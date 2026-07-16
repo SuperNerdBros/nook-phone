@@ -1,0 +1,6 @@
+{
+  "name": "Nook Phone",
+  "description": "An immersive, fully interactive mobile web app mirroring the Animal Crossing: New Horizons Nook Phone (NookOS), complete with functional apps, custom designs, camera filter tools, and a dynamic web directory of AC community tools.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
