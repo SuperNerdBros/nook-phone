@@ -68,6 +68,8 @@ export interface NookOSState {
   customDesigns: CustomDesign[];
   activeWallpaperId: string;
   pinnedApps: string[];
+  installedApps: string[];
+  hasCompletedOnboarding: boolean;
   settings: {
     use24HourTime: boolean;
     showBatteryPercentage: boolean;
@@ -143,9 +145,12 @@ const INITIAL_STATE: NookOSState = {
   ],
   activeWallpaperId: "default",
   pinnedApps: ["passport", "settings", "chat", "shopping"],
+  installedApps: [],
+  hasCompletedOnboarding: false,
   settings: {
     use24HourTime: false,
     showBatteryPercentage: true,
+
     reduceMotion: false
   }
 };
@@ -197,6 +202,12 @@ class NookStateManager {
 
   get pinnedApps() { return this.state.pinnedApps; }
   set pinnedApps(val) { this.state.pinnedApps = val; }
+
+  get installedApps() { return this.state.installedApps || []; }
+  set installedApps(val) { this.state.installedApps = val; }
+
+  get hasCompletedOnboarding() { return this.state.hasCompletedOnboarding || false; }
+  set hasCompletedOnboarding(val) { this.state.hasCompletedOnboarding = val; }
 
   get settings() { return this.state.settings; }
   set settings(val) { this.state.settings = val; }
@@ -462,6 +473,26 @@ class NookStateManager {
     return this.state.pinnedApps.includes(appIdOrName);
   }
 
+  installApp(appName: string) {
+    if (!this.state.installedApps) this.state.installedApps = [];
+    if (!this.state.installedApps.includes(appName)) {
+      this.state.installedApps.push(appName);
+      this.save();
+    }
+  }
+
+  uninstallApp(appName: string) {
+    if (!this.state.installedApps) this.state.installedApps = [];
+    this.state.installedApps = this.state.installedApps.filter(name => name !== appName);
+    this.state.pinnedApps = this.state.pinnedApps.filter(id => id !== appName);
+    this.save();
+  }
+
+  isAppInstalled(appName: string): boolean {
+    if (!this.state.installedApps) return false;
+    return this.state.installedApps.includes(appName);
+  }
+
   updateSettings(newSettings: Partial<NookOSState["settings"]>) {
     this.state.settings = { ...this.state.settings, ...newSettings };
     this.save();
@@ -469,6 +500,14 @@ class NookStateManager {
 
   snapPhoto() {
     this.triggerAchievementProgress("m1", 1);
+    this.save();
+  }
+
+  completeOnboarding(name: string, islandName: string, hemisphere: "north" | "south") {
+    this.state.passport.name = name;
+    this.state.passport.islandName = islandName;
+    this.state.critters.filterHemisphere = hemisphere;
+    this.state.hasCompletedOnboarding = true;
     this.save();
   }
 

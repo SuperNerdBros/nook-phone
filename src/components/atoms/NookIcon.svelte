@@ -55,7 +55,7 @@
     weather: weather_png
   };
 
-  const src = icons[name] || icons['diy'];
+  const src = $derived(icons[name] || icons['diy']);
 </script>
 
 <img {src} alt="{name} icon" class="w-full h-full object-contain drop-shadow-sm {className}" draggable="false" />

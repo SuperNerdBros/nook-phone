@@ -15,6 +15,7 @@
     Award
   } from "@lucide/svelte";
 
+  import Onboarding from './Onboarding.svelte';
   import DirectoryApp from '../pages/DirectoryApp.svelte';
   import PassportApp from '../pages/PassportApp.svelte';
   import CameraApp from '../pages/CameraApp.svelte';
@@ -29,6 +30,7 @@
   import DesignerApp from '../pages/DesignerApp.svelte';
   import SettingsApp from '../pages/SettingsApp.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
+  import nookIncLogo from '../../../assets/img/Nook_Inc.svg';
 
   let timeStr = $state("12:00 PM");
   let activeTipIdx = $state(0);
@@ -79,7 +81,8 @@
 
   const customWallpaper = $derived(nookState.customDesigns.find(d => d.id === nookState.activeWallpaperId));
 
-  const CORE_APPS = [
+  const CORE_APPS: Array<{id: string, name: string, icon: string, bg: string, appIcon?: string}> = [
+    { id: "directory", name: "App Store", icon: "directory", bg: "bg-[#e5a044]" },
     { id: "passport", name: "Passport", icon: "passport", bg: "bg-[#89b88b]" },
     { id: "camera", name: "Camera", icon: "camera", bg: "bg-[#f0614e]" },
     { id: "miles", name: "Nook Miles", icon: "miles", bg: "bg-[#91bd5e]" },
@@ -94,20 +97,35 @@
     { id: "settings", name: "Settings", icon: "settings", bg: "bg-[#7c8088]" }
   ];
 
-  const allApps = $derived([...CORE_APPS, ...projectsData]);
+  const allApps = $derived([
+    ...CORE_APPS, 
+    ...projectsData.filter(p => nookState.isAppInstalled(p.name))
+  ]);
   const homeScreenApps = $derived(allApps.filter(a => nookState.isAppPinned(a.id || a.name)));
 
   const wallpaperStyle = $derived(customWallpaper
     ? `background-image: conic-gradient(from 0deg, ${customWallpaper.grid[0][0]}, ${customWallpaper.grid[4][4]}, ${customWallpaper.grid[8][8]}); background-size: cover;`
     : "");
+
+  const PRESET_WALLPAPERS: Record<string, { bg: string, pattern: string }> = {
+    'nook-inc': { bg: 'bg-[#e0dcc5]', pattern: 'fill="%235c8e43"' },
+    'nook-dark': { bg: 'bg-[#2c2a24]', pattern: 'fill="%234b7a34"' },
+    'cherry-blossom': { bg: 'bg-[#f5d5d8]', pattern: 'fill="%23e28a9b"' },
+    'ocean-wave': { bg: 'bg-[#b3d4d6]', pattern: 'fill="%2363a1a6"' },
+    'starry-night': { bg: 'bg-[#2a3b5c]', pattern: 'fill="%23eccf73"' }
+  };
+  
+  const currentPreset = $derived(customWallpaper ? PRESET_WALLPAPERS['nook-inc'] : (PRESET_WALLPAPERS[nookState.activeWallpaperId || 'nook-inc'] || PRESET_WALLPAPERS['nook-inc']));
 </script>
 
 <div id="nook-phone-canvas" class="w-full h-full relative z-10">
   
   <!-- Main OS Frame -->
   <div class="w-full h-full relative overflow-hidden flex flex-col bg-[#e0dcc5] select-none">
-
-    <!-- Dynamic Status Bar -->
+    {#if !nookState.hasCompletedOnboarding}
+      <Onboarding />
+    {:else}
+      <!-- Dynamic Status Bar -->
     <div class="bg-[#e0dcc5]/80 backdrop-blur-md px-6 pt-3 pb-2 flex justify-between items-center text-[11px] text-[#5d5a4a] font-black select-none z-50 shrink-0 border-b border-[#d1cbb0]">
       <div class="flex items-center gap-1">
         <Signal class="w-3.5 h-3.5 text-[#5d5a4a] stroke-[3px]" />
@@ -135,13 +153,16 @@
     {#if nookState.isPhoneLocked}
       <div
         transition:fly={{ y: -20, duration: 300 }}
-        class="absolute inset-0 bg-[#e0dcc5] flex flex-col justify-between p-6 z-40 overflow-hidden"
+        class={`absolute inset-0 flex flex-col justify-between p-6 z-40 overflow-hidden ${!customWallpaper ? currentPreset.bg : ''}`}
+        style={wallpaperStyle}
       >
         <!-- Wallpaper Pattern -->
-        <div 
-          class="absolute inset-0 opacity-[0.14] pointer-events-none z-0" 
-          style="background-image: url('data:image/svg+xml,%3Csvg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M20 5l5 10h10l-8 7 3 10-10-6-10 6 3-10-8-7h10z%22 fill=%22%235c8e43%22 fill-opacity=%220.4%22/%3E%3C/svg%3E'); background-size: 56px 56px;"
-        ></div>
+        {#if !customWallpaper}
+          <div 
+            class="absolute inset-0 opacity-[0.14] pointer-events-none z-0" 
+            style={`background-image: url('data:image/svg+xml,%3Csvg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M20 5l5 10h10l-8 7 3 10-10-6-10 6 3-10-8-7h10z%22 ${currentPreset.pattern} fill-opacity=%220.4%22/%3E%3C/svg%3E'); background-size: 56px 56px;`}
+          ></div>
+        {/if}
 
         <div class="flex flex-col items-center mt-12 gap-1.5 text-center relative z-10">
           <span class="text-[#5d5a4a] text-xs font-black uppercase tracking-widest block">
@@ -150,12 +171,29 @@
           <h1 class="text-4xl font-mono font-black text-[#5d5a4a] tracking-tight">
             {timeStr}
           </h1>
-          <div class="mt-4 bg-white/80 backdrop-blur border border-[#edd8aa] rounded-2xl p-3 max-w-[240px] text-left text-[11px] leading-relaxed text-[#5c5446] shadow-sm flex items-start gap-2">
-            <Award class="w-5 h-5 text-yellow-600 shrink-0 mt-0.5 animate-bounce" />
-            <div>
-              <span class="font-bold block text-emerald-800">Ready to collect:</span>
-              Collect Nook Miles rewards by launching your apps!
+          <!-- Island Life 101 Daily Tip Widget -->
+          <div class="mt-4 bg-white/90 backdrop-blur-sm border border-[#edd8aa] rounded-2xl p-3 w-full max-w-[280px] shadow-sm flex gap-2.5 items-start text-left relative animate-fade-in shrink-0">
+            <div class="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xl shrink-0 mt-0.5">
+              {activeTip.author === "Tom Nook" ? "🍃" : activeTip.author === "Isabelle" ? "🐶" : "🌸"}
             </div>
+            
+            <div class="flex-1 flex flex-col gap-0.5 pr-4">
+              <span class="text-[8px] font-black text-emerald-800/80 tracking-widest uppercase block">
+                Island Life 101 • {activeTip.author}
+              </span>
+              <span class="font-extrabold text-[13px] text-[#5c5446] leading-tight">{activeTip.title}</span>
+              <p class="text-[10px] text-gray-500 mt-1 leading-relaxed m-0">
+                {activeTip.content}
+              </p>
+            </div>
+
+            <button
+              onclick={handleNextTip}
+              class="absolute right-2 top-2 text-emerald-800 hover:scale-105 active:scale-95 transition bg-transparent border-0 p-1 cursor-pointer"
+              title="Next tip"
+            >
+              <ChevronRight class="w-4 h-4 stroke-[3px]" />
+            </button>
           </div>
         </div>
 
@@ -248,14 +286,14 @@
       {:else}
         <!-- LAUNCHER HOME SCREEN -->
         <div
-          class={`flex-1 flex flex-col justify-between p-4 pb-2 relative h-full overflow-hidden ${!customWallpaper ? 'bg-[#e0dcc5]' : ''}`}
+          class={`flex-1 flex flex-col justify-between p-4 pb-2 relative h-full overflow-hidden ${!customWallpaper ? currentPreset.bg : ''}`}
           style={wallpaperStyle}
         >
           <!-- Wallpaper Star/Leaf Pattern Overlay -->
           {#if !customWallpaper}
             <div 
               class="absolute inset-0 opacity-[0.14] pointer-events-none z-0" 
-              style="background-image: url('data:image/svg+xml,%3Csvg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M20 5l5 10h10l-8 7 3 10-10-6-10 6 3-10-8-7h10z%22 fill=%22%235c8e43%22 fill-opacity=%220.4%22/%3E%3C/svg%3E'); background-size: 56px 56px;"
+              style={`background-image: url('data:image/svg+xml,%3Csvg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M20 5l5 10h10l-8 7 3 10-10-6-10 6 3-10-8-7h10z%22 ${currentPreset.pattern} fill-opacity=%220.4%22/%3E%3C/svg%3E'); background-size: 56px 56px;`}
             ></div>
           {/if}
 
@@ -380,18 +418,17 @@
       {/if}
     </div>
 
-    <!-- Persistent Floating Home Button -->
-    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] flex justify-center pointer-events-auto">
-      <button 
-        onclick={handleHomeButton}
-        class="w-[50px] h-[50px] rounded-full bg-[#5c8e43] border-4 border-white/40 flex items-center justify-center shadow-[0_8px_16px_rgba(0,0,0,0.25),inset_0_2px_4px_rgba(255,255,255,0.2)] hover:scale-110 active:scale-95 transition-all cursor-pointer group p-0 m-0" 
-        title="Nook Home Menu"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="white" class="group-hover:rotate-12 transition-transform">
-          <path d="M17,8C15.39,8.15 13.92,8.96 13,10.15C12.08,8.96 10.61,8.15 9,8C6.79,8 5,9.79 5,12C5,14.21 6.79,16 9,16C10.61,15.85 12.08,15.04 13,13.85C13.92,15.04 15.39,15.85 17,16C19.21,16 21,14.21 21,12C21,9.79 19.21,8 17,8Z" />
-        </svg>
-      </button>
-    </div>
+      <!-- Persistent Floating Home Button -->
+      <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] flex justify-center pointer-events-auto">
+        <button 
+          onclick={handleHomeButton}
+          class="w-[50px] h-[50px] rounded-full overflow-hidden flex items-center justify-center shadow-[0_8px_16px_rgba(0,0,0,0.25),inset_0_2px_4px_rgba(255,255,255,0.2)] border-4 border-white/40 hover:scale-110 active:scale-95 transition-all cursor-pointer group p-0 m-0" 
+          title="Nook Home Menu"
+        >
+          <img src={nookIncLogo} alt="Nook Home Menu" class="w-full h-full group-hover:rotate-12 transition-transform" />
+        </button>
+      </div>
+    {/if}
 
   </div>
 </div>
