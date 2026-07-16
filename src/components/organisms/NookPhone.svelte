@@ -194,12 +194,12 @@
             <div class="flex flex-col h-full ac-app-screen bg-[#faf9f4]">
               <div class="bg-[#8cc3b0] text-[#1a4335] p-3 pt-5 ac-wavy-header flex justify-between items-center z-10 shadow-sm shrink-0">
                 <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-lg shadow-inner">
-                    {currentProject?.appIcon || '🌐'}
+                  <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-lg shadow-inner overflow-hidden relative">
+                    <NookIcon name={currentProject?.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-1 z-10 relative" />
                   </div>
                   <div>
                     <h1 class="text-sm font-bold flex items-center gap-1 m-0 truncate max-w-[150px]">{nookState.currentApp}</h1>
-                    <p class="text-[9px] opacity-90 m-0">Embedded Web App</p>
+                    <p class="text-[9px] opacity-90 m-0">Powered by {nookState.currentApp}</p>
                   </div>
                 </div>
                 <button
@@ -220,8 +220,8 @@
                   ></iframe>
                 {:else}
                   <div class="flex-1 p-4 flex flex-col justify-center items-center text-center gap-3 h-full">
-                    <div class="w-16 h-16 bg-blue-50 border border-blue-200 rounded-full flex items-center justify-center text-3xl shadow-inner">
-                      {currentProject?.appIcon || '📌'}
+                    <div class="w-16 h-16 bg-blue-50 border border-blue-200 rounded-full flex items-center justify-center text-3xl shadow-inner overflow-hidden relative">
+                      <NookIcon name={currentProject?.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-2 z-10 relative" />
                     </div>
                     <div>
                       <h2 class="font-extrabold text-sm text-[#4c4637]">{nookState.currentApp}</h2>
@@ -315,12 +315,12 @@
                             onclick={() => handleAppLaunch(app.id || app.name)}
                             class="flex flex-col items-center gap-1 bg-transparent border-0 hover:scale-105 transition-all duration-200 cursor-pointer p-0 w-[80px]"
                           >
-                            <div class={`w-[60px] h-[60px] flex items-center justify-center rounded-[18px] transition-all relative overflow-hidden ${app.bg || 'bg-[#f5fbf7] border-4 border-white/20 shadow-md text-3xl'}`}>
+                            <div class={`w-[60px] h-[60px] flex items-center justify-center rounded-[18px] transition-all relative overflow-hidden ${app.bg || 'bg-[#f5fbf7] border-4 border-white/20 shadow-md'}`}>
                               {#if app.id}
                                 <NookIcon name={app.id} class="w-full h-full object-contain drop-shadow-sm p-2" />
                               {:else}
                                 <div class="absolute inset-0 bg-gradient-to-tr from-black/5 to-white/20 pointer-events-none"></div>
-                                {app.appIcon || '🌐'}
+                                <NookIcon name={app.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-2 z-10 relative" />
                               {/if}
                             </div>
                             <span class="text-[9px] font-black text-[#5d5a4a] tracking-tight text-center truncate w-full px-1">
@@ -350,12 +350,12 @@
                         onclick={() => handleAppLaunch(app.id || app.name)}
                         class="flex flex-col items-center gap-1 bg-transparent border-0 hover:scale-105 transition-all duration-200 group cursor-pointer p-0 w-[80px]"
                       >
-                        <div class={`w-[66px] h-[66px] flex items-center justify-center group-hover:scale-105 transition-all relative group-hover:ring-4 group-hover:ring-offset-2 group-hover:ring-[#8cc3b0] rounded-[18px] overflow-hidden ${app.bg || 'bg-[#f5fbf7] border-4 border-white/20 shadow-md text-3xl'}`}>
+                        <div class={`w-[66px] h-[66px] flex items-center justify-center group-hover:scale-105 transition-all relative group-hover:ring-4 group-hover:ring-offset-2 group-hover:ring-[#8cc3b0] rounded-[18px] overflow-hidden ${app.bg || 'bg-[#f5fbf7] border-4 border-white/20 shadow-md'}`}>
                           {#if app.id}
                             <NookIcon name={app.id} class="w-full h-full object-contain drop-shadow-sm p-2.5" />
                           {:else}
                             <div class="absolute inset-0 bg-gradient-to-tr from-black/5 to-white/20 pointer-events-none"></div>
-                            {app.appIcon || '🌐'}
+                            <NookIcon name={app.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-2.5 z-10 relative" />
                           {/if}
                         </div>
                         <span class="text-[10px] font-black text-[#5d5a4a] tracking-tight text-center truncate w-full px-1">

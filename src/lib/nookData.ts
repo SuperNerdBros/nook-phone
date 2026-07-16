@@ -23,7 +23,7 @@ export interface ProjectItem {
 export const projectsData: ProjectItem[] = [
 	{
 		name: 'AC Community (JP)',
-		appIcon: '🌐',
+		appIcon: 'directory',
 		description: 'あつまれ どうぶつの森 コミュニティ',
 		languages: ['jp'],
 		logo: '',
@@ -41,7 +41,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'AC Community (KO)',
-		appIcon: '🏝️',
+		appIcon: 'critter',
 		description: '모여봐요 동물의 숲 커뮤니티',
 		languages: ['ko'],
 		logo: '',
@@ -59,7 +59,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'AC Helper',
-		appIcon: '📱',
+		appIcon: 'shopping',
 		description:
 			'Companion app for catching critters, logging critters and items, and turnip predictions',
 		languages: ['en', 'es', 'de', 'fr', 'it', 'jp', 'ru', 'zh'],
@@ -78,7 +78,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'AC Miles',
-		appIcon: '🎮',
+		appIcon: 'diy',
 		description: 'Achievement visualizer for Animal Crossing: New Horizons',
 		languages: ['en'],
 		logo: '',
@@ -96,7 +96,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'AC Wildlife',
-		appIcon: '🎨',
+		appIcon: 'designs',
 		description:
 			'Tracking tool for Critters, Art, Achievements and more! Add your friends to share progress!',
 		languages: ['en'],
@@ -132,7 +132,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'ACNH Data Spreadsheet',
-		appIcon: '📚',
+		appIcon: 'map',
 		description:
 			'A comprehensive Google spreadsheet documenting items, villagers, achievements, and much more',
 		languages: ['en'],
@@ -151,7 +151,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'ACNH FAQ',
-		appIcon: '🛠️',
+		appIcon: 'chat',
 		description: 'Fan-made FAQ for AC:NH',
 		languages: ['en'],
 		logo: 'faq_logo.png',
@@ -169,7 +169,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'ACNH.Guide',
-		appIcon: '🧮',
+		appIcon: 'passport',
 		description:
 			'A free multi-purpose guide and cataloging app with Catalog Scanner integration for New Horizons.',
 		languages: ['en', 'es', 'de', 'fr', 'it', 'nl', 'ja', 'zh', 'ko', 'ru'],
@@ -188,7 +188,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'ACNH Life',
-		appIcon: '📈',
+		appIcon: 'miles',
 		description: 'Mobile app with critter info, item checklists, turnip calculator, and more',
 		languages: ['en'],
 		logo: 'acnh-life.png',
@@ -207,7 +207,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'ACNH Music',
-		appIcon: '🛒',
+		appIcon: 'best_friend',
 		description: 'Web app that plays the current hourly music from Animal Crossing: New Horizons',
 		languages: ['en'],
 		logo: '',
@@ -225,7 +225,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'ACNH Plant Guide',
-		appIcon: '📝',
+		appIcon: 'books',
 		description: 'A guide to every plant in the game (except for flowers)',
 		languages: ['en'],
 		logo: 'plant_logo.png',
@@ -243,7 +243,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'ACNH Translation Spreadsheet',
-		appIcon: '🌐',
+		appIcon: 'calculator',
 		description: "A Google spreadsheet listing translation for most of the game's data",
 		languages: ['en', 'es', 'fr', 'de', 'it', 'nl', 'ru', 'zh', 'jp', 'ko'],
 		logo: '',
@@ -261,7 +261,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'ACNH Travel Guide',
-		appIcon: '🏝️',
+		appIcon: 'calendar',
 		description:
 			'Companion app for iOS with all information and tools you need, and a great design',
 		languages: ['en', 'es', 'de', 'fr', 'it', 'nl', 'ja', 'zh', 'ko', 'ru'],
@@ -280,7 +280,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Animal Crossing Pattern Tool',
-		appIcon: '📱',
+		appIcon: 'camera_alt',
 		description: 'Pattern designer compatible with NL, HHD, and NH',
 		languages: ['en'],
 		logo: 'ac-pattern-tool.png',
@@ -298,7 +298,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Animal Crossing Wiki',
-		appIcon: '🎮',
+		appIcon: 'clock',
 		description: 'Animal-Crossing-Wiki von AC-Booster.net',
 		languages: ['de'],
 		logo: 'animal-crossing-wiki-de.png',
@@ -316,7 +316,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Animal Crossing World',
-		appIcon: '🎨',
+		appIcon: 'contacts',
 		description: 'Blogs and guides about the Animal Crossing series',
 		languages: ['en'],
 		logo: 'animal-crossing-world.png',
@@ -334,7 +334,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Animal Guide for ACNH',
-		appIcon: '📚',
+		appIcon: 'dating',
 		description:
 			'Fan-made guidebook for ACNH with comprehensive info on collectibles, villagers, and more',
 		languages: ['en'],
@@ -379,7 +379,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'CatalogScanner',
-		appIcon: '🛠️',
+		appIcon: 'files',
 		description:
 			'A simple bot for quickly extracting catalogs, recipes, critters and more from recorded videos',
 		languages: ['en', 'es', 'de', 'fr', 'it', 'ja', 'ko', 'nl', 'ru', 'zh'],
@@ -398,7 +398,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Custom Crossing',
-		appIcon: '🧮',
+		appIcon: 'mail',
 		description: 'Pattern and design sharing',
 		languages: ['en'],
 		logo: 'custom-crossing.png',
@@ -416,7 +416,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'DodoCodes.com',
-		appIcon: '📈',
+		appIcon: 'maps',
 		description:
 			'All in one ACNH Community with Dodo codes, designs, auctions, giveaways, articles, dreams, user ratings, wishlists, catalogs, and more',
 		languages: ['en', 'de', 'fr', 'zh'],
@@ -436,7 +436,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'FANDOM Animal Crossing Wiki',
-		appIcon: '🛒',
+		appIcon: 'messages',
 		description: 'FANDOM Animal Crossing wiki that anyone can contribute to',
 		languages: ['en'],
 		logo: 'acw.png',
@@ -454,7 +454,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Flower Breeding Simulator',
-		appIcon: '📝',
+		appIcon: 'notes',
 		description: 'A fancy tool to simulate flower breeding and pattern performance',
 		languages: ['en', 'es', 'de', 'fr', 'it', 'jp', 'ko', 'nl', 'ru', 'zh'],
 		logo: 'garden-science.png',
@@ -472,7 +472,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Happy Island Designer',
-		appIcon: '🌐',
+		appIcon: 'photos',
 		description: 'Draw terrain and paths, place buildings, and trace your in-game map',
 		languages: ['en'],
 		logo: '',
@@ -490,7 +490,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Horizonpedia',
-		appIcon: '🏝️',
+		appIcon: 'reminders',
 		description:
 			'Aiming to be the most userfriendly App for iOS and Android with Item catalog, fake art comparison, and more!',
 		languages: ['en', 'es', 'de', 'fr', 'it', 'jp', 'ko', 'nl', 'ru', 'zh', 'se'],
@@ -509,7 +509,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'MeteoNook',
-		appIcon: '📱',
+		appIcon: 'settings',
 		description:
 			"Predict your island's weather patterns, including exact times for meteor showers, rainbows and the aurora borealis",
 		languages: ['en'],
@@ -528,7 +528,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'My Dodo Link',
-		appIcon: '🎮',
+		appIcon: 'wallet',
 		description: "Islands queue manager, go in line and receive the dodo code when it's your turn.",
 		languages: ['en', 'it'],
 		logo: 'my-dodo-link.png',
@@ -546,7 +546,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Nookazon',
-		appIcon: '🎨',
+		appIcon: 'weather',
 		description: 'Buy and sell Animal Crossing: New Horizons items',
 		languages: ['en', 'es', 'de', 'fr', 'it', 'jp', 'ko', 'nl', 'ru', 'zh'],
 		logo: 'nookazon.svg',
@@ -564,7 +564,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Nook DB.io',
-		appIcon: '📚',
+		appIcon: 'directory',
 		description:
 			'Comprehensive item database with filtering, checklists, stalk market calculator, a music player, and more',
 		languages: ['en', 'es', 'de', 'fr', 'it', 'jp', 'ko', 'ru', 'zh'],
@@ -583,7 +583,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Nook Exchange',
-		appIcon: '🛠️',
+		appIcon: 'critter',
 		description: 'Item tracker and marketplace',
 		languages: ['en', 'es', 'de', 'fr', 'it', 'jp', 'ko', 'nl', 'ru', 'zh'],
 		logo: 'nook-exchange.png',
@@ -601,7 +601,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'NookFriends',
-		appIcon: '🧮',
+		appIcon: 'shopping',
 		description: 'The friendliest Animal Crossing: New Horizons community!',
 		languages: ['en'],
 		logo: 'nookfriends.png',
@@ -618,7 +618,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Nookipedia',
-		appIcon: '📈',
+		appIcon: 'diy',
 		description:
 			'The independent Animal Crossing wiki, covering the series along with an API service',
 		languages: ['en'],
@@ -637,7 +637,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Nooknet',
-		appIcon: '🛒',
+		appIcon: 'designs',
 		description:
 			'Comprehensive services, including checklists, design sharing, dream codes, tune creation, turnip calculator, and more',
 		languages: ['en'],
@@ -656,7 +656,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Nook Plaza',
-		appIcon: '📝',
+		appIcon: 'map',
 		description:
 			'Item catalog, wishlists, villager gifts, island rating calc, weather forecasting, fake art detector, and more!',
 		languages: ['en', 'es', 'de', 'fr', 'it', 'jp', 'ru', 'zh'],
@@ -675,7 +675,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Nooks Guide',
-		appIcon: '🌐',
+		appIcon: 'chat',
 		description: 'List of critters, items, villagers, recipes, and more',
 		languages: ['en'],
 		logo: 'nooks-guide.jpg',
@@ -693,7 +693,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Stalks.io',
-		appIcon: '🏝️',
+		appIcon: 'passport',
 		description:
 			"Get stalk price predictions, forecasts and advice for you and your friends' islands",
 		languages: ['en'],
@@ -712,7 +712,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Tanuki Forest',
-		appIcon: '📱',
+		appIcon: 'miles',
 		description: 'Database of items, critters, clothing, and villagers',
 		languages: ['en'],
 		logo: 'tanuki-forest.gif',
@@ -730,7 +730,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'The ULTIMATE Catalogue',
-		appIcon: '🎮',
+		appIcon: 'best_friend',
 		description: 'A full ACNH catalogue and checklist containing all items in the game and more',
 		languages: ['en', 'es', 'fr', 'de', 'it', 'nl', 'ru', 'zh', 'jp', 'ko'],
 		logo: 'catalogue-ac.png',
@@ -748,7 +748,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Turnip.Exchange',
-		appIcon: '🎨',
+		appIcon: 'books',
 		description: 'Queue for turnip selling and more',
 		languages: ['en'],
 		logo: 'turnip-exchange.png',
@@ -766,7 +766,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Turnip Prophet',
-		appIcon: '📚',
+		appIcon: 'calculator',
 		description: 'Turnip price prediction tool available in multiple languages',
 		languages: ['en', 'es', 'fr', 'de', 'it', 'nl', 'ru', 'zh', 'jp', 'ko'],
 		logo: '',
@@ -784,7 +784,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'VillagerDB',
-		appIcon: '🛠️',
+		appIcon: 'calendar',
 		description: 'Database of items and villagers, with a wishlist maker',
 		languages: ['en'],
 		logo: 'villagerdb.jpg',
@@ -1000,7 +1000,7 @@ export const diyData: DIYRecipe[] = [
 		name: 'Flimsy Fishing Rod',
 		category: 'tools',
 		materials: [{ name: 'Tree Branch',
-		appIcon: '🧮', qty: 5 }],
+		appIcon: 'camera_alt', qty: 5 }],
 		isUnlocked: true,
 		source: "Tom Nook's Workshop"
 	},
