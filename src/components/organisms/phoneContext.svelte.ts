@@ -41,7 +41,7 @@ export const CORE_APPS: CoreApp[] = [
   { id: "passport", name: "Passport", icon: "passport", bg: "bg-[#7cb988]", image: passportIcon },
   { id: "chat", name: "Chat Log", icon: "chat", bg: "bg-[#d3e551]", image: chatIcon, proOnly: true },
   { id: "settings", name: "Settings", icon: "settings", bg: "bg-[#8ba6a4]", image: settingsIcon },
-  { id: "directory", name: "Call Islander", icon: "directory", bg: "bg-[#f3cd4a]" },
+  { id: "directory", name: "Community Toolchest", icon: "directory", bg: "bg-[#45a38f]" },
   { id: "messages", name: "Messages", icon: "messages", bg: "bg-[#8bd168]", image: mailIcon, proOnly: true },
   { id: "contacts", name: "Contacts", icon: "best_friend", bg: "bg-[#8cc3b0]", image: contactsIcon },
   { id: "best_friends", name: "Best Friends", icon: "best_friend", bg: "bg-[#ffd375]", image: messagesIcon, proOnly: true },
@@ -58,7 +58,7 @@ export class PhoneContext {
 
   allApps = $derived([
     ...CORE_APPS,
-    ...projectsData.filter(p => nookState.isAppInstalled(p.name))
+    ...(nookState.installedApps || []).map(name => projectsData.find(p => p.name === name)).filter(Boolean) as any[]
   ]);
   
   homeScreenApps = $derived(this.allApps.filter(a => nookState.isAppPinned(a.id || a.name)));

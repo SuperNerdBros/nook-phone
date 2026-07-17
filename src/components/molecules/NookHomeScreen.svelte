@@ -59,8 +59,63 @@
     }
   };
 
+  
+  const handleDragOverApp = (e: DragEvent, targetId: string) => {
+    e.preventDefault(); // Necessary to allow dropping
+  };
+
+  const handleDropOnApp = (e: DragEvent, targetId: string) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer?.getData('appId');
+    if (!sourceId || sourceId === targetId) return;
+
+    // We only allow reordering additional apps (installedApps) for now.
+    const installed = nookState.installedApps || [];
+    
+    // Check if both source and target are additional apps
+    const sourceIdx = installed.indexOf(sourceId);
+    const targetIdx = installed.indexOf(targetId);
+
+    if (sourceIdx !== -1 && targetIdx !== -1) {
+      // Reorder
+      const newArr = [...installed];
+      const [removed] = newArr.splice(sourceIdx, 1);
+      
+      // If we are dropping it after the target, we should maybe insert it after?
+      // For simplicity, just insert at targetIdx
+      newArr.splice(targetIdx, 0, removed);
+      
+      nookState.installedApps = newArr;
+      nookState.save();
+    }
+  };
+
+
+  let dragScrollTimeout: ReturnType<typeof setTimeout> | null = null;
+
   const handleHomeDragOver = (e: DragEvent) => {
     e.preventDefault();
+    if (!sliderRef) return;
+    
+    const threshold = 60; // px from edge
+    const rect = sliderRef.getBoundingClientRect();
+    
+    const isNearLeft = e.clientX < rect.left + threshold;
+    const isNearRight = e.clientX > rect.right - threshold;
+
+    if ((isNearLeft || isNearRight) && !dragScrollTimeout) {
+      dragScrollTimeout = setTimeout(() => {
+        if (isNearLeft && currentPage > 0) {
+          sliderRef.scrollTo({ left: (currentPage - 1) * sliderRef.clientWidth, behavior: 'smooth' });
+        } else if (isNearRight && currentPage < pages.length - 1) {
+          sliderRef.scrollTo({ left: (currentPage + 1) * sliderRef.clientWidth, behavior: 'smooth' });
+        }
+        dragScrollTimeout = null;
+      }, 500); // 500ms hover delay before flipping page
+    } else if (!isNearLeft && !isNearRight && dragScrollTimeout) {
+      clearTimeout(dragScrollTimeout);
+      dragScrollTimeout = null;
+    }
   };
 
   const handleScroll = () => {
@@ -97,14 +152,19 @@
       <div class="w-full h-full shrink-0 snap-center flex flex-col items-center">
         <div class={`w-full max-w-full grid gap-y-[24px] gap-x-[10px] px-[30px] pt-[10px] justify-items-center content-start ${cols === 4 ? 'grid-cols-4 gap-x-2' : cols === 5 ? 'grid-cols-5 gap-x-1' : 'grid-cols-3'}`}>
           {#each page as app (app.id || app.name)}
-            <NookAppIcon 
-              app={app} 
-              size="lg" 
-              showText={false}
-              onClick={() => ctx.handleAppLaunch(app.id || app.name)}
-              onMouseEnter={() => ctx.hoveredAppName = app.name}
-              onMouseLeave={() => ctx.hoveredAppName = "NookPhone"}
-            />
+            <div 
+              ondragover={(e) => handleDragOverApp(e, app.id || app.name)}
+              ondrop={(e) => handleDropOnApp(e, app.id || app.name)}
+            >
+              <NookAppIcon 
+                app={app} 
+                size="lg" 
+                showText={false}
+                onClick={() => ctx.handleAppLaunch(app.id || app.name)}
+                onMouseEnter={() => ctx.hoveredAppName = app.name}
+                onMouseLeave={() => ctx.hoveredAppName = "NookPhone"}
+              />
+            </div>
           {/each}
         </div>
       </div>

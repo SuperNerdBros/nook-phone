@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import nookState from '@/lib/nookState.svelte';
   import { fetchNookipediaVillagers, fetchNookipediaItems } from '@/lib/api';
-  import { Search, Star, MessageCircle, Home, Info, ChevronLeft, Phone, Video, Users, Plus, Image as ImageIcon, Camera, Gift, Trash2, Check, UserPlus, Leaf , X } from '@lucide/svelte';
+  import { Search, Star, MessageCircle, Home, Info, ChevronLeft, Phone, Video, Users, Plus, Image as ImageIcon, Camera, Gift, Trash2, Check, UserPlus, Leaf, X as XIcon } from '@lucide/svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import AcnhBubble from '@/components/molecules/AcnhBubble.svelte';
   
@@ -388,7 +388,7 @@
             <Plus class="w-5 h-5" />
           </button>
         {/if}
-        <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
+        <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#649e8a]" /></button>
     {/snippet}
       
       <div class="relative w-full">

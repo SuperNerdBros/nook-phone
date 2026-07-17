@@ -40,7 +40,7 @@ export const projectsData: ProjectItem[] = [
 // 		twitter: '',
 // 		git: '',
 // 		information: ['critters', 'fossils', 'items'],
-// 		tools: ['turnips']
+// 		tools: ['economy']
 // 	},
 // 	{
 // 		name: 'AC Community (KO)',
@@ -58,7 +58,7 @@ export const projectsData: ProjectItem[] = [
 // 		twitter: '',
 // 		git: '',
 // 		information: ['critters', 'fossils'],
-// 		tools: ['turnips']
+// 		tools: ['economy']
 // 	},
 	{
 		name: 'ACNH Critterpedia',
@@ -67,7 +67,7 @@ export const projectsData: ProjectItem[] = [
 		languages: ['en'],
 		site: 'https://acnhcritterpedia.com/',
 		information: ['critters'],
-		tools: ['checklist']
+		tools: ['tracking']
 	},
 	{
 		name: 'Dodo Air',
@@ -76,7 +76,7 @@ export const projectsData: ProjectItem[] = [
 		languages: ['en'],
 		site: 'https://dodoair.forthexp.com/',
 		information: ['gameplay'],
-		tools: ['rescue']
+		tools: ['utilities']
 	},
 	{
 		name: 'AC Helper',
@@ -95,7 +95,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: 'https://github.com/Dimillian/ACHNBrowserUI',
 		information: ['critters', 'fossils'],
-		tools: ['music', 'turnips']
+		tools: ['creative', 'economy']
 	},
 	{
 		name: 'AC Miles',
@@ -132,7 +132,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: 'https://github.com/zeepk/wildlife',
 		information: ['art', 'critters', 'fossils', 'items', 'gameplay', 'villagers'],
-		tools: ['checklist']
+		tools: ['tracking']
 	},
 	{
 		name: "ACNH Beginner's Guide",
@@ -205,7 +205,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'GeneSy',
 		git: '',
 		information: ['art', 'critters', 'fossils', 'gameplay', 'items', 'villagers'],
-		tools: ['checklist', 'dreams', 'turnips']
+		tools: ['tracking', 'multiplayer', 'economy']
 	},
 	{
 		name: 'ACNH Life',
@@ -224,7 +224,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: '',
 		information: ['art', 'critters', 'items', 'villagers'],
-		tools: ['checklist', 'turnips']
+		tools: ['tracking', 'economy']
 	},
 // 	{
 // 		name: 'ACNH Music',
@@ -242,7 +242,7 @@ export const projectsData: ProjectItem[] = [
 // 		twitter: '',
 // 		git: '',
 // 		information: [],
-// 		tools: ['music']
+// 		tools: ['creative']
 // 	},
 	{
 		name: 'ACNH Plant Guide',
@@ -297,7 +297,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: '',
 		information: ['art', 'critters', 'fossils', 'items', 'villagers', 'flowers', 'gifts'],
-		tools: ['checklist', 'turnips', 'dreams']
+		tools: ['tracking', 'economy', 'multiplayer']
 	},
 	{
 		name: 'Animal Crossing Pattern Tool',
@@ -315,7 +315,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: '',
 		information: [],
-		tools: ['design sharing']
+		tools: ['creative']
 	},
 	{
 		name: 'Animal Crossing Wiki',
@@ -333,7 +333,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: '',
 		information: ['art', 'critters', 'fossils', 'gameplay', 'gifts', 'items', 'villagers'],
-		tools: ['wiki']
+		tools: ['reference']
 	},
 	{
 		name: 'Animal Crossing World',
@@ -379,7 +379,7 @@ export const projectsData: ProjectItem[] = [
 			'items',
 			'villagers'
 		],
-		tools: ['checklist', 'music', 'marketplace', 'turnips']
+		tools: ['tracking', 'creative', 'economy']
 	},
 	{
 		name: "cestislife's Visual Guides",
@@ -415,7 +415,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'catalogscanner',
 		git: 'https://github.com/EhsanKia/CatalogScanner',
 		information: ['critters', 'items'],
-		tools: ['api']
+		tools: ['reference']
 	},
 // 	{
 // 		name: 'Custom Crossing',
@@ -433,7 +433,7 @@ export const projectsData: ProjectItem[] = [
 // 		twitter: '',
 // 		git: '',
 // 		information: [],
-// 		tools: ['design sharing']
+// 		tools: ['creative']
 // 	},
 // 	{
 // 		name: 'DodoCodes.com',
@@ -453,7 +453,7 @@ export const projectsData: ProjectItem[] = [
 // 		twitter: 'dodo_codes',
 // 		git: '',
 // 		information: [],
-// 		tools: ['design sharing', 'dreams', 'marketplace', 'queueing']
+// 		tools: ['creative', 'multiplayer', 'economy']
 // 	},
 // 	{
 // 		name: 'FANDOM Animal Crossing Wiki',
@@ -471,7 +471,7 @@ export const projectsData: ProjectItem[] = [
 // 		twitter: '',
 // 		git: '',
 // 		information: ['art', 'critters', 'fossils', 'gameplay', 'items', 'villagers'],
-// 		tools: ['wiki']
+// 		tools: ['reference']
 // 	},
 	{
 		name: 'Flower Breeding Simulator',
@@ -489,7 +489,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: '',
 		information: ['flowers'],
-		tools: ['simulator']
+		tools: ['utilities']
 	},
 	{
 		name: 'Happy Island Designer',
@@ -507,7 +507,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: 'https://github.com/eugeneration/HappyIslandDesigner',
 		information: [],
-		tools: ['simulator']
+		tools: ['utilities']
 	},
 	{
 		name: 'Horizonpedia',
@@ -526,7 +526,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'HorizonpediaE',
 		git: '',
 		information: ['art', 'critters', 'fossils', 'items', 'villagers'],
-		tools: ['checklist', 'fake art', 'turnips']
+		tools: ['tracking', 'economy']
 	},
 	{
 		name: 'MeteoNook',
@@ -545,7 +545,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: 'https://github.com/Treeki/MeteoNook/',
 		information: [],
-		tools: ['weather']
+		tools: ['utilities']
 	},
 // 	{
 // 		name: 'My Dodo Link',
@@ -563,7 +563,7 @@ export const projectsData: ProjectItem[] = [
 // 		twitter: '',
 // 		git: '',
 // 		information: [],
-// 		tools: ['queueing']
+// 		tools: ['multiplayer']
 // 	},
 	{
 		name: 'Nookazon',
@@ -581,7 +581,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'nookazon',
 		git: '',
 		information: ['items'],
-		tools: ['marketplace']
+		tools: ['economy']
 	},
 // 	{
 // 		name: 'Nook DB.io',
@@ -600,7 +600,7 @@ export const projectsData: ProjectItem[] = [
 // 		twitter: '',
 // 		git: '',
 // 		information: ['flowers', 'items'],
-// 		tools: ['checklist', 'music', 'turnips']
+// 		tools: ['tracking', 'creative', 'economy']
 // 	},
 	{
 		name: 'Nook Exchange',
@@ -618,7 +618,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'nookexchange',
 		git: '',
 		information: ['items'],
-		tools: ['checklist', 'marketplace']
+		tools: ['tracking', 'economy']
 	},
 	{
 		name: 'NookFriends',
@@ -635,7 +635,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'nookfriendsACNH',
 		git: '',
 		information: ['art', 'gameplay'],
-		tools: ['dreams', 'fake art', 'queueing']
+		tools: ['multiplayer', 'tracking']
 	},
 	{
 		name: 'Nookipedia',
@@ -654,7 +654,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'nookipedia',
 		git: '',
 		information: ['art', 'critters', 'fossils', 'gameplay', 'gifts', 'items', 'villagers'],
-		tools: ['api', 'wiki']
+		tools: ['reference']
 	},
 	{
 		name: 'Nooknet',
@@ -673,7 +673,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'nooknetnet',
 		git: '',
 		information: ['art', 'flowers', 'gameplay', 'villagers'],
-		tools: ['checklist', 'design sharing', 'dreams', 'town tunes', 'turnips', 'queueing']
+		tools: ['tracking', 'creative', 'multiplayer', 'economy']
 	},
 	{
 		name: 'Nook Plaza',
@@ -692,7 +692,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'nook_plaza',
 		git: '',
 		information: ['art', 'critters', 'fossils', 'gifts', 'items', 'villagers'],
-		tools: ['checklist', 'fake art', 'island rating', 'simulator', 'weather']
+		tools: ['tracking', 'utilities']
 	},
 // 	{
 // 		name: 'Nooks Guide',
@@ -710,7 +710,7 @@ export const projectsData: ProjectItem[] = [
 // 		twitter: 'nooksguide',
 // 		git: '',
 // 		information: ['art', 'critters', 'fossils', 'villagers'],
-// 		tools: ['checklist', 'design sharing', 'dreams', 'turnips', 'queueing']
+// 		tools: ['tracking', 'creative', 'multiplayer', 'economy']
 // 	},
 	{
 		name: 'Stalks.io',
@@ -729,7 +729,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'stalksio',
 		git: '',
 		information: [],
-		tools: ['turnips']
+		tools: ['economy']
 	},
 	{
 		name: 'Tanuki Forest',
@@ -765,7 +765,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: '',
 		information: ['art', 'critters', 'fossils', 'gifts', 'items', 'villagers'],
-		tools: ['checklist', 'fake art']
+		tools: ['tracking']
 	},
 	{
 		name: 'Turnip.Exchange',
@@ -783,7 +783,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'WarpWorld',
 		git: '',
 		information: [],
-		tools: ['queueing']
+		tools: ['multiplayer']
 	},
 	{
 		name: 'Turnip Prophet',
@@ -801,7 +801,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: 'https://github.com/mikebryant/ac-nh-turnip-prices',
 		information: [],
-		tools: ['turnips']
+		tools: ['economy']
 	},
 // 	{
 // 		name: 'VillagerDB',
@@ -819,7 +819,7 @@ export const projectsData: ProjectItem[] = [
 // 		twitter: 'villagerdb',
 // 		git: 'https://github.com/jefflomacy/villagerdb',
 // 		information: ['art', 'critters', 'fossils', 'items', 'villagers'],
-// 		tools: ['checklist']
+// 		tools: ['tracking']
 // 	},
 	{
 		name: "Yue's ACNH Guides",

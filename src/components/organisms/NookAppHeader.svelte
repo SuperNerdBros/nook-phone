@@ -10,6 +10,7 @@
     bgClass = 'bg-[#8cc3b0]', 
     textClass = 'text-white', 
     actions,
+    leftActions,
     children
   }: { 
     title: string;
@@ -20,6 +21,7 @@
     bgClass?: string;
     textClass?: string;
     actions?: Snippet;
+    leftActions?: Snippet;
     children?: Snippet;
   } = $props();
 
@@ -47,20 +49,25 @@
 
     <!-- Top Row -->
     <div class="ext-header-top">
-      <div class="ext-header-identity">
-        <div class="ext-header-icon-wrap">
-          {#if iconSnippet}
-            {@render iconSnippet()}
-          {:else if icon}
-            <span class="text-xl leading-none z-10 relative drop-shadow-sm">{icon}</span>
-          {/if}
-        </div>
-        <div class="ext-header-title-group">
-          <h1 class="ext-header-title">{title}</h1>
+      <div class="flex items-center gap-2">
+        {#if leftActions}
+          {@render leftActions()}
+        {/if}
+        <div class="ext-header-identity">
+          <div class="ext-header-icon-wrap">
+            {#if iconSnippet}
+              {@render iconSnippet()}
+            {:else if icon}
+              <span class="text-xl leading-none z-10 relative drop-shadow-sm">{icon}</span>
+            {/if}
+          </div>
+          <div class="ext-header-title-group">
+            <h1 class="ext-header-title">{title}</h1>
           {#if subtitle}
             <p class="text-[9px] font-bold text-white/70 m-0 uppercase tracking-wider">{subtitle}</p>
           {/if}
         </div>
+      </div>
       </div>
 
       <div class="ext-header-actions">

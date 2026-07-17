@@ -2,7 +2,7 @@
   import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   import nookState from '@/lib/nookState.svelte';
   import { projectsData } from '@/lib/nookData';
-  import { Search, Globe, Download, CheckCircle, Store, Smartphone, Code, ArrowLeft , X } from '@lucide/svelte';
+  import { Search, Download, CheckCircle, Smartphone, Code, Globe, XIcon, Trash2, Play, Users, CloudDownload, Box, Grid3x3, BookOpen, CheckSquare, Palette, Moon, Music, TrendingUp, Image as ImageIcon, Star, Monitor, CloudSun, Store, LifeBuoy, Settings2 } from '@lucide/svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
   import Rating from '../atoms/Rating.svelte';
   import { fetchApps, installAppTracker, rateApp, isProUser } from '@/lib/api';
@@ -10,20 +10,34 @@
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
 
   const ctx = getPhoneContext();
-  const getBgUrl = (bgName: string): string => {
-    let base = "/assets/bgs/";
-    if (typeof window !== 'undefined' && window.wpApiSettings?.pluginUrl) {
-      const pluginUrl = window.wpApiSettings.pluginUrl;
-      base = pluginUrl.endsWith('/') ? pluginUrl + 'public/assets/bgs/' : pluginUrl + '/public/assets/bgs/';
-    }
-    return `${base}${bgName}`;
-  };
   
   let cloudApps: Record<string, any> = $state({});
   let proUser = $state(false);
 
+  let searchTerm = $state("");
+  let selectedCategory = $state("all");
+  let selectedLanguage = $state("en");
+  let showFilters = $state(false);
+  let selectedApp = $state<any>(null);
+  let currentView = $state<"grid" | "detail">("grid");
+  let ratingComments = $state<Record<string, string>>({});
+  
+  const allToolTypes = Array.from(new Set(projectsData.flatMap(p => p.tools)));
+  const allLanguages = Array.from(new Set(projectsData.flatMap(p => p.languages || []))).sort();
+  const languageNames: Record<string, string> = {
+    all: "All Languages", en: "English", es: "Spanish", de: "German", fr: "French",
+    it: "Italian", jp: "Japanese", ru: "Russian", zh: "Chinese", ko: "Korean"
+  };
+
   onMount(async () => {
     proUser = isProUser();
+    
+    // Attempt to match browser locale
+    if (typeof navigator !== 'undefined' && navigator.language) {
+      const loc = navigator.language.split('-')[0].toLowerCase();
+      if (allLanguages.includes(loc)) selectedLanguage = loc;
+    }
+
     const apps = await fetchApps();
     const map: Record<string, any> = {};
     apps.forEach((a: any) => {
@@ -32,69 +46,26 @@
     cloudApps = map;
   });
 
-  let searchTerm = $state("");
-  let selectedLanguage = $state("all");
-  let selectedInfo = $state("all");
-  let selectedTool = $state("all");
-  let activeCategory = $state<string | null>(null);
-
-  // Collect unique filters
-  const allLanguages = Array.from(new Set(projectsData.flatMap(p => p.languages)));
-  const allInfoTypes = Array.from(new Set(projectsData.flatMap(p => p.information)));
-  const allToolTypes = Array.from(new Set(projectsData.flatMap(p => p.tools)));
-
-  const featuredApp = $derived(projectsData.find(p => p.name === "Dodo Air") || projectsData[0]);
-  const isFeaturedInstalled = $derived(nookState.isAppInstalled(featuredApp.name));
-
-  let filteredProjects = $derived(projectsData.filter((p) => {
-    const matchesSearch =
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesLang = selectedLanguage === "all" || p.languages.includes(selectedLanguage);
-    const matchesInfo = selectedInfo === "all" || p.information.includes(selectedInfo);
-    const matchesTool = selectedTool === "all" || p.tools.includes(selectedTool);
-
-    return matchesSearch && matchesLang && matchesInfo && matchesTool;
-  }));
-
-  const categoryConfig: Record<string, { label: string, icon: string, bg: string, sub: string }> = {
-    rescue: { label: "Rescue", icon: "rescue", bg: "bg-smartphone.png", sub: "Rescue services & utilities" },
-    music: { label: "Music", icon: "best_friend", bg: "bg-plant.png", sub: "KK Slider & song logs" },
-    turnips: { label: "Turnips", icon: "shopping", bg: "bg-money.png", sub: "Price prediction calculators" },
-    checklist: { label: "Checklists", icon: "diy", bg: "bg-diy.png", sub: "Progress & completion logs" },
-    dreams: { label: "Dreams", icon: "passport", bg: "bg-communication.png", sub: "Dream address sharing" },
-    "design sharing": { label: "Pattern Share", icon: "designs", bg: "bg-mydesign.png", sub: "Custom pattern databases" },
-    wiki: { label: "Wiki", icon: "files", bg: "bg-landmaking.png", sub: "Companion guide databases" },
-    marketplace: { label: "Marketplace", icon: "shopping", bg: "bg-money.png", sub: "Item trading & bazaars" },
-    api: { label: "API", icon: "directory", bg: "bg-smartphone.png", sub: "Developer integrations" },
-    simulator: { label: "Simulators", icon: "designer", bg: "bg-landmaking.png", sub: "Island & garden planners" },
-    "fake art": { label: "Art Guide", icon: "camera_alt", bg: "bg-event.png", sub: "Fake painting detector" },
-    weather: { label: "Weather", icon: "weather", bg: "bg-negative.png", sub: "MeteoNook predictions" },
-    queueing: { label: "Queueing", icon: "chat", bg: "bg-communication.png", sub: "Island queue tools" },
-    "town tunes": { label: "Town Tunes", icon: "best_friend", bg: "bg-plant.png", sub: "Melody makers" },
-    "island rating": { label: "Island Rating", icon: "miles", bg: "bg-hha.png", sub: "HHA & rating calculators" }
+  const getCategoryIcon = (cat: string) => {
+    switch (cat.toLowerCase()) {
+      case "all": return Grid3x3;
+      case "tracking": return CheckSquare;
+      case "economy": return TrendingUp;
+      case "multiplayer": return Users;
+      case "creative": return Palette;
+      case "utilities": return Monitor;
+      case "reference": return BookOpen;
+      default: return Box;
+    }
   };
 
-  function selectCategory(type: 'info' | 'tool' | 'all', value: string, categoryLabel: string) {
-    if (type === 'info') {
-      selectedInfo = value;
-      selectedTool = 'all';
-    } else if (type === 'tool') {
-      selectedTool = value;
-      selectedInfo = 'all';
-    } else {
-      selectedInfo = 'all';
-      selectedTool = 'all';
-    }
-    activeCategory = categoryLabel;
-  }
-
-  function resetCategory() {
-    selectedInfo = 'all';
-    selectedTool = 'all';
-    activeCategory = null;
-  }
+  let filteredProjects = $derived(projectsData.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          p.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "all" || p.tools.includes(selectedCategory);
+    const matchesLang = selectedLanguage === "all" || (p.languages && p.languages.includes(selectedLanguage));
+    return matchesSearch && matchesCategory && matchesLang;
+  }));
 
   async function handleInstall(projectName: string) {
     nookState.installApp(projectName);
@@ -107,7 +78,9 @@
     cloudApps = map;
   }
 
-  let ratingComments = $state<Record<string, string>>({});
+  function handleUninstall(projectName: string) {
+    nookState.uninstallApp(projectName);
+  }
 
   async function handleRate(projectName: string, rating: number) {
     if (!proUser) return;
@@ -120,274 +93,260 @@
     apps.forEach((a: any) => { map[a.slug] = a; });
     cloudApps = map;
   }
-
-  function handleUninstall(projectName: string) {
-    nookState.uninstallApp(projectName);
-  }
 </script>
 
-<div id="directory-app" class="flex flex-col h-full ac-app-screen ac-bg-dots">
-  <!-- Wavy Header -->
+<div class="flex flex-col h-full bg-[#e5f1f0] text-[#2d5c56] font-['Varela_Round',sans-serif] relative overflow-hidden select-none">
+  
+  <!-- Header -->
   <NookAppHeader 
-    title="Nook Play" 
-    subtitle="Welcome to Nook Play! Discover community creations for your NookPhone! Yes, yes!" 
-    bgClass="bg-[#f0b157] border-b-4 border-[#d99c45]" 
-    textClass="text-[#5c3a21]"
+    title="Community Toolchest" 
+    subtitle="Master Tools" 
+    bgClass="bg-[#45a38f]" 
+    textClass="text-[#fffdf5]"
   >
     {#snippet iconSnippet()}
-      <Store class="w-6 h-6 text-white drop-shadow-sm" />
+      <Box class="w-5 h-5 drop-shadow-sm mr-1 text-[#fffdf5]" strokeWidth={3} />
+    {/snippet}
+    {#snippet leftActions()}
+      <button onclick={() => showFilters = !showFilters} class="nook-header-btn mr-1" title="Filters">
+        <Settings2 class="w-3.5 h-3.5 stroke-[3px] text-[#2d5c56]" />
+      </button>
     {/snippet}
     {#snippet actions()}
-      <div class="bg-[#5c3a21] text-[#f0b157] px-3 py-1.5 rounded-full font-black text-xs flex items-center gap-1.5 shadow-inner">
-        <Smartphone class="w-3.5 h-3.5" />
-        {filteredProjects.length} Apps
-      </div>
-      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
+      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
+        <XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#2d5c56]" />
+      </button>
     {/snippet}
   </NookAppHeader>
 
-  <!-- Search and Filters -->
-  <div class="px-4 py-4 flex flex-col gap-3 relative z-0">
-    <div class="relative drop-shadow-sm">
-      <Search class="w-5 h-5 text-[#caa253] absolute left-3 top-3.5" />
-      <input
-        id="directory-search"
-        type="text"
-        placeholder="Search for apps..."
-        bind:value={searchTerm}
-        class="w-full bg-[#fcfcf9] pl-10 pr-4 py-3 rounded-2xl text-[13px] font-bold border-4 border-[#e1d9be] focus:outline-none focus:border-[#f0b157] text-[#5c3a21] placeholder:text-[#caa253]/60 transition-colors"
-      />
-    </div>
-
-    <div class="grid grid-cols-3 gap-2 text-xs font-bold">
-      <select bind:value={selectedLanguage} class="bg-[#fcfcf9] px-2 py-2 rounded-xl border-2 border-[#e1d9be] text-[#5c3a21] focus:outline-none focus:border-[#f0b157] shadow-sm appearance-none cursor-pointer">
-        <option value="all">🌐 Langs</option>
-        {#each allLanguages as l}<option value={l}>{l.toUpperCase()}</option>{/each}
-      </select>
-      <select bind:value={selectedInfo} class="bg-[#fcfcf9] px-2 py-2 rounded-xl border-2 border-[#e1d9be] text-[#5c3a21] focus:outline-none focus:border-[#f0b157] shadow-sm appearance-none cursor-pointer text-center">
-        <option value="all">📖 DB</option>
-        {#each allInfoTypes as i}<option value={i}>{i}</option>{/each}
-      </select>
-      <select bind:value={selectedTool} class="bg-[#fcfcf9] px-2 py-2 rounded-xl border-2 border-[#e1d9be] text-[#5c3a21] focus:outline-none focus:border-[#f0b157] shadow-sm appearance-none cursor-pointer text-right">
-        <option value="all">🛠️ Tools</option>
-        {#each allToolTypes as t}<option value={t}>{t}</option>{/each}
-      </select>
-    </div>
-  </div>
-
   <!-- Main Content Area -->
-  <div class="flex-1 overflow-y-auto pb-32 ac-scrollbar">
-    {#if activeCategory === null && searchTerm === "" && selectedLanguage === "all" && selectedInfo === "all" && selectedTool === "all"}
-      <!-- Category Splash Screen Dashboard -->
-      <div class="px-4 flex flex-col gap-5 animate-fade-in text-left">
-        <!-- Featured App Card -->
-        <div>
-          <h3 class="text-xs font-black text-[#8a7f66] uppercase tracking-wider mb-2">Featured App</h3>
-          <div class="bg-gradient-to-br from-[#fffdf5] to-[#fff6df] rounded-3xl p-5 border-4 border-[#edd8aa] shadow-md relative overflow-hidden flex gap-4 items-center">
-            <div class="w-16 h-16 shrink-0 bg-white rounded-2xl shadow border-2 border-orange-200 flex items-center justify-center relative overflow-hidden">
-              <NookIcon name={featuredApp.appIcon || 'directory'} class="w-full h-full object-contain p-2 z-10" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <span class="text-[8px] font-black text-[#d99c45] bg-[#f0b157]/20 px-1.5 py-0.5 rounded-full uppercase tracking-wider">Editor's Choice</span>
-              <h4 class="font-black text-sm text-[#5c3a21] mt-1.5 mb-0.5 leading-none">{featuredApp.name}</h4>
-              <p class="text-[10px] text-gray-500 font-bold m-0 line-clamp-2 leading-tight mt-1">{featuredApp.description}</p>
-            </div>
-            <button 
-              onclick={() => {
-                if (isFeaturedInstalled) {
-                  nookState.navigate(featuredApp.id || featuredApp.name);
-                } else {
-                  handleInstall(featuredApp.name);
-                }
-              }}
-              class={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border-b-4 cursor-pointer active:border-b-0 active:translate-y-0.5 ${isFeaturedInstalled ? 'bg-[#8cc3b0] border-[#649e8a] text-white' : 'bg-[#6cd476] border-[#4ca454] text-white'}`}
-            >
-              {isFeaturedInstalled ? 'Open' : 'Get'}
-            </button>
-          </div>
+  <div class="flex-1 relative overflow-hidden w-full h-full">
+    
+    <!-- Grid View -->
+    <div class={`absolute inset-0 w-full h-full flex flex-col transition-transform duration-300 ${currentView === 'grid' ? 'translate-x-0' : '-translate-x-full'}`}>
+      
+      <!-- Top Bar: Categories & Search -->
+      <div class="pt-4 pb-2 px-4 relative flex flex-col shrink-0 z-10 gap-3">
+        <!-- Search Bar -->
+        <div class="relative drop-shadow-sm">
+          <Search class="w-5 h-5 text-[#45a38f] absolute left-4 top-3.5" />
+          <input
+            type="text"
+            placeholder="Search tools..."
+            bind:value={searchTerm}
+            class="w-full bg-[#fffdf5] pl-11 pr-4 py-3 rounded-2xl text-[13px] font-black border-4 border-[#bedad4] focus:outline-none focus:border-[#45a38f] text-[#2d5c56] placeholder:text-[#45a38f]/60 transition-colors shadow-inner"
+          />
         </div>
 
-        <!-- Browse Categories Section -->
-        <div>
-          <h3 class="text-xs font-black text-[#8a7f66] uppercase tracking-wider mb-2">Browse Categories</h3>
-          <div class="grid grid-cols-2 gap-3.5 pb-8">
-            {#each allToolTypes as tool}
-              {@const cfg = categoryConfig[tool] || { label: tool, icon: "directory", bg: "bg-smartphone.png", sub: "Community utilities" }}
-              <button 
-                onclick={() => selectCategory('tool', tool, cfg.label)}
-                class="relative border-4 border-[#edd8aa] hover:border-[#f0b157] rounded-3xl p-3 flex gap-3 items-center transition text-left cursor-pointer active:scale-95 shadow-sm overflow-hidden h-[85px] w-full group"
-              >
-                <img src={getBgUrl(cfg.bg)} alt={cfg.label} class="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none opacity-85 group-hover:scale-105 transition-transform" />
-                <div class="absolute inset-0 bg-gradient-to-r from-orange-50/50 to-transparent z-10 pointer-events-none"></div>
-                <!-- Left Column: Icon -->
-                <div class="w-12 h-12 rounded-2xl bg-white/35 border-2 border-white/30 p-1 flex items-center justify-center shrink-0 shadow-md overflow-hidden z-20">
-                  <NookIcon name={cfg.icon} class="w-full h-full object-contain" />
-                </div>
-                <!-- Right Column: Text Info -->
-                <div class="relative z-20 flex flex-col min-w-0 justify-center">
-                  <span class="font-black text-xs text-[#5c3a21] leading-tight uppercase tracking-wider truncate">{cfg.label}</span>
-                  <span class="text-[9px] font-black text-[#8a7f66] leading-tight mt-0.5 line-clamp-2">{cfg.sub}</span>
-                </div>
-              </button>
-            {/each}
-
-            <!-- All Utilities -->
-            <button 
-              onclick={() => selectCategory('all', 'all', 'All Apps')}
-              class="relative border-4 border-[#bde1f4] hover:border-[#5ea8d3] rounded-3xl p-3 flex gap-3 items-center transition text-left cursor-pointer active:scale-95 shadow-sm overflow-hidden h-[85px] w-full group"
-            >
-              <img src={getBgUrl('bg-smartphone.png')} alt="All Apps" class="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none opacity-85 group-hover:scale-105 transition-transform" />
-              <div class="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-transparent z-10 pointer-events-none"></div>
-              <!-- Left Column: Icon -->
-              <div class="w-12 h-12 rounded-2xl bg-white/35 border-2 border-white/30 p-1 flex items-center justify-center shrink-0 shadow-md overflow-hidden z-20">
-                <NookIcon name="directory" class="w-full h-full object-contain" />
-              </div>
-              <!-- Right Column: Text Info -->
-              <div class="relative z-20 flex flex-col min-w-0 justify-center">
-                <span class="font-black text-xs text-[#5c3a21] leading-tight uppercase tracking-wider truncate">All Apps</span>
-                <span class="text-[9px] font-black text-[#8a7f66] leading-tight mt-0.5 line-clamp-2">Complete Utilities Catalog</span>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-    {:else}
-      <!-- Drilled List View -->
-      <div class="px-4 flex flex-col gap-4">
-        {#if activeCategory !== null}
-          <div class="flex justify-between items-center text-xs font-bold text-[#8a7f66] bg-[#fcfcf9]/70 backdrop-blur border border-[#e1d9be] rounded-2xl p-2 px-3.5 shadow-inner">
-            <button 
-              onclick={resetCategory}
-              class="flex items-center gap-1 bg-transparent border-0 p-0 text-[#caa253] hover:text-[#5c3a21] font-black cursor-pointer"
-            >
-              <ArrowLeft class="w-4 h-4 stroke-[3px]" /> Back
-            </button>
-            <span class="capitalize font-black text-[#5c3a21] bg-[#f0b157]/20 px-2 py-0.5 rounded text-[10px] tracking-wider uppercase">
-              {activeCategory === "all" ? "All Apps" : activeCategory}
-            </span>
+        <!-- Filter Panel -->
+        {#if showFilters}
+          <div class="bg-[#fffdf5] rounded-2xl border-4 border-[#bedad4] p-3 shadow-inner flex flex-col gap-2 transition-all animate-fade-in-down origin-top">
+            <h3 class="text-[11px] font-black uppercase text-[#45a38f]">Filter by Language</h3>
+            <div class="flex flex-wrap gap-2">
+              {#each ['all', ...allLanguages] as lang}
+                <button
+                  onclick={() => selectedLanguage = lang}
+                  class={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${selectedLanguage === lang ? 'bg-[#2d5c56] text-[#fffdf5]' : 'bg-[#e5f1f0] text-[#2d5c56] hover:bg-[#bedad4]'}`}
+                >
+                  {languageNames[lang] || lang.toUpperCase()}
+                </button>
+              {/each}
+            </div>
           </div>
         {/if}
 
-        <div class="flex flex-col gap-4">
+        <!-- Categories Pill -->
+        <div class="relative flex flex-col items-center mt-3 mb-1 w-full">
+          <!-- Active Category Label Pill -->
+          <div class="absolute top-0 bg-[#45a38f] text-[#fffdf5] px-4 py-0.5 rounded-full text-[13px] font-black tracking-wide shadow-sm z-20 whitespace-nowrap"
+               style="transform: translateY(-50%);">
+            {selectedCategory === 'all' ? 'All Tools' : selectedCategory.toUpperCase()}
+          </div>
+
+          <!-- Cloud-like white background for icons -->
+          <div class="bg-[#fffdf5] rounded-3xl w-full max-w-lg shadow-sm flex relative border-2 border-[#bedad4] py-3 px-2">
+            <div class="flex-1 flex flex-wrap justify-center gap-3 items-center">
+              {#each ['all', ...allToolTypes] as category}
+                {@const Icon = getCategoryIcon(category)}
+                <button 
+                  onclick={() => {
+                    selectedCategory = category;
+                  }}
+                  class={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-all ${
+                    selectedCategory === category 
+                      ? "bg-[#2d5c56] text-[#fffdf5] shadow-md scale-110" 
+                      : "text-[#45a38f]/60 hover:text-[#45a38f]"
+                  }`}
+                  title={category}
+                >
+                  <Icon class="w-5 h-5" strokeWidth={selectedCategory === category ? 3 : 2} />
+                </button>
+              {/each}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto ac-scrollbar px-4 pb-10">
+        <div class="grid grid-cols-2 gap-3 content-start">
           {#each filteredProjects as p (p.name)}
             {@const isInstalled = nookState.isAppInstalled(p.name)}
-            {@const slug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}
-            <div class="relative group">
-              <!-- Main Card -->
-              <div class="bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-[0_4px_0_#dcd3be] transition-transform group-hover:-translate-y-1 h-full z-10 relative">
-                <div class="flex items-start gap-3.5 text-left">
-                  <!-- Left Col: App Icon -->
-                  <div class="w-16 h-16 shrink-0 bg-[#f0b157]/10 rounded-2xl border-2 border-[#f0b157]/30 flex items-center justify-center shadow-inner overflow-hidden relative">
-                    <NookIcon name={p.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-2 z-10 relative" />
-                  </div>
-                  
-                  <!-- Right Col: Content -->
-                  <div class="flex-1 min-w-0 pt-0.5">
-                    <!-- Float Right Button -->
-                    <div class="float-right ml-3 mb-1">
-                      {#if isInstalled}
-                        <button
-                          onclick={() => handleUninstall(p.name)}
-                          class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black transition-all bg-[#e1d9be] text-[#8a7f66] border-b-4 border-[#dcd3be] active:border-b-0 active:translate-y-1 cursor-pointer"
-                        >
-                          <CheckCircle class="w-4 h-4" /> Inst
-                        </button>
-                      {:else}
-                        <button
-                          onclick={() => handleInstall(p.name)}
-                          class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black transition-all bg-[#6cd476] text-white border-b-4 border-[#4ca454] hover:bg-[#5bc265] active:border-b-0 active:translate-y-1 cursor-pointer shadow-sm"
-                        >
-                          <Download class="w-4 h-4" /> Get
-                        </button>
-                      {/if}
-                    </div>
-
-                    <h2 class="font-black text-[13px] text-[#5c3a21] leading-tight mb-1">{p.name}</h2>
-                    <p class="text-[10px] font-bold text-[#8a7f66] leading-snug line-clamp-2">
-                      {p.description}
-                    </p>
-                    
-                    {#if cloudApps[slug]}
-                      <div class="mt-2 text-[10px] font-bold text-[#5c3a21] flex items-center gap-2">
-                        <span class="bg-[#f0b157]/20 px-1.5 py-0.5 rounded text-[#d99c45]">⬇ {cloudApps[slug].installs}</span>
-                        <span class="bg-[#f0b157]/20 px-1.5 py-0.5 rounded text-[#d99c45]">★ {cloudApps[slug].average_rating} ({cloudApps[slug].rating_count})</span>
-                      </div>
-                      {#if isInstalled && proUser}
-                        <div class="mt-2 flex flex-col bg-[#fdfcf0] p-2 rounded-xl border-2 border-[#e1d9be]">
-                          <span class="text-[9px] font-black text-[#8a7f66] uppercase tracking-wider mb-1">{cloudApps[slug].user_rating ? 'Your Rating & Review:' : 'Rate App:'}</span>
-                          
-                          <div class="flex items-center justify-between">
-                            <Rating 
-                              bind:rating={cloudApps[slug].user_rating}
-                              size={16}
-                              max={5}
-                            />
-                            <button 
-                              onclick={() => handleRate(p.name, cloudApps[slug].user_rating)}
-                              class="text-[9px] bg-[#f0b157] text-white font-black py-1 px-2 rounded-lg hover:bg-[#d99c45] transition-colors shadow-sm disabled:opacity-50"
-                              disabled={!cloudApps[slug].user_rating}
-                            >
-                              {cloudApps[slug].user_rating ? 'Update' : 'Submit'}
-                            </button>
-                          </div>
-                          
-                          <input 
-                            type="text" 
-                            bind:value={ratingComments[slug]} 
-                            placeholder="Add an optional review..." 
-                            class="text-[10px] p-1.5 rounded-lg border border-[#e1d9be] bg-white focus:outline-none focus:border-[#f0b157] font-bold text-[#5c3a21] mt-2 w-full"
-                          />
-                        </div>
-                      {/if}
-                    {:else}
-                      <div class="mt-2 text-[10px] font-bold text-[#8a7f66] italic">No cloud stats yet</div>
-                    {/if}
-                  </div>
+            <button
+              onclick={() => {
+                selectedApp = p;
+                currentView = "detail";
+              }}
+              class="h-44 rounded-xl flex flex-col items-center p-3 pb-8 transition-all relative overflow-hidden group bg-[#d4e8e6] border-2 border-[#bedad4] shadow-sm hover:scale-105"
+            >
+              <!-- Faux Pattern Background -->
+              <div class="absolute inset-0 opacity-[0.05] pointer-events-none" style="background-image: radial-gradient(#2d5c56 1px, transparent 1px); background-size: 10px 10px;"></div>
+              
+              <!-- Checkmark if installed -->
+              {#if isInstalled}
+                <div class="absolute top-2 right-2 opacity-70 z-10">
+                  <CheckCircle class="w-4 h-4 text-[#2a8b75]" strokeWidth={4} />
                 </div>
+              {/if}
+
+              <!-- Item Icon -->
+              <div class="w-12 h-12 shrink-0 bg-white/50 rounded-2xl border-2 border-white/60 flex items-center justify-center shadow-inner overflow-hidden z-10 mb-2">
+                <NookIcon name={p.appIcon || 'directory'} class="w-8 h-8 object-contain drop-shadow-sm group-hover:scale-110 transition-transform" />
               </div>
 
-              <!-- Hover Tooltip (for tags and links) -->
-              <div class="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[260px] bg-[#fdfcf0] border-4 border-[#dcd3be] rounded-2xl p-3 shadow-xl z-40 text-left opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 flex flex-col gap-2">
-                <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#fdfcf0] border-t-4 border-l-4 border-[#dcd3be] rotate-45"></div>
-                
-                <div class="flex flex-wrap gap-1.5">
-                  {#each p.languages as l}
-                    <span class="text-[9px] font-black bg-[#f0b157] text-[#5c3a21] px-2 py-0.5 rounded-md border-b-2 border-[#d99c45] uppercase">{l}</span>
-                  {/each}
-                  {#each p.information as info}
-                    <span class="text-[9px] font-black bg-[#8cc3b0] text-[#1a4335] px-2 py-0.5 rounded-md border-b-2 border-[#649e8a]">{info}</span>
-                  {/each}
-                  {#each p.tools as tool}
-                    <span class="text-[9px] font-black bg-[#e483b3] text-[#5e2b43] px-2 py-0.5 rounded-md border-b-2 border-[#c55d91]">{tool}</span>
-                  {/each}
-                </div>
+              <!-- Item Name -->
+              <h3 class="text-[#2d5c56] text-[12px] font-black leading-tight truncate w-full text-center z-10">
+                {p.name}
+              </h3>
 
-                <div class="flex items-center gap-2 pt-1.5 mt-1 border-t-2 border-dashed border-[#e1d9be]">
-                  {#if p.site}
-                    <a href={p.site} target="_blank" rel="noreferrer" class="w-8 h-8 bg-[#fdf5e2] text-[#8a7f66] rounded-full flex items-center justify-center border-2 border-[#e1d9be] hover:bg-[#f0b157] hover:text-white hover:border-[#d99c45] transition-colors"><Globe class="w-4 h-4" /></a>
-                  {/if}
-                  {#if p.ios || p.android}
-                    <div class="w-8 h-8 bg-[#fdf5e2] text-[#8a7f66] rounded-full flex items-center justify-center border-2 border-[#e1d9be] hover:bg-[#8cc3b0] hover:text-white hover:border-[#649e8a] transition-colors cursor-help"><Smartphone class="w-4 h-4" /></div>
-                  {/if}
-                  {#if p.git}
-                    <a href={p.git} target="_blank" rel="noreferrer" class="w-8 h-8 bg-[#fdf5e2] text-[#8a7f66] rounded-full flex items-center justify-center border-2 border-[#e1d9be] hover:bg-slate-700 hover:text-white hover:border-slate-800 transition-colors"><Code class="w-4 h-4" /></a>
-                  {/if}
-                </div>
+              <!-- Item Description -->
+              <p class="text-[#45a38f] text-[10px] font-bold leading-tight text-center line-clamp-2 mt-1 z-10 w-full px-1">
+                {p.description}
+              </p>
+
+              <!-- Craftable Banner -->
+              <div class="absolute bottom-0 left-0 w-full bg-[#45a38f] text-[#fffdf5] text-[10px] font-black py-1.5 flex items-center justify-center gap-1 shadow-inner z-10 border-t-2 border-[#368875]">
+                {#if isInstalled}
+                  Installed
+                {:else}
+                  <CloudDownload class="w-3.5 h-3.5" strokeWidth={3} /> Cloud
+                {/if}
               </div>
-            </div>
+            </button>
           {/each}
-        </div>
 
-        {#if filteredProjects.length === 0}
-          <div class="text-center py-16 text-[#caa253] flex flex-col items-center">
-            <div class="w-16 h-16 bg-[#f0b157]/20 rounded-full flex items-center justify-center mb-3">
-              <Store class="w-8 h-8 text-[#f0b157]" />
+          {#if filteredProjects.length === 0}
+            <div class="col-span-full text-center py-10 opacity-50 font-bold">
+              No tools found.
             </div>
-            <span class="font-black text-sm">No apps found...</span>
-            <span class="text-xs font-bold mt-1 opacity-80">Try different search terms!</span>
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
-    {/if}
+    </div>
+
+    <!-- Detail View -->
+    <div class={`absolute inset-0 w-full h-full flex flex-col bg-[#e5f1f0] transition-transform duration-300 z-20 ${currentView === 'detail' ? 'translate-x-0' : 'translate-x-full'}`}>
+      {#if selectedApp}
+        {@const isInstalled = nookState.isAppInstalled(selectedApp.name)}
+        {@const slug = selectedApp.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}
+        {@const stats = cloudApps[slug]}
+
+        <div class="flex flex-col h-full overflow-hidden p-4">
+          
+          <!-- Header (Back & Title) -->
+          <div class="flex items-center gap-2 mb-4 shrink-0">
+            <button 
+              onclick={() => currentView = "grid"} 
+              class="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center shadow-sm text-[#2d5c56] hover:bg-white active:scale-95 transition-all"
+            >
+              <div class="font-black text-xl leading-none -mt-1 -ml-1">‹</div>
+            </button>
+            <div class="flex items-center gap-2">
+              <Users class="w-5 h-5 text-[#45a38f]" strokeWidth={3} />
+              <h2 class="text-[18px] font-bold text-[#2d5c56] capitalize leading-tight tracking-wide truncate">
+                {selectedApp.name}
+              </h2>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-y-auto ac-scrollbar flex flex-col gap-5 pb-28">
+            <!-- Preview Square -->
+            <div class="w-full aspect-square bg-[#bedad4] rounded-3xl p-6 shadow-inner relative flex flex-col items-center justify-center">
+              <div class="w-24 h-24 bg-white/70 rounded-3xl border-4 border-white flex items-center justify-center shadow-md overflow-hidden mb-4">
+                <NookIcon name={selectedApp.appIcon || 'directory'} class="w-16 h-16 object-contain drop-shadow-md animate-fade-in" />
+              </div>
+              <p class="text-[12px] font-bold text-[#2d5c56] leading-snug text-center px-2">
+                {selectedApp.description}
+              </p>
+            </div>
+
+            <!-- Stats & Info -->
+            <div class="flex flex-col px-2 gap-3">
+              <div class="flex flex-wrap gap-1.5">
+                {#each selectedApp.languages as l}
+                  <span class="text-[9px] font-black bg-[#45a38f] text-[#fffdf5] px-2 py-0.5 rounded-md uppercase shadow-sm">{l}</span>
+                {/each}
+                {#each selectedApp.information as info}
+                  <span class="text-[9px] font-black bg-[#bedad4] text-[#2d5c56] px-2 py-0.5 rounded-md uppercase border border-[#45a38f]/30">{info}</span>
+                {/each}
+              </div>
+
+              {#if stats}
+                <div class="flex items-center gap-4 text-[11px] font-black text-[#2d5c56]/80 mt-2">
+                  <div class="flex items-center gap-1">
+                    <Download class="w-3.5 h-3.5 text-[#45a38f]" /> {stats.installs} Installs
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span class="text-[#f59e33] text-lg leading-none">★</span> {stats.average_rating} ({stats.rating_count})
+                  </div>
+                </div>
+              {:else}
+                <div class="text-[10px] font-bold text-[#45a38f] italic">No cloud stats available yet.</div>
+              {/if}
+
+              <!-- Rating Section -->
+              {#if isInstalled && proUser && stats}
+                <div class="mt-2 bg-[#d4e8e6] p-3 rounded-2xl border-2 border-[#bedad4]">
+                  <span class="text-[10px] font-black text-[#2d5c56] uppercase tracking-wider block mb-2">Your Review</span>
+                  <div class="flex justify-between items-center">
+                    <Rating bind:rating={stats.user_rating} size={20} max={5} />
+                    <button 
+                      onclick={() => handleRate(selectedApp.name, stats.user_rating)}
+                      class="bg-[#45a38f] text-[#fffdf5] text-[10px] font-black px-3 py-1.5 rounded-xl active:scale-95 transition-transform"
+                    >
+                      {stats.user_rating ? 'Update' : 'Submit'}
+                    </button>
+                  </div>
+                </div>
+              {/if}
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="absolute bottom-6 left-6 right-6 flex flex-col gap-2 z-30">
+            {#if isInstalled}
+              <button
+                onclick={() => { currentView = 'grid'; nookState.navigate(selectedApp.id || selectedApp.name); }}
+                class="w-full bg-[#1bc6b6] text-white py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#15a497] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
+              >
+                <Play class="w-4 h-4 mr-1.5 fill-current" /> Open Tool
+              </button>
+              <button
+                onclick={() => { handleUninstall(selectedApp.name); currentView = "grid"; }}
+                class="w-full bg-[#fdafb2] text-[#8c2a2e] py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#f09a9d] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
+              >
+                <Trash2 class="w-4 h-4 mr-1.5" /> Uninstall
+              </button>
+            {:else}
+              <button
+                onclick={() => { handleInstall(selectedApp.name); }}
+                class="w-full bg-[#45a38f] text-white py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#368875] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
+              >
+                <CloudDownload class="w-5 h-5 mr-1.5" /> Download
+              </button>
+            {/if}
+          </div>
+        </div>
+      {/if}
+    </div>
   </div>
 </div>
