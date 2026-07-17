@@ -3,6 +3,7 @@
   import { projectsData } from '@/lib/nookData';
   import { Search, Globe, Download, CheckCircle, Store, Smartphone, Code, ArrowLeft } from '@lucide/svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
+  import Rating from '../atoms/Rating.svelte';
   import { fetchApps, installAppTracker, rateApp, isProUser } from '@/lib/api';
   import { onMount } from 'svelte';
 
@@ -103,10 +104,13 @@
     cloudApps = map;
   }
 
+  let ratingComments = $state<Record<string, string>>({});
+
   async function handleRate(projectName: string, rating: number) {
     if (!proUser) return;
     const slug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    await rateApp(slug, rating);
+    const comment = ratingComments[slug] || '';
+    await rateApp(slug, rating, comment);
     // Refresh stats
     const apps = await fetchApps();
     const map: Record<string, any> = {};
@@ -303,10 +307,30 @@
                         <span class="bg-[#f0b157]/20 px-1.5 py-0.5 rounded text-[#d99c45]">★ {cloudApps[slug].average_rating} ({cloudApps[slug].rating_count})</span>
                       </div>
                       {#if isInstalled && proUser}
-                        <div class="mt-1 flex gap-1">
-                          {#each [1, 2, 3, 4, 5] as star}
-                            <button onclick={() => handleRate(p.name, star)} class="text-xs hover:scale-125 transition-transform" class:text-[#f0b157]={star <= cloudApps[slug].average_rating} class:text-[#e1d9be]={star > cloudApps[slug].average_rating}>★</button>
-                          {/each}
+                        <div class="mt-2 flex flex-col bg-[#fdfcf0] p-2 rounded-xl border-2 border-[#e1d9be]">
+                          <span class="text-[9px] font-black text-[#8a7f66] uppercase tracking-wider mb-1">{cloudApps[slug].user_rating ? 'Your Rating & Review:' : 'Rate App:'}</span>
+                          
+                          <div class="flex items-center justify-between">
+                            <Rating 
+                              bind:rating={cloudApps[slug].user_rating}
+                              size={16}
+                              max={5}
+                            />
+                            <button 
+                              onclick={() => handleRate(p.name, cloudApps[slug].user_rating)}
+                              class="text-[9px] bg-[#f0b157] text-white font-black py-1 px-2 rounded-lg hover:bg-[#d99c45] transition-colors shadow-sm disabled:opacity-50"
+                              disabled={!cloudApps[slug].user_rating}
+                            >
+                              {cloudApps[slug].user_rating ? 'Update' : 'Submit'}
+                            </button>
+                          </div>
+                          
+                          <input 
+                            type="text" 
+                            bind:value={ratingComments[slug]} 
+                            placeholder="Add an optional review..." 
+                            class="text-[10px] p-1.5 rounded-lg border border-[#e1d9be] bg-white focus:outline-none focus:border-[#f0b157] font-bold text-[#5c3a21] mt-2 w-full"
+                          />
                         </div>
                       {/if}
                     {:else}

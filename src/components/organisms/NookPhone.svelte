@@ -357,7 +357,7 @@
       {/if}
       {#if nookState.currentApp}
         <!-- ACTIVE APPLICATION WINDOW -->
-        <div class="flex-1 h-full flex flex-col">
+        <div class="flex-1 min-h-0 flex flex-col">
           {#if nookState.currentApp === "directory"} <DirectoryApp /> {/if}
           {#if nookState.currentApp === "passport"} <PassportApp /> {/if}
           {#if nookState.currentApp === "camera"} <CameraApp /> {/if}

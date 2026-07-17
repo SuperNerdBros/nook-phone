@@ -67,13 +67,13 @@ export const fetchApps = async () => {
   }
 };
 
-export const rateApp = async (appSlug: string, rating: number) => {
+export const rateApp = async (appSlug: string, rating: number, comment: string = '') => {
   if (!isProUser()) return false;
   try {
     const res = await fetch(getApiUrl('rate'), {
       method: 'POST',
       headers: getApiHeaders(),
-      body: JSON.stringify({ app_slug: appSlug, rating })
+      body: JSON.stringify({ app_slug: appSlug, rating, comment })
     });
     return res.ok;
   } catch (e) {

@@ -31,11 +31,52 @@
   import wallet_png from '../../../assets/img/Wallet.png';
   import weather_png from '../../../assets/img/Weather.png';
 
+  import dodo_air_png from '../../../assets/img/DodoAir.png';
+  import turnips_png from '../../../assets/img/Turnips.png';
+  import music_png from '../../../assets/img/Music.png';
+  import checklist_png from '../../../assets/img/Checklist.png';
+  import wiki_png from '../../../assets/img/Wiki.png';
+  import marketplace_png from '../../../assets/img/Marketplace.png';
+  import simulator_png from '../../../assets/img/Simulator.png';
+  import fake_art_png from '../../../assets/img/FakeArt.png';
+  import queueing_png from '../../../assets/img/Queueing.png';
+  import town_tunes_png from '../../../assets/img/TownTunes.png';
+  import island_rating_png from '../../../assets/img/IslandRating.png';
+  import weather_app_png from '../../../assets/img/WeatherApp.png';
+  import browser_png from '../../../assets/img/Browser.png';
+  import stocks_png from '../../../assets/img/Stocks.png';
+  import gyroid_wiki_png from '../../../assets/img/GyroidWiki.png';
+  import cardboard_box_png from '../../../assets/img/CardboardBox.png';
+  import bug_net_png from '../../../assets/img/BugNet.png';
+  import fishing_rod_png from '../../../assets/img/FishingRod.png';
+  import shovel_png from '../../../assets/img/Shovel.png';
+  import coffee_roost_png from '../../../assets/img/CoffeeRoost.png';
+
   const { name, class: className = "" } = $props<{ name: string; class?: string }>();
 
   const icons: Record<string, string> = {
     passport, camera, miles, critter, diy, designs, map, chat, rescue, shopping, designer, directory,
     best_friend,
+    dodo_air: dodo_air_png,
+    turnips: turnips_png,
+    music: music_png,
+    checklist: checklist_png,
+    wiki: wiki_png,
+    marketplace: marketplace_png,
+    simulator: simulator_png,
+    fake_art: fake_art_png,
+    queueing: queueing_png,
+    town_tunes: town_tunes_png,
+    island_rating: island_rating_png,
+    weather_app: weather_app_png,
+    browser: browser_png,
+    stocks: stocks_png,
+    gyroid_wiki: gyroid_wiki_png,
+    cardboard_box: cardboard_box_png,
+    bug_net: bug_net_png,
+    fishing_rod: fishing_rod_png,
+    shovel: shovel_png,
+    coffee_roost: coffee_roost_png,
     books: books_png,
     calculator: calculator_png,
     calendar: calendar_png,
