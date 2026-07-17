@@ -490,7 +490,7 @@
 
               <!-- Homescreen Desktop -->
               <div class="absolute inset-0 overflow-y-auto ac-scrollbar">
-                <div class="grid grid-cols-3 gap-y-6 gap-x-4 p-4 justify-items-center content-start pb-6">
+                <div class={`grid gap-y-6 gap-x-4 p-4 justify-items-center content-start pb-6 ${nookState.settings.gridSize === 4 ? 'grid-cols-4' : nookState.settings.gridSize === 5 ? 'grid-cols-5' : 'grid-cols-3'}`}>
                   {#each desktopApps as app (app.id || app.name)}
                     <div class="relative group w-[80px]">
                       <button

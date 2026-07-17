@@ -85,6 +85,7 @@ export interface NookOSState {
     use24HourTime: boolean;
     showBatteryPercentage: boolean;
     reduceMotion: boolean;
+    gridSize: number;
   };
 }
 
@@ -164,7 +165,8 @@ const INITIAL_STATE: NookOSState = {
     use24HourTime: false,
     showBatteryPercentage: true,
 
-    reduceMotion: false
+    reduceMotion: false,
+    gridSize: 3
   }
 };
 

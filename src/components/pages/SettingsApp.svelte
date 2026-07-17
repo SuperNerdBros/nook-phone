@@ -167,6 +167,28 @@
                   <div class={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${nookState.settings.reduceMotion ? 'translate-x-5' : 'translate-x-0'}`}></div>
                 </button>
               </div>
+
+              <div class="flex items-center justify-between py-3">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-2xl bg-orange-50 border-2 border-orange-200 flex items-center justify-center text-orange-500 shadow-inner">
+                    <Smartphone class="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div class="font-black text-[#5c5446] text-sm">App Grid Size</div>
+                    <div class="text-[10px] font-bold text-[#8a816f]">Columns on homescreen ({nookState.settings.gridSize || 3})</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 bg-[#f4f2e8] p-1 rounded-full border-2 border-[#e1d9be]">
+                  {#each [3, 4, 5] as size}
+                    <button
+                      onclick={() => nookState.updateSettings({ gridSize: size })}
+                      class={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-colors cursor-pointer border-0 shadow-sm ${nookState.settings.gridSize === size ? 'bg-[#6cd476] text-white' : 'bg-transparent text-[#8a816f] hover:bg-white'}`}
+                    >
+                      {size}
+                    </button>
+                  {/each}
+                </div>
+              </div>
             </div>
           </div>
         {/if}

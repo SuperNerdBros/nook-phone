@@ -7,6 +7,8 @@
   } from '@lucide/svelte';
   import { fetchThreads, createThread, fetchComments, createComment, isProUser } from '@/lib/api';
   import NookIcon from '../atoms/NookIcon.svelte';
+  import NewThreadForm from './NewThreadForm.svelte';
+  import CreateSublogForm from './CreateSublogForm.svelte';
 
   interface Thread {
     id: number;
@@ -99,8 +101,8 @@
 
   // Filter threads by active sublog selection
   let filteredThreads = $derived(threads.filter(t => {
-    if (selectedSubnookFilter === "n/All") return true;
-    return t.subnook.toLowerCase() === selectedSubnookFilter.toLowerCase();
+    if (selectedSublogFilter === "n/All") return true;
+    return t.subnook.toLowerCase() === selectedSublogFilter.toLowerCase();
   }));
 
   async function loadThreads() {
@@ -272,17 +274,17 @@
   }
 
   onMount(() => {
-    newSubnook = islandSubnook;
+    newSubnook = islandSublog;
     loadThreads();
   });
 
-  const getSubnookColor = (sub: string) => {
+  const getSublogColor = (sub: string) => {
     if (sub.startsWith("n/Isabelle")) return "bg-green-100 text-green-800 border-green-200";
     if (sub.startsWith("n/TomNook")) return "bg-amber-100 text-amber-800 border-amber-200";
     if (sub.startsWith("n/Lottie")) return "bg-pink-100 text-pink-800 border-pink-200";
     if (sub.startsWith("n/KKSlider")) return "bg-blue-100 text-blue-800 border-blue-200";
     if (sub.startsWith("n/Blathers")) return "bg-emerald-100 text-emerald-800 border-emerald-200";
-    // Custom island / user subnooks
+    // Custom island / user sublogs
     return "bg-indigo-100 text-indigo-800 border-indigo-200";
   };
 
@@ -324,7 +326,7 @@
           <Plus class="w-3.5 h-3.5 stroke-[2.5px]" /> Sublog
         </button>
         <button
-          onclick={() => { view = "new"; newSubnook = islandSubnook; }}
+          onclick={() => { view = "new"; newSubnook = islandSublog; }}
           class="text-[#344d18] bg-white/40 p-2 rounded-full hover:bg-white/60 transition cursor-pointer flex items-center justify-center"
           title="New thread"
         >
@@ -392,7 +394,7 @@
             <!-- Content -->
             <div class="flex flex-col gap-1">
               <div class="flex items-center gap-1.5">
-                <span class={`text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${getSubnookColor(thread.subnook)}`}>
+                <span class={`text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${getSublogColor(thread.subnook)}`}>
                   {thread.subnook}
                 </span>
                 <h3 class="text-xs font-black text-[#5c3a21] line-clamp-1">{thread.title}</h3>
@@ -436,7 +438,7 @@
 
           <div class="flex flex-col gap-1.5">
             <div class="flex items-center gap-1.5">
-              <span class={`text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${getSubnookColor(activeThread.subnook)}`}>
+              <span class={`text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${getSublogColor(activeThread.subnook)}`}>
                 {activeThread.subnook}
               </span>
               <h2 class="text-sm font-black text-[#5c3a21]">{activeThread.title}</h2>
@@ -486,106 +488,26 @@
       </div>
 
     {:else if view === "new"}
-      <!-- NEW THREAD FORM -->
-      <div class="bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-sm text-left flex flex-col gap-4">
-        <h2 class="text-sm font-black text-[#5c3a21] border-b-2 border-dashed border-[#e1d9be] pb-2 uppercase tracking-wide">
-          New Bulletin Post
-        </h2>
-
-        <!-- Title -->
-        <div class="flex flex-col gap-1">
-          <label for="new-thread-title" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Post Title</label>
-          <input
-            id="new-thread-title"
-            type="text"
-            placeholder="e.g. Turnips buying for 450 bells!"
-            bind:value={newTitle}
-            class="bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-semibold"
-          />
-        </div>
-
-        <!-- Sublog Selection -->
-        <div class="flex flex-col gap-1">
-          <label for="new-thread-subnook" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Post to Sublog</label>
-          <select
-            id="new-thread-subnook"
-            bind:value={newSubnook}
-            class="bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-semibold cursor-pointer appearance-none"
-          >
-            {#each allSublogs.filter(s => s !== "n/All") as sub}
-              <option value={sub}>{sub}</option>
-            {/each}
-          </select>
-        </div>
-
-        <!-- Content -->
-        <div class="flex flex-col gap-1">
-          <label for="new-thread-content" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Message Description</label>
-          <textarea
-            id="new-thread-content"
-            rows="5"
-            placeholder="Write your logs, trading details or Dodo Code here..."
-            bind:value={newContent}
-            class="bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-medium resize-none"
-          ></textarea>
-        </div>
-
-        <!-- Buttons -->
-        <div class="flex justify-between items-center gap-3 mt-2">
-          <button
-            onclick={() => view = "list"}
-            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 border-2 border-gray-200 text-gray-600 rounded-2xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            onclick={submitThread}
-            disabled={!newTitle.trim() || !newContent.trim()}
-            class="px-6 py-2 bg-[#afd485] hover:bg-opacity-95 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Post Bulletin
-          </button>
-        </div>
-      </div>
+      <NewThreadForm
+        allSublogs={allSublogs}
+        defaultSublog={islandSublog}
+        onCancel={() => view = "list"}
+        onSubmit={(title, content, sublog) => {
+          newTitle = title;
+          newContent = content;
+          newSubnook = sublog;
+          submitThread();
+        }}
+      />
 
     {:else if view === "create_sublog"}
-      <!-- CREATE NEW SUBLOG FORM -->
-      <div class="bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-sm text-left flex flex-col gap-4">
-        <h2 class="text-sm font-black text-[#5c3a21] border-b-2 border-dashed border-[#e1d9be] pb-2 uppercase tracking-wide">
-          Create Custom Sublog
-        </h2>
-
-        <div class="flex flex-col gap-1">
-          <label for="new-subnook-name" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sublog Name</label>
-          <div class="flex gap-2 items-center">
-            <span class="text-sm font-black text-[#8a7f66]">n/</span>
-            <input
-              id="new-subnook-name"
-              type="text"
-              placeholder="e.g. TurnipFarmers"
-              bind:value={newSublogName}
-              class="flex-1 bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-semibold"
-            />
-          </div>
-          <p class="text-[9px] text-gray-400 font-bold mt-1">Spaces will be stripped automatically to form a cute sublog tag.</p>
-        </div>
-
-        <div class="flex justify-between items-center gap-3 mt-2">
-          <button
-            onclick={() => view = "list"}
-            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 border-2 border-gray-200 text-gray-600 rounded-2xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            onclick={handleCreateSublog}
-            disabled={!newSublogName.trim()}
-            class="px-6 py-2 bg-[#afd485] hover:bg-opacity-95 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Create
-          </button>
-        </div>
-      </div>
+      <CreateSublogForm
+        onCancel={() => view = "list"}
+        onCreate={(name) => {
+          newSublogName = name;
+          handleCreateSublog();
+        }}
+      />
     {/if}
   </div>
 
