@@ -271,6 +271,22 @@ export const fetchNookipediaItems = async () => {
   }
 };
 
+export const searchNookipediaItems = async (query: string, category?: string) => {
+  try {
+    const root = window.wpApiSettings?.root || '/wp-json/';
+    let url = `${root}xophz/v1/nookipedia/items?search=${encodeURIComponent(query)}`;
+    if (category) {
+      url += `&category=${encodeURIComponent(category)}`;
+    }
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to search Nookipedia items', e);
+    return [];
+  }
+};
+
 export const fetchPatreonAuthUrl = async () => {
   try {
     const root = window.wpApiSettings?.root || '/wp-json/';
