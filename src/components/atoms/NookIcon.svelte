@@ -55,7 +55,24 @@
     weather: weather_png
   };
 
-  const src = $derived(icons[name] || icons['diy']);
+  function resolveAssetUrl(assetPath: string) {
+    if (!assetPath) return assetPath;
+    if (assetPath.startsWith('http')) return assetPath;
+    
+    // In development, the assets are served from the Vite dev server (port 5175)
+    if (import.meta.env.DEV) {
+      return `${window.location.protocol}//${window.location.hostname}:5175${assetPath}`;
+    }
+    
+    // In production, we ensure it loads from the plugin directory if it's an absolute path
+    if (assetPath.startsWith('/assets/')) {
+      return (window as any).wpApiSettings?.pluginUrl + 'public/dist' + assetPath;
+    }
+    
+    return assetPath;
+  }
+
+  const src = $derived(resolveAssetUrl(icons[name] || icons['diy']));
 </script>
 
 <img {src} alt="{name} icon" class="w-full h-full object-contain drop-shadow-sm {className}" draggable="false" />

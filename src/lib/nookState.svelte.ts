@@ -39,6 +39,15 @@ export interface ChatMessage {
   avatar?: string;
 }
 
+export interface NookNotification {
+  id: string;
+  title: string;
+  message: string;
+  sender: string;
+  timestamp: string;
+  isRead: boolean;
+}
+
 export interface NookOSState {
   currentApp: string | null;
   isPhoneLocked: boolean;
@@ -65,6 +74,8 @@ export interface NookOSState {
   };
   milesChallenges: MilesChallenge[];
   chatLog: ChatMessage[];
+  notifications: NookNotification[];
+  installingApp: string | null;
   customDesigns: CustomDesign[];
   activeWallpaperId: string;
   pinnedApps: string[];
@@ -111,7 +122,7 @@ const INITIAL_STATE: NookOSState = {
   passport: {
     name: "Villager",
     islandName: "Nook Island",
-    friendCode: "SW-3245-8791-0023",
+    friendCode: "",
     photoUrl: "https://picsum.photos/seed/animalcrossing/300/300",
     titlePrefix: "Horizon",
     titleSuffix: "Dweller",
@@ -138,13 +149,15 @@ const INITIAL_STATE: NookOSState = {
   chatLog: [
     { id: "c1", sender: "Tom Nook", content: "Welcome to NookOS, yes, yes! Use your phone to manage your island and check the directories!", timestamp: "10:00 AM", isNpc: true, avatar: "🍃" }
   ],
+  notifications: [],
+  installingApp: null,
   customDesigns: [
     { id: "d1", name: "Nook Leaf", grid: DEFAULT_GRID_LEAF, creator: "Timmy" },
     { id: "d2", name: "Island Tee", grid: DEFAULT_GRID_SHIRT, creator: "Tommy" },
     { id: "d3", name: "Custom Tile", grid: Array(16).fill(null).map(() => Array(16).fill("#ffffff")), creator: "Villager" }
   ],
   activeWallpaperId: "default",
-  pinnedApps: ["passport", "settings", "chat", "shopping"],
+  pinnedApps: ["directory", "passport", "miles", "chat", "shopping"],
   installedApps: [],
   hasCompletedOnboarding: false,
   settings: {
@@ -197,6 +210,12 @@ class NookStateManager {
   get customDesigns() { return this.state.customDesigns; }
   set customDesigns(val) { this.state.customDesigns = val; }
 
+  get notifications() { return this.state.notifications || []; }
+  set notifications(val) { this.state.notifications = val; }
+
+  get installingApp() { return this.state.installingApp; }
+  set installingApp(val) { this.state.installingApp = val; }
+
   get activeWallpaperId() { return this.state.activeWallpaperId; }
   set activeWallpaperId(val) { this.state.activeWallpaperId = val; }
 
@@ -224,6 +243,25 @@ class NookStateManager {
         console.error("Failed to load state from localStorage:", e);
       }
     }
+    
+    // Ensure notifications is initialized
+    if (!this.state.notifications) {
+      this.state.notifications = [];
+    }
+    
+    // Seed initial notification if empty
+    if (this.state.notifications.length === 0) {
+      this.state.notifications = [
+        {
+          id: "n_welcome",
+          title: "Welcome to Island Life!",
+          message: "Make sure to shake trees with a net in hand to catch any pesky wasps!",
+          sender: "Tom Nook",
+          timestamp: "10:00 AM",
+          isRead: false
+        }
+      ];
+    }
   }
 
   save() {
@@ -240,6 +278,14 @@ class NookStateManager {
   navigate(appId: string | null) {
     this.state.currentApp = appId;
     this.save();
+
+    // Sync browser hash for navigation history tracking
+    if (typeof window !== 'undefined') {
+      const targetHash = appId ? `#/app/${encodeURIComponent(appId)}` : '#/';
+      if (window.location.hash !== targetHash) {
+        window.location.hash = targetHash;
+      }
+    }
   }
 
   setPhoneLocked(locked: boolean) {
@@ -476,8 +522,23 @@ class NookStateManager {
   installApp(appName: string) {
     if (!this.state.installedApps) this.state.installedApps = [];
     if (!this.state.installedApps.includes(appName)) {
-      this.state.installedApps.push(appName);
-      this.save();
+      this.state.installingApp = appName;
+      
+      setTimeout(() => {
+        if (!this.state.installedApps) this.state.installedApps = [];
+        this.state.installedApps.push(appName);
+        if (!this.state.pinnedApps.includes(appName)) {
+          this.state.pinnedApps.push(appName);
+        }
+        this.state.installingApp = null;
+        this.save();
+        
+        this.addNotification(
+          "New App Installed!", 
+          `Yes, yes! ${appName} has been successfully downloaded and placed on your homescreen!`, 
+          "Tom Nook"
+        );
+      }, 2500);
     }
   }
 
@@ -503,9 +564,10 @@ class NookStateManager {
     this.save();
   }
 
-  completeOnboarding(name: string, islandName: string, hemisphere: "north" | "south") {
+  completeOnboarding(name: string, islandName: string, hemisphere: "north" | "south", friendCode: string) {
     this.state.passport.name = name;
     this.state.passport.islandName = islandName;
+    this.state.passport.friendCode = friendCode;
     this.state.critters.filterHemisphere = hemisphere;
     this.state.hasCompletedOnboarding = true;
     this.save();
@@ -518,6 +580,47 @@ class NookStateManager {
       return true;
     }
     return false;
+  }
+
+  addNotification(title: string, message: string, sender: string) {
+    if (!this.state.notifications) {
+      this.state.notifications = [];
+    }
+    const newNotif: NookNotification = {
+      id: "n_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9),
+      title,
+      message,
+      sender,
+      timestamp: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+      isRead: false
+    };
+    this.state.notifications.unshift(newNotif);
+    this.save();
+    
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("nook-notification", { detail: newNotif }));
+    }
+  }
+
+  markAllNotificationsAsRead() {
+    if (this.state.notifications) {
+      this.state.notifications.forEach(n => {
+        n.isRead = true;
+      });
+      this.save();
+    }
+  }
+
+  clearNotifications() {
+    this.state.notifications = [];
+    this.save();
+  }
+
+  dismissNotification(id: string) {
+    if (this.state.notifications) {
+      this.state.notifications = this.state.notifications.filter(n => n.id !== id);
+      this.save();
+    }
   }
 }
 

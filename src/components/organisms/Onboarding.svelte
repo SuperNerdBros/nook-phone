@@ -1,12 +1,30 @@
 <script lang="ts">
   import nookState from '@/lib/nookState.svelte';
   import { fly, fade } from 'svelte/transition';
-  import { User, MapPin, Globe } from '@lucide/svelte';
+  import { User, MapPin, Globe, Hash } from '@lucide/svelte';
+  import AcnhBubble from '../molecules/AcnhBubble.svelte';
 
   let step = $state(0);
   let name = $state("");
   let islandName = $state("");
+  let friendCode = $state("");
   let hemisphere = $state<"north" | "south">("north");
+
+  function formatFriendCode(e: Event) {
+    const input = e.target as HTMLInputElement;
+    let val = input.value.toUpperCase();
+    if (val.startsWith("SW-")) val = val.substring(3);
+    else if (val.startsWith("SW")) val = val.substring(2);
+    
+    val = val.replace(/[^0-9]/g, '');
+    let formatted = "";
+    if (val.length > 0) {
+      formatted = val.substring(0, 4);
+      if (val.length > 4) formatted += "-" + val.substring(4, 8);
+      if (val.length > 8) formatted += "-" + val.substring(8, 12);
+    }
+    friendCode = formatted.length > 0 ? `SW-${formatted}` : "";
+  }
 
   const steps = [
     { text: "Ah, hello! Yes, yes! Welcome to your brand new NookPhone!" },
@@ -14,6 +32,7 @@
     { text: "First things first, what should we call you, hm?", input: 'name' },
     { text: "Splendid! And what is the name of your beautiful island?", input: 'island' },
     { text: "Excellent, excellent. Finally, which hemisphere is your island located in? This helps us calibrate the weather and critter apps!", input: 'hemisphere' },
+    { text: "And one last thing! What is your Nintendo Switch Friend Code? Don't worry, you can always update this later in the Passport app!", input: 'friendcode' },
     { text: "All set! Your NookPhone is now fully registered. I hope you enjoy your island life, yes, yes!" }
   ];
 
@@ -21,9 +40,10 @@
     if (step < steps.length - 1) {
       if (steps[step].input === 'name' && !name.trim()) return;
       if (steps[step].input === 'island' && !islandName.trim()) return;
+      if (steps[step].input === 'friendcode' && friendCode.length < 17) return;
       step++;
     } else {
-      nookState.completeOnboarding(name, islandName + " Island", hemisphere);
+      nookState.completeOnboarding(name, islandName + " Island", hemisphere, friendCode);
     }
   }
 </script>
@@ -35,8 +55,8 @@
   
   <!-- Tom Nook Avatar -->
   <div class="absolute top-16 left-1/2 -translate-x-1/2 z-10 animate-ac-float">
-    <div class="w-32 h-32 bg-[#e0dcc5] rounded-[2.5rem] border-4 border-[#dcd3be] shadow-xl flex items-center justify-center text-[4rem] relative rotate-3">
-      🦝
+    <div class="w-32 h-32 bg-[#e0dcc5] rounded-[2.5rem] border-4 border-[#dcd3be] shadow-xl flex items-center justify-center relative rotate-3">
+      <img src="/wp-content/plugins/super-nerd-bros-dodo-air/public/img/nook-face.svg" alt="Tom Nook" class="w-24 h-24 object-contain drop-shadow-sm" />
       <!-- Decorative Leaf -->
       <div class="absolute -top-4 -right-2 text-3xl rotate-12 drop-shadow-md">🍃</div>
     </div>
@@ -75,26 +95,32 @@
           </div>
         </div>
       {/if}
+
+      {#if steps[step].input === 'friendcode'}
+        <div transition:fly={{ y: 20, duration: 400 }} class="flex flex-col gap-2 mx-auto w-full max-w-[280px]">
+          <label for="fcInput" class="text-[#5c5446] font-black text-xs flex items-center justify-center gap-1.5 uppercase tracking-widest"><Hash class="w-3.5 h-3.5" /> Friend Code</label>
+          <input id="fcInput" type="text" value={friendCode} oninput={formatFriendCode} maxlength="17" class="bg-white border-4 border-[#dcd3be] rounded-2xl px-4 py-3.5 font-black text-[#5c5446] focus:outline-none focus:border-[#22c55e] text-lg text-center shadow-sm placeholder:text-gray-300 placeholder:font-medium" placeholder="SW-XXXX-XXXX-XXXX" />
+        </div>
+      {/if}
     </div>
 
     <!-- Dialog Bubble -->
-    <div class="relative min-h-[140px]">
+    <div class="relative min-h-[140px] mt-4 flex justify-center">
       {#key step}
-        <div in:fly={{ y: 10, duration: 300, delay: 100 }} out:fade={{ duration: 100 }} class="ac-bubble p-5 px-6 shadow-[0_8px_20px_rgba(0,0,0,0.06)] mb-2 absolute inset-0 flex flex-col justify-center">
-          <div class="font-black text-[#22c55e] text-[11px] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-[#22c55e] animate-pulse"></span>
-            Tom Nook
-          </div>
-          <p class="font-bold text-[#5c5446] text-[15px] leading-relaxed m-0">
-            {steps[step].text}
-          </p>
+        <div in:fly={{ y: 10, duration: 300, delay: 100 }} out:fade={{ duration: 100 }} class="absolute inset-0">
+          <AcnhBubble
+            title="Tom Nook"
+            dialogText={steps[step].text}
+            isActive={true}
+            class="mx-auto w-full max-w-4xl"
+          />
         </div>
       {/key}
     </div>
 
     <button 
       onclick={nextStep}
-      disabled={(steps[step].input === 'name' && !name.trim()) || (steps[step].input === 'island' && !islandName.trim())}
+      disabled={(steps[step].input === 'name' && !name.trim()) || (steps[step].input === 'island' && !islandName.trim()) || (steps[step].input === 'friendcode' && friendCode.length < 17)}
       class="bg-[#f0b157] disabled:bg-gray-300 disabled:border-gray-400 disabled:text-gray-500 text-[#5c3a21] font-black py-4 px-6 rounded-full w-full max-w-[220px] mx-auto border-b-4 border-[#d99c45] hover:bg-[#f2bd70] active:border-b-0 active:translate-y-1 transition-all cursor-pointer shadow-md text-lg flex items-center justify-center gap-2"
     >
       {step === steps.length - 1 ? 'Start Life!' : 'Next'}

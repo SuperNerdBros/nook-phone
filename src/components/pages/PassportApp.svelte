@@ -1,6 +1,8 @@
 <script lang="ts">
   import nookState from '@/lib/nookState.svelte';
-  import { Edit2, Save, RefreshCw } from '@lucide/svelte';
+  import { Edit2, Save, RefreshCw, Cloud, CloudOff } from '@lucide/svelte';
+  import { fetchPassports, linkPassport, isProUser } from '@/lib/api';
+  import { onMount } from 'svelte';
 
   const TITLE_PREFIXES = ["Horizon", "Wild", "Friendly", "Active", "Casual", "Island", "Cozy", "Legendary", "Sassy", "Happy"];
   const TITLE_SUFFIXES = ["Dweller", "Resident", "Explorer", "Hustler", "Nookling", "Leader", "Fanatic", "Pioneer", "Artist"];
@@ -15,7 +17,18 @@
   let titleSuffix = $state(nookState.passport.titleSuffix);
   let comment = $state(nookState.passport.comment);
 
-  function handleSave() {
+  let cloudPassports: any[] = $state([]);
+  let isPro = $state(false);
+  let syncing = $state(false);
+
+  onMount(async () => {
+    isPro = isProUser();
+    if (isPro) {
+      cloudPassports = await fetchPassports();
+    }
+  });
+
+  async function handleSave() {
     nookState.updatePassport({
       name,
       islandName,
@@ -24,7 +37,39 @@
       titleSuffix,
       comment
     });
+    
+    if (isPro) {
+      syncing = true;
+      await linkPassport(nookState.passport);
+      cloudPassports = await fetchPassports();
+      syncing = false;
+    }
+
     isEditing = false;
+  }
+
+  function handleSelectPassport(e: Event) {
+    const selectedId = (e.target as HTMLSelectElement).value;
+    if (selectedId === 'new') return;
+    const selected = cloudPassports.find(p => p.id.toString() === selectedId);
+    if (selected && selected.data) {
+      nookState.updatePassport({
+        name: selected.data.name,
+        islandName: selected.data.islandName,
+        friendCode: selected.data.friendCode,
+        titlePrefix: selected.data.titlePrefix,
+        titleSuffix: selected.data.titleSuffix,
+        comment: selected.data.comment,
+        photoUrl: selected.data.photoUrl || nookState.passport.photoUrl
+      });
+      // Update local state bound vars
+      name = nookState.passport.name;
+      islandName = nookState.passport.islandName;
+      friendCode = nookState.passport.friendCode;
+      titlePrefix = nookState.passport.titlePrefix;
+      titleSuffix = nookState.passport.titleSuffix;
+      comment = nookState.passport.comment;
+    }
   }
 
   function handleRandomizePhoto() {
@@ -55,6 +100,26 @@
   </div>
 
   <div class="flex-1 overflow-y-auto p-4 ac-scrollbar flex flex-col gap-4">
+    {#if isPro}
+      <div class="bg-white p-3 rounded-2xl shadow-sm border-2 border-[#83ccca] flex items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-1.5 text-[#1b4c4b] font-bold">
+          <Cloud class="w-4 h-4 text-[#83ccca]" /> 
+          {#if syncing}Syncing...{:else}Cloud Passports{/if}
+        </div>
+        <select class="flex-1 bg-[#fbf9f0] border-2 border-[#edd8aa] rounded-xl p-1.5 text-[#5c5446] font-bold" onchange={handleSelectPassport}>
+          <option value="">Switch Passport...</option>
+          {#each cloudPassports as cp}
+            <option value={cp.id}>{cp.title}</option>
+          {/each}
+          <option value="new">+ New Cloud Passport</option>
+        </select>
+      </div>
+    {:else}
+      <div class="bg-white/50 p-2 rounded-xl text-center text-[10px] text-gray-500 font-bold border border-white/60">
+        <CloudOff class="w-3 h-3 inline mb-0.5" /> PRO users can save and sync multiple passports across devices.
+      </div>
+    {/if}
+
     <!-- Physical Passport Card Mockup -->
     <div class="bg-[#fbf9f0] border-4 border-[#edd8aa] rounded-3xl p-4 shadow-sm relative overflow-hidden flex flex-col gap-3">
       <!-- Passport Watermark/Stamp Graphic -->

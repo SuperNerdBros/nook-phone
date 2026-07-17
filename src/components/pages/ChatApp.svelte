@@ -1,82 +1,296 @@
 <script lang="ts">
   import nookState from '@/lib/nookState.svelte';
-  import { MessageSquare, Send, Trash2 } from '@lucide/svelte';
+  import { onMount } from 'svelte';
+  import { 
+    MessageSquare, Send, Trash2, ArrowLeft, Plus, 
+    ThumbsUp, Calendar, User, MessageCircle, Hash 
+  } from '@lucide/svelte';
+  import { fetchThreads, createThread, fetchComments, createComment, isProUser } from '@/lib/api';
+  import NookIcon from '../atoms/NookIcon.svelte';
 
-  const QUICK_MESSAGES = [
-    "Hello! Is anyone awake? 🌸",
-    "I caught a rare Great White Shark! 🦈",
-    "Hey Tom Nook, when is the next island upgrade? 🍃",
-    "Blathers, I found a fossil! 🦉"
+  interface Thread {
+    id: number;
+    title: string;
+    content: string;
+    subnook: string;
+    author_name: string;
+    date: string;
+    comment_count: number;
+    likes?: number;
+    hasLiked?: boolean;
+  }
+
+  // Helper to normalize island name for n/ prefix
+  const getIslandSubnook = () => {
+    const raw = nookState.passport.islandName || "Nook Island";
+    return "n/" + raw.replace(/\s+/g, "");
+  };
+
+  let islandSubnook = $derived(getIslandSubnook());
+
+  // Default villager subnooks
+  const DEFAULT_SUBNOOKS = [
+    "n/Isabelle",
+    "n/TomNook",
+    "n/Blathers",
+    "n/Lottie",
+    "n/KKSlider"
   ];
 
-  let inputText = $state("");
-  let isTyping = $state(false);
-  let typingNpc = $state("");
-  let chatEndRef: HTMLDivElement;
-  let delayTimer: ReturnType<typeof setTimeout>;
-  let timer: ReturnType<typeof setTimeout>;
+  let customSubnooks = $state<string[]>([]);
+  let allSubnooks = $derived([
+    "n/All",
+    islandSubnook,
+    ...DEFAULT_SUBNOOKS,
+    ...customSubnooks
+  ]);
 
-  // Auto scroll
-  $effect(() => {
-    // depend on chatLog length
-    const _len = nookState.chatLog.length;
-    // depend on isTyping
-    const _typing = isTyping;
-    if (chatEndRef) {
-      chatEndRef.scrollIntoView({ behavior: "smooth" });
+  let selectedSubnookFilter = $state("n/All");
+
+  const MOCK_THREADS = (): Thread[] => [
+    {
+      id: 1,
+      title: "Turnips selling for 542 bells! 💸",
+      content: "Dodo code is C1TY9. Tips are appreciated! Resident Services is right outside the airport. Please be respectful of my hybrid flowers!",
+      subnook: "n/Isabelle",
+      author_name: "Isabelle",
+      date: new Date(Date.now() - 600000).toISOString(),
+      comment_count: 2,
+      likes: 18,
+      hasLiked: false
+    },
+    {
+      id: 2,
+      title: "Looking for Ironwood DIY Recipes 🔨",
+      content: "Can trade for Gold Nuggets or Nook Miles Tickets! Let me know if your villagers are crafting or if you have spare recipe cards.",
+      subnook: "n/TomNook",
+      author_name: "Tom Nook",
+      date: new Date(Date.now() - 3600000).toISOString(),
+      comment_count: 1,
+      likes: 4,
+      hasLiked: false
+    },
+    {
+      id: 3,
+      title: "Shared a new custom path pattern! 🌸",
+      content: "Check my designer code MA-4829-1092-4820. Let me know if you like the brick border textures!",
+      subnook: "n/Lottie",
+      author_name: "Lottie",
+      date: new Date(Date.now() - 7200000).toISOString(),
+      comment_count: 0,
+      likes: 24,
+      hasLiked: true
     }
-  });
+  ];
 
-  // Simulator
-  $effect(() => {
-    if (nookState.chatLog.length === 0) return;
-    const lastMsg = nookState.chatLog[nookState.chatLog.length - 1];
+  let threads = $state<Thread[]>([]);
+  let activeThread = $state<Thread | null>(null);
+  let threadComments = $state<any[]>([]);
+  let view = $state<"list" | "detail" | "new" | "create_subnook">("list");
+  
+  // Form fields
+  let newTitle = $state("");
+  let newContent = $state("");
+  let newSubnook = $state("");
+  let newSubnookName = $state("");
+  let replyText = $state("");
+  let loading = $state(false);
 
-    if (!lastMsg.isNpc) {
-      if (delayTimer) clearTimeout(delayTimer);
-      if (timer) clearTimeout(timer);
+  // Filter threads by active subnook selection
+  let filteredThreads = $derived(threads.filter(t => {
+    if (selectedSubnookFilter === "n/All") return true;
+    return t.subnook.toLowerCase() === selectedSubnookFilter.toLowerCase();
+  }));
 
-      delayTimer = setTimeout(() => {
-        isTyping = true;
-        let npcName = "Someone";
-        const lower = lastMsg.content.toLowerCase();
-        if (lower.includes("hello") || lower.includes("hi") || lower.includes("awake")) {
-          npcName = "Isabelle";
-        } else if (lower.includes("shark") || lower.includes("fish") || lower.includes("fossil") || lower.includes("museum")) {
-          npcName = "Blathers";
-        } else if (lower.includes("nook") || lower.includes("upgrade") || lower.includes("loan") || lower.includes("tip")) {
-          npcName = "Tom Nook";
-        } else {
-          npcName = "Resident";
-        }
-        typingNpc = npcName;
-      }, 50);
-
-      timer = setTimeout(() => {
-        isTyping = false;
-      }, 1200);
-    }
+  async function loadThreads() {
+    loading = true;
     
-    return () => {
-      if (delayTimer) clearTimeout(delayTimer);
-      if (timer) clearTimeout(timer);
-    };
+    // Load custom subnooks
+    const storedSubs = localStorage.getItem("nook_custom_subnooks");
+    if (storedSubs) {
+      customSubnooks = JSON.parse(storedSubs);
+    }
+
+    if (isProUser()) {
+      const data = await fetchThreads();
+      threads = data.map((t: any) => ({
+        ...t,
+        subnook: t.subnook || islandSubnook,
+        likes: t.likes || Math.floor(Math.random() * 12),
+        hasLiked: false
+      }));
+    } else {
+      const stored = localStorage.getItem("nook_mock_threads");
+      if (stored) {
+        threads = JSON.parse(stored);
+      } else {
+        threads = MOCK_THREADS();
+        localStorage.setItem("nook_mock_threads", JSON.stringify(threads));
+      }
+    }
+    loading = false;
+  }
+
+  async function loadComments(threadId: number) {
+    if (isProUser()) {
+      threadComments = await fetchComments(threadId);
+    } else {
+      const stored = localStorage.getItem(`nook_mock_comments_${threadId}`);
+      if (stored) {
+        threadComments = JSON.parse(stored);
+      } else {
+        const initialComments = [
+          { id: 101, author_name: "Orville", content: { rendered: "Wow, sounds like a great deal! I will fly over shortly." }, date: new Date(Date.now() - 300000).toISOString() },
+          { id: 102, author_name: "Wilbur", content: { rendered: "Roger! Roger! On my way." }, date: new Date(Date.now() - 100000).toISOString() }
+        ];
+        threadComments = initialComments;
+        localStorage.setItem(`nook_mock_comments_${threadId}`, JSON.stringify(initialComments));
+      }
+    }
+  }
+
+  async function selectThread(thread: Thread) {
+    activeThread = thread;
+    await loadComments(thread.id);
+    view = "detail";
+  }
+
+  async function submitThread() {
+    if (!newTitle.trim() || !newContent.trim()) return;
+    const author = nookState.passport.name || "Resident";
+    loading = true;
+
+    const subnookTarget = newSubnook || islandSubnook;
+
+    if (isProUser()) {
+      const result = await createThread(newTitle.trim(), newContent.trim());
+      if (result && result.success) {
+        // Save subnook to post meta in real WP environments if available
+        newTitle = "";
+        newContent = "";
+        view = "list";
+        await loadThreads();
+      }
+    } else {
+      const newT: Thread = {
+        id: Date.now(),
+        title: newTitle.trim(),
+        content: newContent.trim(),
+        subnook: subnookTarget,
+        author_name: author,
+        date: new Date().toISOString(),
+        comment_count: 0,
+        likes: 0,
+        hasLiked: false
+      };
+      threads = [newT, ...threads];
+      localStorage.setItem("nook_mock_threads", JSON.stringify(threads));
+      newTitle = "";
+      newContent = "";
+      view = "list";
+    }
+    loading = false;
+  }
+
+  async function submitComment() {
+    if (!replyText.trim() || !activeThread) return;
+    const author = nookState.passport.name || "Resident";
+    
+    if (isProUser()) {
+      const success = await createComment(activeThread.id, replyText.trim());
+      if (success) {
+        replyText = "";
+        await loadComments(activeThread.id);
+        await loadThreads();
+      }
+    } else {
+      const newComment = {
+        id: Date.now(),
+        author_name: author,
+        content: { rendered: replyText.trim() },
+        date: new Date().toISOString()
+      };
+      threadComments = [...threadComments, newComment];
+      localStorage.setItem(`nook_mock_comments_${activeThread.id}`, JSON.stringify(threadComments));
+      
+      // Update comment count on thread
+      threads = threads.map(t => {
+        if (t.id === activeThread?.id) {
+          return { ...t, comment_count: t.comment_count + 1 };
+        }
+        return t;
+      });
+      localStorage.setItem("nook_mock_threads", JSON.stringify(threads));
+      
+      // Sync activeThread count
+      if (activeThread) {
+        activeThread.comment_count++;
+      }
+      replyText = "";
+    }
+  }
+
+  function handleCreateSubnook() {
+    if (!newSubnookName.trim()) return;
+    const formatted = "n/" + newSubnookName.trim().replace(/\s+/g, "");
+    if (!customSubnooks.includes(formatted)) {
+      customSubnooks = [...customSubnooks, formatted];
+      localStorage.setItem("nook_custom_subnooks", JSON.stringify(customSubnooks));
+    }
+    newSubnookName = "";
+    view = "list";
+  }
+
+  function handleLike(threadId: number, event: Event) {
+    event.stopPropagation();
+    threads = threads.map(t => {
+      if (t.id === threadId) {
+        const liked = !t.hasLiked;
+        return {
+          ...t,
+          hasLiked: liked,
+          likes: (t.likes || 0) + (liked ? 1 : -1)
+        };
+      }
+      return t;
+    });
+    localStorage.setItem("nook_mock_threads", JSON.stringify(threads));
+    
+    if (activeThread && activeThread.id === threadId) {
+      activeThread = threads.find(t => t.id === threadId) || null;
+    }
+  }
+
+  function handleClearLog() {
+    if (confirm("Clear local chat/thread history?")) {
+      localStorage.removeItem("nook_mock_threads");
+      localStorage.removeItem("nook_custom_subnooks");
+      customSubnooks = [];
+      loadThreads();
+    }
+  }
+
+  onMount(() => {
+    newSubnook = islandSubnook;
+    loadThreads();
   });
 
-  const handleSend = () => {
-    if (inputText.trim()) {
-      nookState.sendChatMessage(nookState.passport.name, inputText.trim(), false);
-      inputText = "";
-    }
+  const getSubnookColor = (sub: string) => {
+    if (sub.startsWith("n/Isabelle")) return "bg-green-100 text-green-800 border-green-200";
+    if (sub.startsWith("n/TomNook")) return "bg-amber-100 text-amber-800 border-amber-200";
+    if (sub.startsWith("n/Lottie")) return "bg-pink-100 text-pink-800 border-pink-200";
+    if (sub.startsWith("n/KKSlider")) return "bg-blue-100 text-blue-800 border-blue-200";
+    if (sub.startsWith("n/Blathers")) return "bg-emerald-100 text-emerald-800 border-emerald-200";
+    // Custom island / user subnooks
+    return "bg-indigo-100 text-indigo-800 border-indigo-200";
   };
 
-  const handleQuickSend = (msg: string) => {
-    nookState.sendChatMessage(nookState.passport.name, msg, false);
-  };
-
-  const handleClearLog = () => {
-    if (confirm("Clear chat log history?")) {
-      nookState.clearChatLog();
+  const getFormatDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return dateStr;
     }
   };
 </script>
@@ -84,107 +298,314 @@
 <div id="chat-app" class="flex flex-col h-full ac-app-screen relative">
   <!-- Header -->
   <div class="bg-[#afd485] text-[#344d18] p-4 pt-6 ac-wavy-header flex justify-between items-center z-10 shrink-0">
-    <div>
-      <h1 class="text-xl font-bold flex items-center gap-1.5">💬 Resident Chat</h1>
-      <p class="text-xs opacity-90">Local co-op and resident log messages</p>
+    <div class="flex items-center gap-2">
+      {#if view !== "list"}
+        <button 
+          onclick={() => view = "list"}
+          class="text-[#344d18] p-1 rounded-full hover:bg-black/5 cursor-pointer flex items-center justify-center"
+        >
+          <ArrowLeft class="w-5 h-5 stroke-[2.5px]" />
+        </button>
+      {/if}
+      <div>
+        <h1 class="text-xl font-bold flex items-center gap-1.5 leading-none">💬 Resident Log</h1>
+        <p class="text-[10px] opacity-90 mt-0.5">Bulleted Subnook boards & local logs</p>
+      </div>
     </div>
-    <button
-      onclick={handleClearLog}
-      class="text-[#344d18] p-2 rounded-full hover:bg-black/5"
-      title="Clear logs"
-    >
-      <Trash2 class="w-4 h-4" />
-    </button>
-  </div>
-
-  <!-- Main chat window -->
-  <div class="flex-1 overflow-y-auto p-4 ac-scrollbar flex flex-col gap-3 bg-[#fdfdfc]/80">
-    {#each nookState.chatLog as chat (chat.id)}
-      {@const isPlayer = !chat.isNpc}
-      <div
-        class="flex items-start gap-2.5 max-w-[85%] {isPlayer ? 'self-end flex-row-reverse' : 'self-start'}"
-      >
-        <!-- NPC or Player Avatar icon -->
-        <div
-          class="w-8 h-8 rounded-full flex items-center justify-center text-lg shadow-sm border {isPlayer ? 'bg-amber-100 border-[#edd8aa]' : 'bg-green-100 border-[#c5e69e]'}"
-        >
-          {chat.avatar || "🐾"}
-        </div>
-
-        <!-- Message Bubble Container -->
-        <div class="flex flex-col gap-0.5">
-          <span class="text-[9px] font-bold text-gray-400 {isPlayer ? 'text-right' : 'text-left'}">
-            {chat.sender} • {chat.timestamp}
-          </span>
-
-          <div
-            class="px-3 py-2 text-xs leading-relaxed shadow-sm {isPlayer
-              ? 'bg-[#eaf3e2] text-green-900 rounded-2xl rounded-tr-none border border-green-200'
-              : 'bg-[#fcfbf7] text-[#4c4637] rounded-2xl rounded-tl-none border border-gray-100'}"
-          >
-            {chat.content}
-          </div>
-        </div>
-      </div>
-    {/each}
-
-    <!-- Typing simulator indicator bubble -->
-    {#if isTyping}
-      <div class="flex items-start gap-2.5 max-w-[80%] self-start animate-pulse">
-        <div class="w-8 h-8 rounded-full bg-green-50 border border-green-100 flex items-center justify-center text-sm">
-          💬
-        </div>
-        <div class="flex flex-col gap-0.5">
-          <span class="text-[9px] text-gray-400 font-bold">{typingNpc} is typing...</span>
-          <div class="bg-[#fcfbf7] border border-gray-100 px-3 py-2 rounded-2xl rounded-tl-none text-xs flex gap-1 items-center">
-            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
-            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
-            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
-          </div>
-        </div>
-      </div>
-    {/if}
-
-    {#if nookState.chatLog.length === 0}
-      <div class="text-center py-20 text-gray-400 text-sm">
-        <MessageSquare class="w-12 h-12 mx-auto opacity-25 mb-2" />
-        No chat history found. Tap quick messages below to start talking!
-      </div>
-    {/if}
-
-    <div bind:this={chatEndRef}></div>
-  </div>
-
-  <!-- Quick message templates drawer -->
-  <div class="px-3 py-2 bg-[#f4f1e3] border-t border-[#e1d9be] flex flex-col gap-1 shrink-0">
-    <span class="text-[9px] font-bold text-gray-500 uppercase tracking-wider px-1">Quick Messages</span>
-    <div class="flex gap-1.5 overflow-x-auto pb-1 ac-scrollbar">
-      {#each QUICK_MESSAGES as msg}
+    
+    {#if view === "list"}
+      <div class="flex items-center gap-1">
         <button
-          onclick={() => handleQuickSend(msg)}
-          class="bg-white hover:bg-gray-50 text-[11px] text-gray-700 px-2.5 py-1.5 rounded-xl shrink-0 font-semibold border border-[#dcd3be] shadow-sm active:scale-95 transition-all"
+          onclick={() => view = "create_subnook"}
+          class="text-[#344d18] bg-white/40 px-2 py-1 rounded-full hover:bg-white/60 transition cursor-pointer flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider"
+          title="Create Subnook"
         >
-          {msg}
+          <Plus class="w-3.5 h-3.5 stroke-[2.5px]" /> Subnook
+        </button>
+        <button
+          onclick={() => { view = "new"; newSubnook = islandSubnook; }}
+          class="text-[#344d18] bg-white/40 p-2 rounded-full hover:bg-white/60 transition cursor-pointer flex items-center justify-center"
+          title="New thread"
+        >
+          <Plus class="w-4 h-4 stroke-[2.5px]" />
+        </button>
+        <button
+          onclick={handleClearLog}
+          class="text-[#344d18] p-2 rounded-full hover:bg-black/5 cursor-pointer flex items-center justify-center"
+          title="Reset mockup logs"
+        >
+          <Trash2 class="w-4 h-4" />
+        </button>
+      </div>
+    {/if}
+  </div>
+
+  <!-- Subnooks Horizontal Selector Bar -->
+  {#if view === "list"}
+    <div class="bg-[#f4f1e3] border-b border-[#e1d9be] py-2 px-3 flex gap-2 overflow-x-auto shrink-0 ac-scrollbar">
+      {#each allSubnooks as sub}
+        <button
+          onclick={() => selectedSubnookFilter = sub}
+          class={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider transition-all border shrink-0 cursor-pointer ${selectedSubnookFilter === sub ? 'bg-[#afd485] border-[#8aab5d] text-white shadow-sm scale-105' : 'bg-white hover:bg-gray-50 border-[#dcd3be] text-gray-700 active:scale-95'}`}
+        >
+          {sub}
         </button>
       {/each}
     </div>
+  {/if}
+
+  <!-- Main View Router -->
+  <div class="flex-1 overflow-y-auto p-4 ac-scrollbar bg-[#fdfdfc]/80 flex flex-col gap-3.5">
+    {#if loading}
+      <div class="flex flex-col items-center justify-center py-20 text-gray-500 gap-2">
+        <span class="text-3xl animate-spin">🍃</span>
+        <span class="text-xs font-bold">Loading bulletin...</span>
+      </div>
+    {:else if view === "list"}
+      <!-- THREAD LIST -->
+      {#if filteredThreads.length === 0}
+        <div class="text-center py-20 text-gray-400 text-sm">
+          <MessageSquare class="w-12 h-12 mx-auto opacity-25 mb-2" />
+          No discussions found in {selectedSubnookFilter}. Tap the + icon above to write a post!
+        </div>
+      {:else}
+        {#each filteredThreads as thread (thread.id)}
+          <div
+            role="button"
+            tabindex="0"
+            onclick={() => selectThread(thread)}
+            onkeydown={(e) => e.key === 'Enter' && selectThread(thread)}
+            class="w-full bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-[0_4px_0_#dcd3be] hover:-translate-y-0.5 transition-all text-left flex flex-col gap-2.5 cursor-pointer relative group"
+          >
+            <!-- Top bar -->
+            <div class="flex justify-between items-center w-full text-[10px] text-gray-400 font-bold">
+              <div class="flex items-center gap-1.5">
+                <div class="w-5 h-5 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-xs shrink-0">
+                  🐾
+                </div>
+                <span>{thread.author_name}</span>
+              </div>
+              <span>{getFormatDate(thread.date)}</span>
+            </div>
+
+            <!-- Content -->
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-1.5">
+                <span class={`text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${getSubnookColor(thread.subnook)}`}>
+                  {thread.subnook}
+                </span>
+                <h3 class="text-xs font-black text-[#5c3a21] line-clamp-1">{thread.title}</h3>
+              </div>
+              <p class="text-[10.5px] text-[#8a7f66] line-clamp-2 leading-relaxed mt-0.5">{thread.content}</p>
+            </div>
+
+            <!-- Bottom Controls -->
+            <div class="flex justify-between items-center w-full pt-1.5 border-t border-dashed border-[#e1d9be] text-[10.5px] font-bold text-gray-500">
+              <button 
+                onclick={(e) => handleLike(thread.id, e)}
+                class={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all cursor-pointer ${thread.hasLiked ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-gray-50 border-gray-100 hover:bg-gray-100 text-gray-500'}`}
+              >
+                <ThumbsUp class="w-3 h-3 stroke-[2.5px]" />
+                <span>{thread.likes || 0}</span>
+              </button>
+
+              <div class="flex items-center gap-1 px-1">
+                <MessageCircle class="w-3.5 h-3.5" />
+                <span>{thread.comment_count} replies</span>
+              </div>
+            </div>
+          </div>
+        {/each}
+      {/if}
+      
+    {:else if view === "detail" && activeThread}
+      <!-- THREAD DETAIL VIEW -->
+      <div class="flex flex-col gap-4">
+        <!-- Post Header Card -->
+        <div class="bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-sm text-left flex flex-col gap-3">
+          <div class="flex justify-between items-center w-full text-[10px] text-gray-400 font-bold pb-2 border-b border-dashed border-gray-100">
+            <div class="flex items-center gap-1.5">
+              <div class="w-6 h-6 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-xs">
+                🐾
+              </div>
+              <span>{activeThread.author_name}</span>
+            </div>
+            <span>{getFormatDate(activeThread.date)}</span>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class={`text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${getSubnookColor(activeThread.subnook)}`}>
+                {activeThread.subnook}
+              </span>
+              <h2 class="text-sm font-black text-[#5c3a21]">{activeThread.title}</h2>
+            </div>
+            <p class="text-xs text-[#8a7f66] leading-relaxed mt-1 font-medium">{activeThread.content}</p>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-dashed border-gray-100">
+            <button 
+              onclick={(e) => handleLike(activeThread!.id, e)}
+              class={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold transition-all cursor-pointer ${activeThread.hasLiked ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-gray-50 border-gray-100 text-gray-500'}`}
+            >
+              <ThumbsUp class="w-3.5 h-3.5 stroke-[2.5px]" />
+              <span>{activeThread.likes || 0} Upvotes</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Replies Section Title -->
+        <div class="px-1 text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1 mt-1">
+          <MessageCircle class="w-3.5 h-3.5" />
+          <span>Replies ({threadComments.length})</span>
+        </div>
+
+        <!-- Comments List -->
+        <div class="flex flex-col gap-2.5">
+          {#each threadComments as comment (comment.id)}
+            <div class="bg-white/90 border-2 border-[#e1d9be] rounded-3xl p-3 flex flex-col gap-1.5 text-left shadow-sm">
+              <div class="flex justify-between items-center text-[9px] font-bold text-gray-400">
+                <span class="text-[#5c3a21] font-black">{comment.author_name}</span>
+                <span>{getFormatDate(comment.date)}</span>
+              </div>
+              <div class="text-xs text-[#8a7f66] leading-relaxed font-medium">
+                {#if typeof comment.content === 'object'}
+                  {@html comment.content.rendered}
+                {:else}
+                  {comment.content}
+                {/if}
+              </div>
+            </div>
+          {:else}
+            <div class="text-center py-8 text-gray-400 text-xs italic bg-white/40 rounded-3xl border border-dashed border-gray-200">
+              No replies yet. Be the first to leave a comment!
+            </div>
+          {/each}
+        </div>
+      </div>
+
+    {:else if view === "new"}
+      <!-- NEW THREAD FORM -->
+      <div class="bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-sm text-left flex flex-col gap-4">
+        <h2 class="text-sm font-black text-[#5c3a21] border-b-2 border-dashed border-[#e1d9be] pb-2 uppercase tracking-wide">
+          New Bulletin Post
+        </h2>
+
+        <!-- Title -->
+        <div class="flex flex-col gap-1">
+          <label for="new-thread-title" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Post Title</label>
+          <input
+            id="new-thread-title"
+            type="text"
+            placeholder="e.g. Turnips buying for 450 bells!"
+            bind:value={newTitle}
+            class="bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-semibold"
+          />
+        </div>
+
+        <!-- Subnook Selection -->
+        <div class="flex flex-col gap-1">
+          <label for="new-thread-subnook" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Post to Subnook</label>
+          <select
+            id="new-thread-subnook"
+            bind:value={newSubnook}
+            class="bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-semibold cursor-pointer appearance-none"
+          >
+            {#each allSubnooks.filter(s => s !== "n/All") as sub}
+              <option value={sub}>{sub}</option>
+            {/each}
+          </select>
+        </div>
+
+        <!-- Content -->
+        <div class="flex flex-col gap-1">
+          <label for="new-thread-content" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Message Description</label>
+          <textarea
+            id="new-thread-content"
+            rows="5"
+            placeholder="Write your logs, trading details or Dodo Code here..."
+            bind:value={newContent}
+            class="bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-medium resize-none"
+          ></textarea>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex justify-between items-center gap-3 mt-2">
+          <button
+            onclick={() => view = "list"}
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 border-2 border-gray-200 text-gray-600 rounded-2xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onclick={submitThread}
+            disabled={!newTitle.trim() || !newContent.trim()}
+            class="px-6 py-2 bg-[#afd485] hover:bg-opacity-95 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Post Bulletin
+          </button>
+        </div>
+      </div>
+
+    {:else if view === "create_subnook"}
+      <!-- CREATE NEW SUBNOOK FORM -->
+      <div class="bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-sm text-left flex flex-col gap-4">
+        <h2 class="text-sm font-black text-[#5c3a21] border-b-2 border-dashed border-[#e1d9be] pb-2 uppercase tracking-wide">
+          Create Custom Subnook
+        </h2>
+
+        <div class="flex flex-col gap-1">
+          <label for="new-subnook-name" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Subnook Name</label>
+          <div class="flex gap-2 items-center">
+            <span class="text-sm font-black text-[#8a7f66]">n/</span>
+            <input
+              id="new-subnook-name"
+              type="text"
+              placeholder="e.g. TurnipFarmers"
+              bind:value={newSubnookName}
+              class="flex-1 bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-semibold"
+            />
+          </div>
+          <p class="text-[9px] text-gray-400 font-bold mt-1">Spaces will be stripped automatically to form a cute subnook tag.</p>
+        </div>
+
+        <div class="flex justify-between items-center gap-3 mt-2">
+          <button
+            onclick={() => view = "list"}
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 border-2 border-gray-200 text-gray-600 rounded-2xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onclick={handleCreateSubnook}
+            disabled={!newSubnookName.trim()}
+            class="px-6 py-2 bg-[#afd485] hover:bg-opacity-95 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Create
+          </button>
+        </div>
+      </div>
+    {/if}
   </div>
 
-  <!-- Input keyboard bar -->
-  <div class="p-3 bg-white border-t border-[#e1d9be] flex gap-2 shrink-0 items-center">
-    <input
-      id="chat-message-input"
-      type="text"
-      placeholder="Send a message to Resident Services..."
-      bind:value={inputText}
-      onkeydown={(e) => e.key === "Enter" && handleSend()}
-      class="flex-1 bg-[#fbf9f0] border border-[#dcd3be] p-2 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#afd485] text-[#4c4637]"
-    />
-    <button
-      onclick={handleSend}
-      class="bg-[#afd485] text-white p-2 rounded-xl hover:bg-opacity-95 transition shadow-sm"
-    >
-      <Send class="w-4 h-4" />
-    </button>
-  </div>
+  <!-- Bottom Interactive Reply Input (only on detail view) -->
+  {#if view === "detail" && activeThread}
+    <div class="p-3 bg-white border-t border-[#e1d9be] flex gap-2 shrink-0 items-center">
+      <input
+        id="reply-message-input"
+        type="text"
+        placeholder="Type a reply to this bulletin..."
+        bind:value={replyText}
+        onkeydown={(e) => e.key === "Enter" && submitComment()}
+        class="flex-1 bg-[#fbf9f0] border border-[#dcd3be] p-2 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#afd485] text-[#4c4637]"
+      />
+      <button
+        onclick={submitComment}
+        disabled={!replyText.trim()}
+        class="bg-[#afd485] text-white p-2 rounded-xl hover:bg-opacity-95 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+      >
+        <Send class="w-4 h-4" />
+      </button>
+    </div>
+  {/if}
 </div>

@@ -2,7 +2,8 @@
   import { onMount } from 'svelte'; 
   import nookState from '@/lib/nookState.svelte';
   import { projectsData, islandLifeTips } from '@/lib/nookData';
-  import { fly } from 'svelte/transition';
+  import { ALL_WALLPAPERS } from '@/lib/wallpaperData';
+  import { fly, fade } from 'svelte/transition';
   
   import {
     Signal,
@@ -12,7 +13,11 @@
     ChevronRight,
     Unlock,
     BookOpen,
-    Award
+    Award,
+    Bell,
+    Trash2,
+    Inbox,
+    X
   } from "@lucide/svelte";
 
   import Onboarding from './Onboarding.svelte';
@@ -33,10 +38,11 @@
   import nookIncLogo from '../../../assets/img/Nook_Inc.svg';
 
   let timeStr = $state("12:00 PM");
-  let activeTipIdx = $state(0);
   let isSwiping = $state(false);
-
   let isAppDrawerOpen = $state(false);
+  let activeToast = $state<any>(null);
+  let showNotificationCenter = $state(false);
+  let launchingApp = $state<any>(null);
 
   onMount(() => {
     const updateTime = () => {
@@ -49,17 +55,72 @@
     };
     updateTime();
     const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
+
+    const deliverRandomTip = () => {
+      const existingNotifTitles = nookState.notifications.map(n => n.title);
+      const availableTips = islandLifeTips.filter(t => !existingNotifTitles.includes(t.title));
+      
+      if (availableTips.length > 0) {
+        const tip = availableTips[Math.floor(Math.random() * availableTips.length)];
+        nookState.addNotification(tip.title, tip.content, tip.author);
+      } else {
+        const tip = islandLifeTips[Math.floor(Math.random() * islandLifeTips.length)];
+        nookState.addNotification(tip.title, tip.content, tip.author);
+      }
+    };
+
+    // Send a new tip notification after 10 seconds of app loading, and then every 75 seconds
+    const initialTipTimeout = setTimeout(deliverRandomTip, 10000);
+    const tipInterval = setInterval(deliverRandomTip, 75000);
+
+    const handleNotificationReceived = (e: Event) => {
+      const notif = (e as CustomEvent).detail;
+      activeToast = notif;
+      
+      setTimeout(() => {
+        if (activeToast && activeToast.id === notif.id) {
+          activeToast = null;
+        }
+      }, 4000);
+    };
+
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      const match = hash.match(/^#\/app\/(.+)$/);
+      const targetApp = match ? decodeURIComponent(match[1]) : null;
+      if (nookState.currentApp !== targetApp) {
+        nookState.navigate(targetApp);
+      }
+    };
+
+    window.addEventListener("nook-notification", handleNotificationReceived);
+    window.addEventListener("hashchange", handleHashChange);
+
+    // Sync initial route from hash if present
+    const hash = window.location.hash;
+    const match = hash.match(/^#\/app\/(.+)$/);
+    const initialApp = match ? decodeURIComponent(match[1]) : null;
+    if (initialApp) {
+      nookState.navigate(initialApp);
+    }
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(initialTipTimeout);
+      clearInterval(tipInterval);
+      window.removeEventListener("nook-notification", handleNotificationReceived);
+      window.removeEventListener("hashchange", handleHashChange);
+    };
   });
 
-  const handleNextTip = () => {
-    activeTipIdx = (activeTipIdx + 1) % islandLifeTips.length;
-  };
-
-  const activeTip = $derived(islandLifeTips[activeTipIdx]);
-
   const handleAppLaunch = (appId: string) => {
-    nookState.navigate(appId);
+    const app = allApps.find(a => (a.id || a.name) === appId);
+    launchingApp = app || { name: appId, id: appId };
+    
+    setTimeout(() => {
+      nookState.navigate(appId);
+      launchingApp = null;
+    }, 850);
   };
 
   const handleHomeButton = () => {
@@ -103,19 +164,17 @@
   ]);
   const homeScreenApps = $derived(allApps.filter(a => nookState.isAppPinned(a.id || a.name)));
 
+  const DOCK_APP_IDS = ["passport", "chat", "directory", "settings"];
+  const dockApps = $derived(allApps.filter(a => a.id && DOCK_APP_IDS.includes(a.id)));
+  const desktopApps = $derived(homeScreenApps.filter(a => !DOCK_APP_IDS.includes(a.id || a.name)));
+
+  const currentWallpaper = $derived(customWallpaper 
+    ? null 
+    : (ALL_WALLPAPERS.find(w => w.id === nookState.activeWallpaperId) || ALL_WALLPAPERS[0]));
+
   const wallpaperStyle = $derived(customWallpaper
     ? `background-image: conic-gradient(from 0deg, ${customWallpaper.grid[0][0]}, ${customWallpaper.grid[4][4]}, ${customWallpaper.grid[8][8]}); background-size: cover;`
-    : "");
-
-  const PRESET_WALLPAPERS: Record<string, { bg: string, pattern: string }> = {
-    'nook-inc': { bg: 'bg-[#e0dcc5]', pattern: 'fill="%235c8e43"' },
-    'nook-dark': { bg: 'bg-[#2c2a24]', pattern: 'fill="%234b7a34"' },
-    'cherry-blossom': { bg: 'bg-[#f5d5d8]', pattern: 'fill="%23e28a9b"' },
-    'ocean-wave': { bg: 'bg-[#b3d4d6]', pattern: 'fill="%2363a1a6"' },
-    'starry-night': { bg: 'bg-[#2a3b5c]', pattern: 'fill="%23eccf73"' }
-  };
-  
-  const currentPreset = $derived(customWallpaper ? PRESET_WALLPAPERS['nook-inc'] : (PRESET_WALLPAPERS[nookState.activeWallpaperId || 'nook-inc'] || PRESET_WALLPAPERS['nook-inc']));
+    : (currentWallpaper?.url ? `background-image: url('${currentWallpaper.url}'); background-size: cover; background-position: center;` : ""));
 </script>
 
 <div id="nook-phone-canvas" class="w-full h-full relative z-10">
@@ -127,19 +186,37 @@
     {:else}
       <!-- Dynamic Status Bar -->
     <div class="bg-[#e0dcc5]/80 backdrop-blur-md px-6 pt-3 pb-2 flex justify-between items-center text-[11px] text-[#5d5a4a] font-black select-none z-50 shrink-0 border-b border-[#d1cbb0]">
-      <div class="flex items-center gap-1">
-        <Signal class="w-3.5 h-3.5 text-[#5d5a4a] stroke-[3px]" />
+      <div class="flex items-center gap-2">
+        <button 
+          onclick={() => {
+            showNotificationCenter = !showNotificationCenter;
+            if (showNotificationCenter) {
+              nookState.markAllNotificationsAsRead();
+            }
+          }} 
+          class="relative flex items-center bg-transparent border-0 p-0 cursor-pointer hover:scale-105 active:scale-95 transition"
+          title="Notifications"
+        >
+          <Bell class="w-3.5 h-3.5 text-[#5d5a4a] stroke-[2.5px]" />
+          {#if nookState.notifications.some(n => !n.isRead)}
+            <span class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+          {/if}
+        </button>
         <span class="font-sans font-bold">NookLink</span>
-        <Wifi class="w-3 h-3 text-[#5d5a4a]" />
       </div>
-      <div class="font-mono text-xs text-[#5d5a4a] tracking-tight font-black">
-        {timeStr}
-      </div>
-      <div class="flex items-center gap-1.5">
-        <MapPin class="w-3.5 h-3.5 text-[#5c8e43]" />
-        <span class="text-[10px] font-sans font-bold tracking-wide mr-1">
+      
+      <div class="flex items-center gap-1.5 text-xs text-[#5d5a4a] tracking-tight font-black font-sans">
+        <MapPin class="w-3.5 h-3.5 text-[#5c8e43] shrink-0" />
+        <span class="font-bold mr-1 truncate max-w-[80px]">
           {nookState.passport.islandName.replace(" Island", "")}
         </span>
+        <span class="opacity-40">•</span>
+        <span class="font-mono">{timeStr}</span>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <Signal class="w-3.5 h-3.5 text-[#5d5a4a] stroke-[3px]" />
+        <Wifi class="w-3 h-3 text-[#5d5a4a]" />
         {#if nookState.settings.showBatteryPercentage}
           <span class="text-[9px] font-mono font-bold text-[#5c8e43]">100%</span>
         {/if}
@@ -153,14 +230,14 @@
     {#if nookState.isPhoneLocked}
       <div
         transition:fly={{ y: -20, duration: 300 }}
-        class={`absolute inset-0 flex flex-col justify-between p-6 z-40 overflow-hidden ${!customWallpaper ? currentPreset.bg : ''}`}
+        class={`absolute inset-0 flex flex-col justify-between p-6 z-40 overflow-hidden ${(!customWallpaper && currentWallpaper?.isDefault) ? currentWallpaper.bg : ''}`}
         style={wallpaperStyle}
       >
         <!-- Wallpaper Pattern -->
-        {#if !customWallpaper}
+        {#if !customWallpaper && currentWallpaper?.isDefault}
           <div 
             class="absolute inset-0 opacity-[0.14] pointer-events-none z-0" 
-            style={`background-image: url('data:image/svg+xml,%3Csvg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M20 5l5 10h10l-8 7 3 10-10-6-10 6 3-10-8-7h10z%22 ${currentPreset.pattern} fill-opacity=%220.4%22/%3E%3C/svg%3E'); background-size: 56px 56px;`}
+            style={`background-image: url('data:image/svg+xml,%3Csvg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M20 5l5 10h10l-8 7 3 10-10-6-10 6 3-10-8-7h10z%22 ${currentWallpaper.pattern} fill-opacity=%220.4%22/%3E%3C/svg%3E'); background-size: 56px 56px;`}
           ></div>
         {/if}
 
@@ -171,29 +248,28 @@
           <h1 class="text-4xl font-mono font-black text-[#5d5a4a] tracking-tight">
             {timeStr}
           </h1>
-          <!-- Island Life 101 Daily Tip Widget -->
-          <div class="mt-4 bg-white/90 backdrop-blur-sm border border-[#edd8aa] rounded-2xl p-3 w-full max-w-[280px] shadow-sm flex gap-2.5 items-start text-left relative animate-fade-in shrink-0">
-            <div class="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xl shrink-0 mt-0.5">
-              {activeTip.author === "Tom Nook" ? "🍃" : activeTip.author === "Isabelle" ? "🐶" : "🌸"}
-            </div>
-            
-            <div class="flex-1 flex flex-col gap-0.5 pr-4">
-              <span class="text-[8px] font-black text-emerald-800/80 tracking-widest uppercase block">
-                Island Life 101 • {activeTip.author}
-              </span>
-              <span class="font-extrabold text-[13px] text-[#5c5446] leading-tight">{activeTip.title}</span>
-              <p class="text-[10px] text-gray-500 mt-1 leading-relaxed m-0">
-                {activeTip.content}
-              </p>
-            </div>
-
-            <button
-              onclick={handleNextTip}
-              class="absolute right-2 top-2 text-emerald-800 hover:scale-105 active:scale-95 transition bg-transparent border-0 p-1 cursor-pointer"
-              title="Next tip"
-            >
-              <ChevronRight class="w-4 h-4 stroke-[3px]" />
-            </button>
+          <!-- Lock Screen Notifications -->
+          <div class="mt-4 w-full max-w-[280px] flex flex-col gap-2 shrink-0 max-h-[180px] overflow-y-auto pr-1 ac-scrollbar">
+            {#each nookState.notifications.slice(0, 2) as notif (notif.id)}
+              <div class="bg-white/85 backdrop-blur-sm border border-white/60 rounded-2xl p-2.5 shadow-sm flex gap-2 items-start text-left relative animate-fade-in">
+                <div class="w-8 h-8 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center text-lg shrink-0 mt-0.5">
+                  {notif.sender === "Tom Nook" ? "🍃" : notif.sender === "Isabelle" ? "🐶" : notif.sender === "Lottie" ? "🌸" : "🔔"}
+                </div>
+                <div class="flex-1 flex flex-col gap-0.5 pr-2">
+                  <span class="text-[7.5px] font-black text-orange-800/80 tracking-widest uppercase block">
+                    {notif.sender} • {notif.timestamp}
+                  </span>
+                  <span class="font-extrabold text-[12px] text-[#5c5446] leading-tight block">{notif.title}</span>
+                  <p class="text-[9.5px] text-gray-500 mt-0.5 leading-relaxed m-0">
+                    {notif.message}
+                  </p>
+                </div>
+              </div>
+            {:else}
+              <div class="bg-white/40 backdrop-blur-sm border border-dashed border-white/40 rounded-2xl p-4 text-center text-[#5d5a4a]/75 text-[11px] font-bold">
+                No recent notifications
+              </div>
+            {/each}
           </div>
         </div>
 
@@ -208,7 +284,17 @@
     {/if}
 
     <!-- Dynamic Display Screens -->
-    <div class="flex-1 relative overflow-hidden flex flex-col bg-[#e0dcc5] h-full">
+    <div 
+      class={`flex-1 relative overflow-hidden flex flex-col h-full bg-[#e0dcc5] ${(!customWallpaper && currentWallpaper?.isDefault) ? currentWallpaper.bg : ''}`}
+      style={wallpaperStyle}
+    >
+      <!-- Wallpaper Star/Leaf Pattern Overlay -->
+      {#if !customWallpaper && currentWallpaper?.isDefault}
+        <div 
+          class="absolute inset-0 opacity-[0.14] pointer-events-none z-0" 
+          style={`background-image: url('data:image/svg+xml,%3Csvg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M20 5l5 10h10l-8 7 3 10-10-6-10 6 3-10-8-7h10z%22 ${currentWallpaper.pattern} fill-opacity=%220.4%22/%3E%3C/svg%3E'); background-size: 56px 56px;`}
+        ></div>
+      {/if}
       {#if nookState.currentApp}
         <!-- ACTIVE APPLICATION WINDOW -->
         <div class="flex-1 h-full flex flex-col">
@@ -235,9 +321,9 @@
                   <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-lg shadow-inner overflow-hidden relative">
                     <NookIcon name={currentProject?.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-1 z-10 relative" />
                   </div>
-                  <div>
-                    <h1 class="text-sm font-bold flex items-center gap-1 m-0 truncate max-w-[150px]">{nookState.currentApp}</h1>
-                    <p class="text-[9px] opacity-90 m-0">Powered by {nookState.currentApp}</p>
+                  <div class="flex items-baseline gap-2 min-w-0">
+                    <h1 class="text-sm font-bold m-0 shrink-0">{nookState.currentApp}</h1>
+                    <p class="text-[9px] opacity-85 m-0 font-bold">{currentProject?.description || ''}</p>
                   </div>
                 </div>
                 <button
@@ -285,50 +371,12 @@
         </div>
       {:else}
         <!-- LAUNCHER HOME SCREEN -->
-        <div
-          class={`flex-1 flex flex-col justify-between p-4 pb-2 relative h-full overflow-hidden ${!customWallpaper ? currentPreset.bg : ''}`}
-          style={wallpaperStyle}
-        >
-          <!-- Wallpaper Star/Leaf Pattern Overlay -->
-          {#if !customWallpaper}
-            <div 
-              class="absolute inset-0 opacity-[0.14] pointer-events-none z-0" 
-              style={`background-image: url('data:image/svg+xml,%3Csvg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M20 5l5 10h10l-8 7 3 10-10-6-10 6 3-10-8-7h10z%22 ${currentPreset.pattern} fill-opacity=%220.4%22/%3E%3C/svg%3E'); background-size: 56px 56px;`}
-            ></div>
-          {/if}
+        <div class="flex-1 flex flex-col justify-between p-4 pb-2 relative h-full overflow-hidden bg-transparent z-10">
 
           <div class="flex flex-col gap-3.5 relative z-10 flex-1">
             
-            <!-- Island Life 101 Daily Tip Widget -->
-            <div class="bg-white/90 backdrop-blur-sm border border-[#edd8aa] rounded-2xl p-2.5 shadow-sm flex gap-2 items-start text-left relative animate-fade-in shrink-0">
-              <div class="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-lg shrink-0">
-                {activeTip.author === "Tom Nook" ? "🍃" : activeTip.author === "Isabelle" ? "🐶" : "🌸"}
-              </div>
-              
-              <div class="flex-1 flex flex-col gap-0.5 pr-4">
-                <span class="text-[7.5px] font-black text-emerald-800/80 tracking-widest uppercase block">
-                  Island Life 101 • {activeTip.author}
-                </span>
-                <span class="font-extrabold text-xs text-[#5c5446]">{activeTip.title}</span>
-                <p class="text-[9.5px] text-gray-500 mt-0.5 leading-relaxed m-0">
-                  {activeTip.content}
-                </p>
-              </div>
 
-              <button
-                onclick={handleNextTip}
-                class="absolute right-2 top-2 text-emerald-800 hover:scale-105 active:scale-95 transition bg-transparent border-0 p-0 cursor-pointer"
-                title="Next tip"
-              >
-                <ChevronRight class="w-3.5 h-3.5 stroke-[3px]" />
-              </button>
-            </div>
 
-            <!-- Wallets widget -->
-            <div class="bg-[#fdfcf8]/90 backdrop-blur-sm border border-[#e4dfd0] rounded-xl p-2 px-3 shadow-sm flex justify-between text-[11px] font-extrabold z-10 text-[#5c5446] shrink-0">
-              <span class="flex items-center gap-1">💰 {nookState.bells.toLocaleString()} <span class="text-[9px] text-gray-400">Bells</span></span>
-              <span class="flex items-center gap-1">🎈 {nookState.miles.toLocaleString()} <span class="text-[9px] text-gray-400">Miles</span></span>
-            </div>
 
             <div class="relative flex-1">
               {#if isAppDrawerOpen}
@@ -382,13 +430,14 @@
 
               <!-- Homescreen Desktop -->
               <div class="absolute inset-0 overflow-y-auto ac-scrollbar">
-                  <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-y-6 gap-x-4 sm:gap-x-6 md:gap-x-8 p-4 justify-items-center content-start pb-24">
-                    {#each homeScreenApps as app (app.id || app.name)}
+                <div class="grid grid-cols-3 gap-y-6 gap-x-4 p-4 justify-items-center content-start pb-6">
+                  {#each desktopApps as app (app.id || app.name)}
+                    <div class="relative group w-[80px]">
                       <button
                         onclick={() => handleAppLaunch(app.id || app.name)}
-                        class="flex flex-col items-center gap-1 bg-transparent border-0 hover:scale-105 transition-all duration-200 group cursor-pointer p-0 w-[80px]"
+                        class="flex flex-col items-center gap-1 bg-transparent border-0 hover:scale-105 transition-all duration-200 cursor-pointer p-0 w-full"
                       >
-                        <div class={`w-[66px] h-[66px] flex items-center justify-center group-hover:scale-105 transition-all relative group-hover:ring-4 group-hover:ring-offset-2 group-hover:ring-[#8cc3b0] rounded-[18px] overflow-hidden ${app.bg || 'bg-[#f5fbf7] border-4 border-white/20 shadow-md'}`}>
+                        <div class={`w-[66px] h-[66px] flex items-center justify-center transition-all relative rounded-[18px] overflow-hidden ${app.bg || 'bg-[#f5fbf7] border-4 border-white/20 shadow-md group-hover:ring-4 group-hover:ring-offset-2 group-hover:ring-[#8cc3b0] group-hover:scale-105'}`}>
                           {#if app.id}
                             <NookIcon name={app.id} class="w-full h-full object-contain drop-shadow-sm p-2.5" />
                           {:else}
@@ -400,35 +449,322 @@
                           {app.name}
                         </span>
                       </button>
-                    {/each}
+                      
+                      <!-- Remove button -->
+                      <button 
+                        onclick={(e) => { e.stopPropagation(); nookState.toggleAppPin(app.id || app.name); }}
+                        class="absolute -top-1 right-0.5 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full border border-white flex items-center justify-center cursor-pointer shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-150 active:scale-95 text-[9px] font-black z-30"
+                        title="Remove from Homescreen"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  {/each}
 
-                    {#if homeScreenApps.length === 0}
-                      <div class="col-span-full flex flex-col items-center justify-center py-20 text-[#5d5a4a]/50 text-sm font-bold text-center">
-                        <div class="text-4xl mb-4 opacity-50">📱</div>
-                        Your homescreen is empty.<br/>
-                        Tap the Home button below to open the App Drawer and pin some apps!
-                      </div>
-                    {/if}
-                  </div>
+                  {#if desktopApps.length === 0}
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-[#5d5a4a]/50 text-sm font-bold text-center">
+                      <div class="text-4xl mb-4 opacity-50">📱</div>
+                      Your desktop is empty.<br/>
+                      Use the App Store to install apps or change pinning in Settings!
+                    </div>
+                  {/if}
+                </div>
               </div>
             </div>
           </div>
 
         </div>
       {/if}
-    </div>
 
-      <!-- Persistent Floating Home Button -->
-      <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] flex justify-center pointer-events-auto">
+      <!-- Notification Center Overlay -->
+      {#if showNotificationCenter}
+        <div
+          transition:fly={{ y: -500, duration: 300 }}
+          class="absolute inset-0 bg-[#f8f5e6]/95 backdrop-blur-md z-45 flex flex-col p-5 pt-16 border-b border-[#d1cbb0]"
+        >
+          <div class="flex justify-between items-center mb-4 shrink-0">
+            <h2 class="text-sm font-black text-[#5d5a4a] flex items-center gap-1.5 m-0 uppercase tracking-wider">
+              <Bell class="w-4 h-4 text-orange-500 fill-orange-500/20" /> Notifications
+            </h2>
+            <div class="flex gap-2">
+              {#if nookState.notifications.length > 0}
+                <button 
+                  onclick={() => nookState.clearNotifications()} 
+                  class="bg-red-500 hover:bg-red-600 text-white border-0 py-1 px-2.5 rounded-full text-[9px] font-black flex items-center gap-1 transition shadow-sm cursor-pointer active:scale-95 uppercase tracking-wider"
+                >
+                  <Trash2 class="w-3 h-3" /> Clear All
+                </button>
+              {/if}
+              <button 
+                onclick={() => showNotificationCenter = false} 
+                class="bg-gray-200 hover:bg-gray-300 text-gray-700 border-0 p-1.5 rounded-full flex items-center justify-center transition cursor-pointer active:scale-95"
+              >
+                <X class="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-y-auto pr-1 flex flex-col gap-3 ac-scrollbar pb-24">
+            {#each nookState.notifications as notif (notif.id)}
+              <div 
+                class={`bg-white border rounded-2xl p-3 shadow-sm relative flex gap-3 text-left transition ${notif.isRead ? 'border-[#edd8aa] bg-white/70' : 'border-orange-200 bg-orange-50/20 shadow-orange-50/10'}`}
+              >
+                <div class="w-8 h-8 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center text-lg shrink-0 mt-0.5">
+                  {notif.sender === "Tom Nook" ? "🍃" : notif.sender === "Isabelle" ? "🐶" : notif.sender === "Lottie" ? "🌸" : "🔔"}
+                </div>
+                <div class="flex-1 flex flex-col gap-0.5 pr-4">
+                  <span class="text-[8px] font-black text-orange-800/80 tracking-widest uppercase block">
+                    {notif.sender} • {notif.timestamp}
+                  </span>
+                  <span class="font-extrabold text-xs text-[#5c5446]">{notif.title}</span>
+                  <p class="text-[10px] text-gray-500 mt-1 leading-relaxed m-0">
+                    {notif.message}
+                  </p>
+                </div>
+                <button 
+                  onclick={() => nookState.dismissNotification(notif.id)}
+                  class="absolute top-2.5 right-2.5 bg-transparent border-0 p-0 text-gray-400 hover:text-gray-600 transition cursor-pointer"
+                  title="Dismiss"
+                >
+                  <X class="w-3.5 h-3.5" />
+                </button>
+              </div>
+            {:else}
+              <div class="flex-1 flex flex-col items-center justify-center py-20 text-gray-400">
+                <Inbox class="w-10 h-10 mb-2 stroke-[1.5px]" />
+                <p class="text-xs font-bold">No notifications</p>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/if}
+
+      <!-- Notification Banner (Toast) -->
+      {#if activeToast}
+        <button
+          onclick={() => {
+            showNotificationCenter = true;
+            nookState.markAllNotificationsAsRead();
+            activeToast = null;
+          }}
+          transition:fly={{ y: -100, duration: 300 }}
+          class="absolute top-16 left-4 right-4 bg-white/95 backdrop-blur-md border-l-4 border-orange-400 border-y border-r border-[#edd8aa] rounded-2xl p-3 shadow-lg flex gap-3 items-center text-left z-50 cursor-pointer hover:bg-orange-50/10 transition"
+        >
+          <div class="w-8 h-8 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center text-lg shrink-0">
+            {activeToast.sender === "Tom Nook" ? "🍃" : activeToast.sender === "Isabelle" ? "🐶" : activeToast.sender === "Lottie" ? "🌸" : "🔔"}
+          </div>
+          <div class="flex-1 min-w-0">
+            <span class="text-[7px] font-black text-orange-800/80 tracking-widest uppercase block">
+              New Notification • {activeToast.sender}
+            </span>
+            <span class="font-extrabold text-xs text-[#5c5446] block truncate">{activeToast.title}</span>
+            <span class="text-[9.5px] text-gray-500 truncate block">{activeToast.message}</span>
+          </div>
+        </button>
+      {/if}
+ 
+    <!-- Sticky Bottom Dock (5 Icons) -->
+    {#if !nookState.currentApp}
+      <div class="shrink-0 bg-white/25 backdrop-blur-md border-4 border-white/35 rounded-[28px] py-2.5 px-4 mx-4 mb-4 flex justify-around items-center gap-1.5 shadow-lg relative z-50">
+        <!-- App 1: Passport -->
+        {#if dockApps[0]}
+          <button
+            onclick={() => handleAppLaunch(dockApps[0].id || dockApps[0].name)}
+            class="flex flex-col items-center gap-1 bg-transparent border-0 hover:scale-105 transition-all duration-200 cursor-pointer p-0 w-[64px]"
+          >
+            <div class={`w-[46px] h-[46px] flex items-center justify-center transition-all relative rounded-[14px] overflow-hidden ${dockApps[0].bg || 'bg-[#f5fbf7] border-4 border-white/20 shadow-sm'}`}>
+              <NookIcon name={dockApps[0].id || 'passport'} class="w-full h-full object-contain drop-shadow-sm p-1.5" />
+            </div>
+            <span class="text-[8.5px] font-black text-[#5d5a4a] tracking-tight text-center truncate w-full px-0.5">
+              {dockApps[0].name}
+            </span>
+          </button>
+        {/if}
+
+        <!-- App 2: Resident Chat -->
+        {#if dockApps[1]}
+          <button
+            onclick={() => handleAppLaunch(dockApps[1].id || dockApps[1].name)}
+            class="flex flex-col items-center gap-1 bg-transparent border-0 hover:scale-105 transition-all duration-200 cursor-pointer p-0 w-[64px]"
+          >
+            <div class={`w-[46px] h-[46px] flex items-center justify-center transition-all relative rounded-[14px] overflow-hidden ${dockApps[1].bg || 'bg-[#f5fbf7] border-4 border-white/20 shadow-sm'}`}>
+              <NookIcon name={dockApps[1].id || 'chat'} class="w-full h-full object-contain drop-shadow-sm p-1.5" />
+            </div>
+            <span class="text-[8.5px] font-black text-[#5d5a4a] tracking-tight text-center truncate w-full px-0.5">
+              {dockApps[1].name}
+            </span>
+          </button>
+        {/if}
+
+        <!-- Home Button (Middle) -->
         <button 
           onclick={handleHomeButton}
-          class="w-[50px] h-[50px] rounded-full overflow-hidden flex items-center justify-center shadow-[0_8px_16px_rgba(0,0,0,0.25),inset_0_2px_4px_rgba(255,255,255,0.2)] border-4 border-white/40 hover:scale-110 active:scale-95 transition-all cursor-pointer group p-0 m-0" 
-          title="Nook Home Menu"
+          class="flex flex-col items-center justify-center bg-transparent border-0 hover:scale-105 transition-all duration-200 cursor-pointer p-0 w-[64px]"
         >
-          <img src={nookIncLogo} alt="Nook Home Menu" class="w-full h-full group-hover:rotate-12 transition-transform" />
+          <div class="w-[50px] h-[50px] rounded-full overflow-hidden flex items-center justify-center shadow-md border-4 border-white/55 hover:scale-110 active:scale-95 transition-all cursor-pointer p-0 m-0 group">
+            <img src={nookIncLogo} alt="Nook Home Menu" class="w-full h-full group-hover:rotate-12 transition-transform" />
+          </div>
         </button>
+
+        <!-- App 3: App Store -->
+        {#if dockApps[2]}
+          <button
+            onclick={() => handleAppLaunch(dockApps[2].id || dockApps[2].name)}
+            class="flex flex-col items-center gap-1 bg-transparent border-0 hover:scale-105 transition-all duration-200 cursor-pointer p-0 w-[64px]"
+          >
+            <div class={`w-[46px] h-[46px] flex items-center justify-center transition-all relative rounded-[14px] overflow-hidden ${dockApps[2].bg || 'bg-[#f5fbf7] border-4 border-white/20 shadow-sm'}`}>
+              <NookIcon name={dockApps[2].id || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-1.5" />
+            </div>
+            <span class="text-[8.5px] font-black text-[#5d5a4a] tracking-tight text-center truncate w-full px-0.5">
+              {dockApps[2].name}
+            </span>
+          </button>
+        {/if}
+
+        <!-- App 4: Settings -->
+        {#if dockApps[3]}
+          <button
+            onclick={() => handleAppLaunch(dockApps[3].id || dockApps[3].name)}
+            class="flex flex-col items-center gap-1 bg-transparent border-0 hover:scale-105 transition-all duration-200 cursor-pointer p-0 w-[64px]"
+          >
+            <div class={`w-[46px] h-[46px] flex items-center justify-center transition-all relative rounded-[14px] overflow-hidden ${dockApps[3].bg || 'bg-[#f5fbf7] border-4 border-white/20 shadow-sm'}`}>
+              <NookIcon name={dockApps[3].id || 'settings'} class="w-full h-full object-contain drop-shadow-sm p-1.5" />
+            </div>
+            <span class="text-[8.5px] font-black text-[#5d5a4a] tracking-tight text-center truncate w-full px-0.5">
+              {dockApps[3].name}
+            </span>
+          </button>
+        {/if}
+      </div>
+    {:else}
+      <!-- Thin Home Indicator Pill (iPhone style) -->
+      <button 
+        onclick={handleHomeButton}
+        class="shrink-0 w-28 h-1.5 bg-[#5d5a4a]/25 hover:bg-[#5d5a4a]/45 rounded-full mx-auto mt-1 mb-2.5 transition-colors cursor-pointer border-0 p-0 block relative z-50 active:scale-95 animate-fade-in"
+        title="Go Home"
+      ></button>
+    {/if}
+    </div>
+    {/if}
+
+    <!-- App Opening Animation Overlay -->
+    {#if launchingApp}
+      <div
+        transition:fade={{ duration: 150 }}
+        class="absolute inset-0 bg-[#e0dcc5]/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-6"
+      >
+        <div class="launch-icon-container animate-bounce-in relative">
+          <div class={`w-[110px] h-[110px] flex items-center justify-center rounded-[28px] overflow-hidden ${launchingApp.bg || 'bg-[#f5fbf7] border-4 border-white/40 shadow-xl'}`}>
+            {#if launchingApp.id}
+              <NookIcon name={launchingApp.id} class="w-full h-full object-contain drop-shadow-md p-4" />
+            {:else}
+              <div class="absolute inset-0 bg-gradient-to-tr from-black/5 to-white/20 pointer-events-none"></div>
+              <NookIcon name={launchingApp.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-md p-4 z-10 relative" />
+            {/if}
+          </div>
+          
+          <div class="absolute -top-3 -right-3 text-2xl animate-spin-slow">⭐</div>
+          <div class="absolute -bottom-2 -left-2 text-xl animate-bounce-slow">✨</div>
+          <div class="absolute -bottom-4 right-6 text-sm animate-pulse">🌸</div>
+        </div>
+        
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-xs font-black text-[#5d5a4a] uppercase tracking-widest animate-pulse">
+            Starting {launchingApp.name}...
+          </span>
+          <div class="text-3xl animate-leaf-spin mt-1">🍃</div>
+        </div>
       </div>
     {/if}
 
+    <!-- App Installation Animation Overlay -->
+    {#if nookState.installingApp}
+      <div
+        transition:fade={{ duration: 200 }}
+        class="absolute inset-0 bg-white/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 text-center"
+      >
+        <div class="relative flex flex-col items-center mb-8">
+          <div class="w-10 h-10 bg-red-500 rounded-full shadow-md animate-balloon-float relative flex items-center justify-center">
+            <div class="absolute bottom-[-10px] w-2 h-2 bg-red-600 rotate-45"></div>
+            <div class="w-0.5 h-10 bg-gray-300 absolute top-9"></div>
+          </div>
+          
+          <div class="w-14 h-14 bg-amber-50 border-4 border-amber-200 rounded-2xl shadow-lg flex items-center justify-center mt-10 animate-present-wobble relative z-10">
+            <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2.5 bg-red-500"></div>
+            <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-2.5 bg-red-500"></div>
+            <div class="text-2xl z-10">🎁</div>
+          </div>
+          
+          <div class="absolute -right-6 top-8 text-xl animate-spin-slow">✨</div>
+          <div class="absolute -left-6 top-16 text-lg animate-pulse">🌟</div>
+        </div>
+
+        <div class="flex flex-col items-center gap-2 max-w-[220px]">
+          <h2 class="text-sm font-black text-[#5d5a4a] uppercase tracking-widest m-0 animate-pulse">
+            Installing App
+          </h2>
+          <p class="text-xs font-bold text-gray-500 m-0">
+            Delivering <span class="text-emerald-600 font-extrabold">{nookState.installingApp}</span> to your phone...
+            </p>
+            
+            <div class="w-full bg-gray-100 border border-gray-200 h-3 rounded-full mt-4 overflow-hidden relative shadow-inner">
+              <div class="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full rounded-full animate-install-progress flex justify-end items-center pr-1">
+                <span class="text-[8px] text-white">🍃</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      {/if}
+
   </div>
 </div>
+
+<style>
+  @keyframes leaf-spin-anim {
+    0% { transform: rotate(0deg) translateY(0); }
+    50% { transform: rotate(180deg) translateY(-6px); }
+    100% { transform: rotate(360deg) translateY(0); }
+  }
+  @keyframes balloon-float-anim {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes present-wobble-anim {
+    0%, 100% { transform: rotate(0) scale(1); }
+    25% { transform: rotate(-5deg) scale(1.05); }
+    75% { transform: rotate(5deg) scale(1.05); }
+  }
+  @keyframes install-progress-anim {
+    0% { width: 0%; }
+    100% { width: 100%; }
+  }
+  @keyframes bounce-in-anim {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.1); opacity: 0.9; }
+    70% { transform: scale(0.9); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+
+  .animate-leaf-spin {
+    animation: leaf-spin-anim 2s infinite ease-in-out;
+  }
+  .animate-balloon-float {
+    animation: balloon-float-anim 2.5s infinite ease-in-out;
+  }
+  .animate-present-wobble {
+    animation: present-wobble-anim 0.8s infinite ease-in-out;
+  }
+  .animate-install-progress {
+    animation: install-progress-anim 2.5s forwards linear;
+  }
+  .animate-bounce-in {
+    animation: bounce-in-anim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+  
+  :global(.animate-spin-slow) {
+    animation: spin 8s linear infinite;
+  }
+  :global(.animate-bounce-slow) {
+    animation: bounce 3s infinite;
+  }
+</style>

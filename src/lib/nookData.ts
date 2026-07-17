@@ -61,6 +61,15 @@ export const projectsData: ProjectItem[] = [
 // 		tools: ['turnips']
 // 	},
 	{
+		name: 'Dodo Air',
+		appIcon: 'directory',
+		description: 'Dodo Airlines Flight Hub. Schedule, track, and manage flights for your island! Dodo Air is always ready for take-off!',
+		languages: ['en'],
+		site: 'https://dodoair.forthexp.com/',
+		information: ['gameplay'],
+		tools: ['rescue']
+	},
+	{
 		name: 'AC Helper',
 		appIcon: 'shopping',
 		description:
