@@ -6,6 +6,7 @@
   import nookState from '@/lib/nookState.svelte';
   import { fetchNookUsers, fetchPassports, isProUser, sendDirectMessage } from '@/lib/api';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
+  import NookIcon from '../atoms/NookIcon.svelte';
 
   interface Friend {
     id: number;
@@ -141,11 +142,16 @@
 <div class="flex flex-col h-full bg-[#fdfcf2] relative ac-app-screen select-none">
   <!-- HEADER -->
   <NookAppHeader 
-    title="💛 Best Friends" 
+    title="Best Friends" 
     subtitle="Friend list and Broadcast"
     bgClass="bg-[#ffb380]"
     textClass="text-white"
   >
+    {#snippet iconSnippet()}
+      <div class="w-12 h-12 mr-1">
+        <NookIcon name="best_friend" class="w-full h-full object-contain drop-shadow-sm" />
+      </div>
+    {/snippet}
     {#snippet actions()}
       <button 
         onclick={loadFriends}

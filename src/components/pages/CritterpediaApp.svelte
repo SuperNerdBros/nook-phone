@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { X } from '@lucide/svelte';
+  import { X, Link } from '@lucide/svelte';
   import NookAppHeader from "../organisms/NookAppHeader.svelte";
   import NookIcon from "../atoms/NookIcon.svelte";
   import { getPhoneContext } from "../organisms/phoneContext.svelte";
@@ -17,12 +17,21 @@
     textClass="text-[#715c34]"
   >
     {#snippet iconSnippet()}
-      <div class="w-6 h-6 mr-1">
+      <div class="w-12 h-12 mr-1">
         <NookIcon name={appData.id || "critter"} class="w-full h-full drop-shadow-sm text-[#715c34]" />
       </div>
     {/snippet}
   
     {#snippet actions()}
+      <a 
+        href="https://acnhcritterpedia.com/" 
+        target="_blank" 
+        rel="noreferrer" 
+        class="nook-header-btn nook-header-btn-ghost mr-1"
+        title="Open Website"
+      >
+        <Link class="w-3.5 h-3.5 stroke-[2.5px] text-[#715c34]" />
+      </a>
       <button
         onclick={ctx.handleHomeButton}
         class="nook-header-btn"

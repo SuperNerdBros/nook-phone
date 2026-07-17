@@ -318,7 +318,9 @@
           <ArrowLeft class="w-5 h-5 stroke-[2.5px]" />
         </button>
       {:else}
-        <span class="mr-1 flex items-center justify-center w-6 h-6 text-2xl leading-none">💬</span>
+        <div class="w-12 h-12 mr-1">
+          <NookIcon name="chat" class="w-full h-full object-contain drop-shadow-sm" />
+        </div>
       {/if}
     {/snippet}
     

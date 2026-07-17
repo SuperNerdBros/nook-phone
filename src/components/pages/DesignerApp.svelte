@@ -1,6 +1,6 @@
 <script lang="ts">
   import nookState from '@/lib/nookState.svelte';
-  import { Code, X } from '@lucide/svelte';
+  import { Code, Link, X } from '@lucide/svelte';
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NookAppHeader from '../organisms/NookAppHeader.svelte';
@@ -15,15 +15,25 @@
 <div id="designer-app" class="flex flex-col h-full ac-app-screen relative bg-white">
   <NookAppHeader 
     title="Island Designer"
-    subtitle="Nook Inc. Construction"
-    description={description}
+    subtitle={description}
     bgClass="bg-[#cca054]"
     textClass="text-white"
   >
     {#snippet iconSnippet()}
-      <NookIcon name="designer" class="w-full h-full object-contain drop-shadow-sm p-1.5 z-10 relative" />
+      <div class="w-12 h-12 mr-1">
+        <NookIcon name="designer" class="w-full h-full object-contain drop-shadow-sm p-1 z-10 relative" />
+      </div>
     {/snippet}
     {#snippet actions()}
+      {#if siteUrl}
+        <a 
+          href={siteUrl} 
+          class="nook-header-btn nook-header-btn-ghost"
+          title="Open Website"
+        >
+          <Link class="w-3.5 h-3.5 stroke-[2.5px]" />
+        </a>
+      {/if}
       {#if gitUrl}
         <a 
           href={gitUrl} 

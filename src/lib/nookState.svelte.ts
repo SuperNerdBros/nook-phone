@@ -506,14 +506,16 @@ class NookStateManager {
   }
 
   
-  getItemQuantity(itemId: string): number {
+  getItemQuantity(itemId: string, type?: 'wishlist' | 'storage' | 'trade'): number {
     if (!this.state.catalog.itemQuantities) this.state.catalog.itemQuantities = {};
-    return this.state.catalog.itemQuantities[itemId] || 1;
+    const key = type ? `${itemId}_${type}` : itemId;
+    return this.state.catalog.itemQuantities[key] || 1;
   }
 
-  setItemQuantity(itemId: string, quantity: number) {
+  setItemQuantity(itemId: string, quantity: number, type?: 'wishlist' | 'storage' | 'trade') {
     if (!this.state.catalog.itemQuantities) this.state.catalog.itemQuantities = {};
-    this.state.catalog.itemQuantities[itemId] = Math.max(1, quantity);
+    const key = type ? `${itemId}_${type}` : itemId;
+    this.state.catalog.itemQuantities[key] = Math.max(1, quantity);
     this.save();
   }
 

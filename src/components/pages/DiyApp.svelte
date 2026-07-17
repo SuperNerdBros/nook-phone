@@ -3,6 +3,7 @@
   import nookState from '@/lib/nookState.svelte';
   import { fetchDIYRecipes, fetchDIYMaterials } from '@/lib/api';
   import NookAppTemplate from '@/components/organisms/NookAppTemplate.svelte';
+  import NookIcon from '../atoms/NookIcon.svelte';
   import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   const ctx = getPhoneContext();
   import { 
@@ -171,7 +172,9 @@
   categoryLabelTextClass="text-white"
 >
   {#snippet iconSnippet()}
-    <Hammer class="w-5 h-5 drop-shadow-sm mr-1 text-white" />
+    <div class="w-12 h-12 mr-1">
+      <NookIcon name="diy" class="w-full h-full object-contain drop-shadow-sm" />
+    </div>
   {/snippet}
 
   {#snippet headerActions()}

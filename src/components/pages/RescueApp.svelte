@@ -35,7 +35,9 @@
     textClass="text-white"
   >
     {#snippet iconSnippet()}
-      <NookIcon name="rescue" class="w-6 h-6 mr-1" />
+      <div class="w-12 h-12 mr-1">
+        <NookIcon name="rescue" class="w-full h-full object-contain drop-shadow-sm" />
+      </div>
     {/snippet}
     {#snippet actions()}
       <button

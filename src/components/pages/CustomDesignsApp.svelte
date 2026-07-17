@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Globe, Code, ChevronRight, X } from "@lucide/svelte";
+  import { Link, Code, ChevronRight, X } from "@lucide/svelte";
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import { projectsData } from '@/lib/nookData';
   import NookIcon from '../atoms/NookIcon.svelte';
@@ -26,15 +26,27 @@
 <div id="designs-app" class="flex flex-col h-full ac-app-screen relative">
   <NookAppHeader 
     title={currentProject.name}
-    subtitle={currentProject.site ? getHostname(currentProject.site) : ""}
-    description={currentProject.description}
+    subtitle={currentProject.description}
     bgClass="bg-[#f08bb2]"
     textClass="text-white"
   >
     {#snippet iconSnippet()}
-      <NookIcon name="designs" class="w-full h-full object-contain drop-shadow-sm p-1.5 z-10 relative" />
+      <div class="w-12 h-12 mr-1">
+        <NookIcon name="designs" class="w-full h-full object-contain drop-shadow-sm p-1.5 z-10 relative" />
+      </div>
     {/snippet}
     {#snippet actions()}
+      {#if currentProject.site}
+        <a 
+          href={currentProject.site} 
+          target="_blank" 
+          rel="noreferrer" 
+          class="nook-header-btn nook-header-btn-ghost"
+          title="Open Website"
+        >
+          <Link class="w-3.5 h-3.5 stroke-[2.5px]" />
+        </a>
+      {/if}
       {#if currentProject.git}
         <a 
           href={currentProject.git} 
@@ -59,7 +71,7 @@
   <!-- Outer splits -->
   <div class="flex-1 flex overflow-hidden bg-white">
     <iframe 
-      src="https://acpatterns.com/editor" 
+      src="https://acpatterns.com" 
       class="w-full h-full border-0"
       title="Animal Crossing Pattern Tool"
       sandbox="allow-scripts allow-same-origin allow-forms allow-popups"

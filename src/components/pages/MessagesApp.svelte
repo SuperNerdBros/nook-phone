@@ -6,6 +6,7 @@
   import nookState from '@/lib/nookState.svelte';
   import { fetchConversations, fetchDirectMessages, sendDirectMessage, fetchNookUsers, isProUser } from '@/lib/api';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
+  import NookIcon from '../atoms/NookIcon.svelte';
 
   interface Conversation {
     partner_id: number;
@@ -139,6 +140,10 @@
         >
           <ArrowLeft class="w-4 h-4" />
         </button>
+      {:else}
+        <div class="w-12 h-12 mr-1">
+          <NookIcon name="messages" class="w-full h-full object-contain drop-shadow-sm" />
+        </div>
       {/if}
     {/snippet}
     {#snippet actions()}

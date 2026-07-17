@@ -172,18 +172,17 @@
     min-width: 0;
   }
   .ext-header-icon-wrap {
-    width: 36px;
-    height: 36px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.18);
-    border: 2px solid rgba(255,255,255,0.15);
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.08);
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
     flex-shrink: 0;
     position: relative;
+    max-width: 60px;
+    max-height: 60px;
+  }
+  .ext-header-icon-wrap > :global(*) {
+    max-width: 100%;
+    max-height: 100%;
   }
   .ext-header-title-group {
     display: flex;

@@ -767,24 +767,7 @@ export const projectsData: ProjectItem[] = [
 		information: ['art', 'critters', 'fossils', 'gifts', 'items', 'villagers'],
 		tools: ['tracking']
 	},
-	{
-		name: 'Turnip.Exchange',
-		appIcon: 'books',
-		description: 'Queue for turnip selling and more',
-		languages: ['en'],
-		logo: 'turnip-exchange.png',
-		logoStyle: 'banner',
-		site: 'https://turnip.exchange/',
-		android: '',
-		ios: '',
-		discord: 'warpworld',
-		facebook: '',
-		instagram: '',
-		twitter: 'WarpWorld',
-		git: '',
-		information: [],
-		tools: ['multiplayer']
-	},
+
 	{
 		name: 'Turnip Prophet',
 		appIcon: 'calculator',

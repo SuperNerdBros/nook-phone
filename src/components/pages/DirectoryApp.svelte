@@ -117,8 +117,8 @@
 </script>
 
 <NookAppTemplate
-  title="Community Toolchest"
-  subtitle="Master Tools"
+  title="Residential Recycle Box"
+  subtitle="Salvage and install community-made utilities."
   headerBgClass="bg-[#45a38f]"
   headerTextClass="text-[#fffdf5]"
   bgClass="bg-[#e5f1f0]"
@@ -144,7 +144,9 @@
   categoryLabelTextClass="text-[#fffdf5]"
 >
   {#snippet iconSnippet()}
-    <Box class="w-5 h-5 drop-shadow-sm mr-1 text-[#fffdf5]" strokeWidth={3} />
+    <div class="w-12 h-12 mr-1">
+      <NookIcon name="directory" class="w-full h-full drop-shadow-sm text-[#fffdf5]" />
+    </div>
   {/snippet}
 
   {#snippet headerActions()}

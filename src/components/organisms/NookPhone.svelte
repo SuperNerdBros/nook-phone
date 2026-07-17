@@ -21,6 +21,7 @@
   import ContactsApp from '../pages/ContactsApp.svelte';
   import DesignerApp from '../pages/DesignerApp.svelte';
   import SettingsApp from '../pages/SettingsApp.svelte';
+  import ChangelogApp from '../pages/ChangelogApp.svelte';
 
   import NookBootScreen from '../molecules/NookBootScreen.svelte';
   import NookStatusBar from '../molecules/NookStatusBar.svelte';
@@ -156,6 +157,7 @@
             {#if nookState.currentApp === "contacts"} <ContactsApp /> {/if}
             {#if nookState.currentApp === "designer"} <DesignerApp /> {/if}
             {#if nookState.currentApp === "settings"} <SettingsApp /> {/if}
+            {#if nookState.currentApp === "changelog"} <ChangelogApp /> {/if}
 
             <!-- Launching embedded directory pinned frames -->
             <NookExternalAppScreen />

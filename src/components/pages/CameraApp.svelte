@@ -4,6 +4,7 @@
   import nookState from '@/lib/nookState.svelte';
   import { Camera, Image as ImageIcon , X } from '@lucide/svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
+  import NookIcon from '../atoms/NookIcon.svelte';
 
   const ctx = getPhoneContext();
   const FILTERS = [
@@ -124,7 +125,9 @@
     textClass="text-[#3e1b54]"
   >
     {#snippet iconSnippet()}
-      <span class="mr-1 flex items-center justify-center w-6 h-6 text-2xl">📷</span>
+      <div class="w-12 h-12 mr-1">
+        <NookIcon name="camera" class="w-full h-full drop-shadow-sm" />
+      </div>
     {/snippet}
     {#snippet actions()}
       <button

@@ -4,6 +4,7 @@
   import { Upload, X, Settings } from "@lucide/svelte";
   import { onMount } from 'svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
+  import NookIcon from '../atoms/NookIcon.svelte';
   import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   const ctx = getPhoneContext();
 
@@ -51,11 +52,9 @@
     bgClass="bg-[#75cfbe]"
   >
     {#snippet iconSnippet()}
-      <svg class="w-5 h-5 drop-shadow-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
-        <line x1="9" y1="3" x2="9" y2="18"></line>
-        <line x1="15" y1="6" x2="15" y2="21"></line>
-      </svg>
+      <div class="w-12 h-12 mr-1">
+        <NookIcon name="map" class="w-full h-full object-contain drop-shadow-sm" />
+      </div>
     {/snippet}
     {#snippet actions()}
       <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">

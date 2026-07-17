@@ -28,14 +28,15 @@
     X,
     Heart,
     Archive,
-    ArrowLeftRight,
+    Handshake,
     Store,
     ChevronLeft,
     Disc,
     Image,
     Wrench,
     Palette
-  } from "@lucide/svelte";
+    } from "@lucide/svelte";
+  import shoppingIcon from '@/assets/img/icons/shopping_icon.png';
 
   type AppView = "home" | "browse" | "detail";
   let currentView = $state<AppView>("home");
@@ -304,7 +305,7 @@
 <NookAppTemplate
   title="Nook Shopping"
   subtitle="Catalog"
-  headerBgClass="bg-transparent"
+  headerBgClass="bg-[#ebce3f]"
   bgClass="nook-shop-bg"
   textClass="text-[#4c4637]"
   showSearch={hasSearched}
@@ -320,18 +321,20 @@
   categoryLayoutStyle="wrap"
   getCategoryIcon={getCategoryIcon}
   getCategoryLabel={(cat) => cat}
-  categoryActiveBgClass="bg-[#82c56f]"
-  categoryInactiveTextClass="text-[#c2bcab] hover:text-[#a09a8a]"
+  categoryActiveBgClass="bg-[#daa520]"
+  categoryInactiveTextClass="text-[#daa520]/60 hover:text-[#daa520]"
   categoryBgClass="bg-transparent"
   categoryBorderClass="border-0 shadow-none"
-  categoryLabelBgClass="bg-[#82c56f]"
+  categoryLabelBgClass="bg-[#daa520]"
   categoryLabelTextClass="text-white"
   showBottomNav={currentView !== "home"}
   bottomNavBgClass="bg-[#fcfaf4]"
   bottomNavBorderClass="border-t-4 border-[#edd8aa]"
 >
   {#snippet iconSnippet()}
-    <ShoppingBag class="w-5 h-5 drop-shadow-sm mr-1" />
+    <div class="w-12 h-12 mr-1">
+      <NookIcon name="shopping" class="w-full h-full object-contain drop-shadow-sm" />
+    </div>
   {/snippet}
 
   {#snippet headerActions()}
@@ -348,7 +351,7 @@
       { id: 'in-stock', label: 'Shop', icon: Store },
       { id: 'storage', label: 'Storage', icon: Archive },
       { id: 'wishlist', label: 'Wishlist', icon: Heart },
-      { id: 'for-trade', label: 'For Trade', icon: ArrowLeftRight }
+      { id: 'for-trade', label: 'For Trade', icon: Handshake }
     ] as tab}
       <button
         onclick={() => activeTab = tab.id as any}
@@ -371,11 +374,11 @@
   <div class="nook-shop-home">
 
     <!-- Top bar: title + bells counter -->
-    <div class="nook-shop-home__topbar">
+    <!-- <div class="nook-shop-home__topbar">
       <button onclick={ctx.handleHomeButton} class="nook-shop-home__close" title="Close App">
         <X class="w-3.5 h-3.5 stroke-[3px]" />
       </button>
-    </div>
+    </div> -->
 
     <!-- Welcome title -->
     <h1 class="nook-shop-home__welcome">Welcome to Nook Shopping!</h1>
@@ -504,71 +507,95 @@
       <div class="flex-1 flex flex-col min-h-0 relative overflow-hidden nook-catalog-main bg-transparent">
         
                 <!-- Hero Section -->
-        <div class="nook-catalog-hero border-b-2 border-[#e1d9be] z-10 p-4 flex gap-4 h-[210px] items-stretch relative">
+        <div class="nook-catalog-hero z-10 flex flex-col relative min-h-[220px]">
           {#if activeItem}
-            <!-- Left Side: Details and Actions -->
-            <div class="flex-1 flex flex-col justify-between py-1">
-              <div class="text-left">
-                <div class="text-[#5a4a18] text-[22px] font-black leading-tight drop-shadow-sm truncate capitalize">{activeItem.name}</div>
-                <div class="text-[#a89f91] text-[10px] font-bold uppercase tracking-wider mt-0.5">{activeItem.category}</div>
+            <!-- Top Ribbons -->
+            <div class="absolute top-4 left-0 w-full flex justify-between items-start pointer-events-none z-20 px-0">
+              <!-- Title Ribbon (Left) -->
+              <div class="bg-[#fcfaf4]/90 backdrop-blur-md px-4 py-1.5 rounded-r-2xl border-y-2 border-r-2 border-[#e1d9be] shadow-sm pointer-events-auto max-w-[50%] flex flex-col">
+                <span class="text-[#5a4a18] text-[18px] font-black leading-tight drop-shadow-sm truncate capitalize">{activeItem.name}</span>
+                <span class="text-[#a89f91] text-[9px] font-bold uppercase tracking-wider mt-0.5">{activeItem.category}</span>
               </div>
 
-              <div class="flex flex-col gap-2">
-                {#if activeTab !== 'in-stock'}
-                  <!-- Counter for Wishlist, Storage, For Trade -->
-                  <div class="flex items-center justify-between py-1.5 px-4 bg-[#8cbe7b] text-white rounded-full font-bold shadow-sm">
-                    <button class="text-white text-xl leading-none hover:scale-110 active:scale-95 transition-transform px-2" onclick={() => nookState.setItemQuantity(activeItem.id, nookState.getItemQuantity(activeItem.id) - 1)}>-</button>
-                    <span>{nookState.getItemQuantity(activeItem.id)}</span>
-                    <button class="text-white text-xl leading-none hover:scale-110 active:scale-95 transition-transform px-2" onclick={() => nookState.setItemQuantity(activeItem.id, nookState.getItemQuantity(activeItem.id) + 1)}>+</button>
-                  </div>
-                {/if}
-
-                <div class="flex items-center gap-1">
-                  <div class="flex items-center gap-1.5 px-2 py-2 bg-black/5 text-[#5a4a18] rounded-full font-bold shadow-sm flex-1 justify-center truncate">
-                    <svg class="w-3.5 h-3.5 text-[#cfb036] opacity-90 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C10.5 2 9.5 3 9.5 4C9.5 4.5 10 5 10 5H14C14 5 14.5 4.5 14.5 4C14.5 3 13.5 2 12 2Z" fill="#ffb75e"/>
-                      <path d="M6.5 7C6.5 7 4.5 13 4.5 17C4.5 21 7.5 23 12 23C16.5 23 19.5 21 19.5 17C19.5 13 17.5 7 17.5 7H6.5Z" fill="#ffd470"/>
-                    </svg>
-                    <span class="text-[10px] whitespace-nowrap">
-                      {activeItem.sell_price ? `Sells for ${activeItem.sell_price.toLocaleString()}` : 'Not for sale'}
-                    </span>
-                  </div>
-
-                  {#if activeItem.is_orderable}
-                    <button 
-                      onclick={() => { selectedGiftItem = activeItem; isFriendPickerOpen = true; }}
-                      class="flex-1 bg-[#darkred] text-[#white] py-2 px-2 rounded-full font-black flex items-center justify-center gap-1.5 shadow-sm text-[10px] hover:bg-[#a8cdc5] transition-colors border-2 border-white cursor-pointer whitespace-nowrap"
-                    >
-                      <ShoppingBag class="w-3 h-3 flex-shrink-0" strokeWidth={3} />
-                      Gift
-                    </button>
-                  {/if}
+              <!-- Price/Gift Ribbon (Right) -->
+              <div class="flex flex-col gap-1 items-end pointer-events-auto">
+                <div class="bg-[#fcfaf4]/90 backdrop-blur-md pl-3 pr-4 py-1.5 rounded-l-2xl border-y-2 border-l-2 border-[#e1d9be] shadow-sm flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-[#cfb036] opacity-90 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C10.5 2 9.5 3 9.5 4C9.5 4.5 10 5 10 5H14C14 5 14.5 4.5 14.5 4C14.5 3 13.5 2 12 2Z" fill="#ffb75e"/>
+                    <path d="M6.5 7C6.5 7 4.5 13 4.5 17C4.5 21 7.5 23 12 23C16.5 23 19.5 21 19.5 17C19.5 13 17.5 7 17.5 7H6.5Z" fill="#ffd470"/>
+                  </svg>
+                  <span class="text-[12px] font-bold text-[#5a4a18] whitespace-nowrap">
+                    {activeItem.sell_price ? `Sells for ${activeItem.sell_price.toLocaleString()}` : 'Not for sale'}
+                  </span>
                 </div>
-              </div>
-
-              <!-- List Management Icons -->
-              <div class="flex items-center justify-between gap-1 mt-auto bg-[#fcfaf4] p-1.5 rounded-2xl border border-[#e1d9be]">
-                <button onclick={() => { nookState.toggleWishlistItem(activeItem.id); }} class="flex-1 flex flex-col items-center py-1 transition-all rounded-xl {nookState.isWishlistItem(activeItem.id) ? 'bg-[#fdafb2]/20 text-[#8c2a2e]' : 'text-[#8c8577] hover:bg-gray-50'}">
-                  <Heart class="w-5 h-5 mb-0.5 {nookState.isWishlistItem(activeItem.id) ? 'fill-current' : ''}" />
-                </button>
-                <div class="w-px h-6 bg-[#e1d9be]"></div>
-                <button onclick={() => { nookState.toggleStorageItem(activeItem.id); }} class="flex-1 flex flex-col items-center py-1 transition-all rounded-xl {nookState.isStorageItem(activeItem.id) ? 'bg-[#bedad4]/20 text-[#2d5c56]' : 'text-[#8c8577] hover:bg-gray-50'}">
-                  <Archive class="w-5 h-5 mb-0.5" strokeWidth={nookState.isStorageItem(activeItem.id) ? 3 : 2} />
-                </button>
-                <div class="w-px h-6 bg-[#e1d9be]"></div>
-                <button onclick={() => { nookState.toggleForTradeItem(activeItem.id); }} class="flex-1 flex flex-col items-center py-1 transition-all rounded-xl {nookState.isForTradeItem(activeItem.id) ? 'bg-[#ffebd1]/30 text-[#b36b19]' : 'text-[#8c8577] hover:bg-gray-50'}">
-                  <ArrowLeftRight class="w-5 h-5 mb-0.5" strokeWidth={nookState.isForTradeItem(activeItem.id) ? 3 : 2} />
-                </button>
+                {#if activeItem.is_orderable}
+                  <button 
+                    onclick={() => { selectedGiftItem = activeItem; isFriendPickerOpen = true; }}
+                    class="bg-[#darkred] text-white py-1.5 px-4 mr-2 rounded-full font-black flex items-center justify-center gap-1.5 shadow-sm text-[10px] hover:bg-[#a8cdc5] transition-colors border-2 border-white cursor-pointer"
+                  >
+                    <ShoppingBag class="w-3 h-3 flex-shrink-0" strokeWidth={3} />
+                    Gift
+                  </button>
+                {/if}
               </div>
             </div>
 
-            <!-- Right Side: Naked Image -->
-            <div class="flex-1 flex justify-center items-center h-full relative">
+            <!-- Hero Image Full Width -->
+            <div class="flex-1 w-full h-[180px] flex justify-center items-center py-4 relative z-10 pt-16 pb-12">
               {#if activeItem.imageUrl}
-                <img src={activeItem.imageUrl} alt={activeItem.name} class="w-full h-full max-h-[140px] object-contain drop-shadow-xl" />
+                <img src={activeItem.imageUrl} alt={activeItem.name} class="w-full h-full max-h-[140px] object-contain drop-shadow-xl hover:scale-110 transition-transform duration-300" />
               {:else}
-                <Leaf class="w-20 h-20 text-[#c6b199]" />
+                <Leaf class="w-24 h-24 text-[#c6b199]" />
               {/if}
+            </div>
+
+            <!-- Bottom Action Bar (Counters & Lists) -->
+            <div class="w-full bg-[#fcfaf4] border-y-2 border-[#e1d9be] py-3 px-2 flex items-center justify-around z-20 shadow-sm shrink-0">
+              <!-- Wishlist -->
+              <div class="flex-1 flex items-center justify-center gap-3">
+                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(1, nookState.getItemQuantity(activeItem.id, 'wishlist') - 1), 'wishlist')}>-</button>
+                
+                <button onclick={() => { nookState.toggleWishlistItem(activeItem.id); }} class="relative flex justify-center items-center py-2 transition-all {nookState.isWishlistItem(activeItem.id) ? 'text-[#8c2a2e]' : 'text-[#8c8577] hover:text-[#82c56f]'}">
+                  <span class="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[12px] font-black tracking-tight {nookState.isWishlistItem(activeItem.id) ? 'text-[#8c2a2e]' : 'text-[#a89f91]'}">
+                    {nookState.getItemQuantity(activeItem.id, 'wishlist')}
+                  </span>
+                  <Heart class="w-7 h-7 {nookState.isWishlistItem(activeItem.id) ? 'fill-[#fdafb2]' : ''}" />
+                </button>
+                
+                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, nookState.getItemQuantity(activeItem.id, 'wishlist') + 1, 'wishlist')}>+</button>
+              </div>
+
+              <div class="w-px h-10 bg-[#e1d9be]"></div>
+
+              <!-- Storage -->
+              <div class="flex-1 flex items-center justify-center gap-3">
+                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(1, nookState.getItemQuantity(activeItem.id, 'storage') - 1), 'storage')}>-</button>
+                
+                <button onclick={() => { nookState.toggleStorageItem(activeItem.id); }} class="relative flex justify-center items-center py-2 transition-all {nookState.isStorageItem(activeItem.id) ? 'text-[#2d5c56]' : 'text-[#8c8577] hover:text-[#82c56f]'}">
+                  <span class="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[12px] font-black tracking-tight {nookState.isStorageItem(activeItem.id) ? 'text-[#2d5c56]' : 'text-[#a89f91]'}">
+                    {nookState.getItemQuantity(activeItem.id, 'storage')}
+                  </span>
+                  <Archive class="w-7 h-7 {nookState.isStorageItem(activeItem.id) ? 'fill-[#bedad4]' : ''}" strokeWidth={nookState.isStorageItem(activeItem.id) ? 2 : 2} />
+                </button>
+                
+                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, nookState.getItemQuantity(activeItem.id, 'storage') + 1, 'storage')}>+</button>
+              </div>
+
+              <div class="w-px h-10 bg-[#e1d9be]"></div>
+
+              <!-- Trade -->
+              <div class="flex-1 flex items-center justify-center gap-3">
+                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(1, nookState.getItemQuantity(activeItem.id, 'trade') - 1), 'trade')}>-</button>
+                
+                <button onclick={() => { nookState.toggleForTradeItem(activeItem.id); }} class="relative flex justify-center items-center py-2 transition-all {nookState.isForTradeItem(activeItem.id) ? 'text-[#b36b19]' : 'text-[#8c8577] hover:text-[#82c56f]'}">
+                  <span class="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[12px] font-black tracking-tight {nookState.isForTradeItem(activeItem.id) ? 'text-[#b36b19]' : 'text-[#a89f91]'}">
+                    {nookState.getItemQuantity(activeItem.id, 'trade')}
+                  </span>
+                  <Handshake class="w-7 h-7 {nookState.isForTradeItem(activeItem.id) ? 'text-[#b36b19]' : ''}" strokeWidth={nookState.isForTradeItem(activeItem.id) ? 2 : 2} />
+                </button>
+                
+                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, nookState.getItemQuantity(activeItem.id, 'trade') + 1, 'trade')}>+</button>
+              </div>
             </div>
           {:else}
             <div class="flex-1 flex flex-col items-center justify-center text-[#8c8577] opacity-50 w-full">
@@ -688,13 +715,13 @@
   :global(.nook-shop-bg) {
     background-color: #fdf6a8 !important;
   }
-  :global(.nook-shop-bg::before) {
+  :global(.nook-shop-bg)::before {
     content: "";
     position: absolute;
     inset: 0;
     opacity: 0.4;
     pointer-events: none;
-    background-image: url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M20 6c3 4.5 9 7.5 9 15s-6 10.5-9 15c-3-4.5-9-7.5-9-15s6-10.5 9-15z" fill="%23dfac2d" fill-opacity="0.5"/%3E%3C/svg%3E');
+    background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23dfac2d" fill-opacity="0.3" stroke="%23dfac2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.4"%3E%3Cpath d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 1 9.8a7 7 0 0 1-13.4 3.2"%3E%3C/path%3E%3Cpath d="M14 11.5a3 3 0 0 0-3-3H7.5"%3E%3C/path%3E%3C/svg%3E');
     background-size: 50px 50px;
     animation: movePatternGlobal 15s linear infinite;
     z-index: 0;

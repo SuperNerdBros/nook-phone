@@ -5,6 +5,7 @@
   import { fetchPassports, linkPassport, isProUser } from '@/lib/api';
   import { onMount } from 'svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
+  import NookIcon from '../atoms/NookIcon.svelte';
 
   const ctx = getPhoneContext();
   const TITLE_PREFIXES = ["Horizon", "Wild", "Friendly", "Active", "Casual", "Island", "Cozy", "Legendary", "Sassy", "Happy"];
@@ -99,11 +100,15 @@
 <div id="passport-app" class="flex flex-col h-full ac-app-screen">
   <NookAppHeader 
     title="Island Passport" 
-    icon="📇" 
     subtitle="View and update your residency profile" 
     bgClass="bg-[#7cb988]" 
     textClass="text-[#1c3d24]"
   >
+    {#snippet iconSnippet()}
+      <div class="w-12 h-12 mr-1">
+        <NookIcon name="passport" class="w-full h-full object-contain drop-shadow-sm" />
+      </div>
+    {/snippet}
     {#snippet actions()}
       <button
         onclick={isEditing ? handleSave : () => isEditing = true}

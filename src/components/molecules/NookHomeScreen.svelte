@@ -171,6 +171,38 @@
     {/each}
   </div>
 
+  <!-- Left/Right Nav Arrows -->
+  {#if pages.length > 1}
+    {#if currentPage > 0}
+      <button 
+        onclick={() => sliderRef?.scrollTo({ left: (currentPage - 1) * sliderRef.clientWidth, behavior: 'smooth' })}
+        class="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-transparent border-0 outline-none cursor-pointer p-0 active:scale-95 transition-transform duration-100"
+        aria-label="Previous Page"
+        style="filter: drop-shadow(0 3px 4px rgba(0,0,0,0.25));"
+      >
+        <svg width="28" height="46" viewBox="0 0 28 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Rounded triangle badge pointing left -->
+          <path d="M26 4 C26 4, 26 1, 23 1 C21 1, 20 2.5, 20 2.5 L3 20 C0.5 22, 0.5 24, 3 26 L20 43.5 C20 43.5, 21 45, 23 45 C26 45, 26 42, 26 42 Z" fill="#f0a41a"/>
+          <path d="M25 4 C25 4, 25 2.5, 23 2.5 C21.5 2.5, 20.5 3.5, 20.5 3.5 L3.5 21 C1.5 22.5, 1.5 23.5, 3.5 25 L20.5 42.5 C20.5 42.5, 21.5 43.5, 23 43.5 C25 43.5, 25 42, 25 42 Z" fill="#ffd04a" opacity="0.5"/>
+        </svg>
+      </button>
+    {/if}
+    {#if currentPage < pages.length - 1}
+      <button 
+        onclick={() => sliderRef?.scrollTo({ left: (currentPage + 1) * sliderRef.clientWidth, behavior: 'smooth' })}
+        class="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-transparent border-0 outline-none cursor-pointer p-0 active:scale-95 transition-transform duration-100"
+        aria-label="Next Page"
+        style="filter: drop-shadow(0 3px 4px rgba(0,0,0,0.25));"
+      >
+        <svg width="28" height="46" viewBox="0 0 28 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Rounded triangle badge pointing right -->
+          <path d="M2 4 C2 4, 2 1, 5 1 C7 1, 8 2.5, 8 2.5 L25 20 C27.5 22, 27.5 24, 25 26 L8 43.5 C8 43.5, 7 45, 5 45 C2 45, 2 42, 2 42 Z" fill="#f0a41a"/>
+          <path d="M3 4 C3 4, 3 2.5, 5 2.5 C6.5 2.5, 7.5 3.5, 7.5 3.5 L24.5 21 C26.5 22.5, 26.5 23.5, 24.5 25 L7.5 42.5 C7.5 42.5, 6.5 43.5, 5 43.5 C3 43.5, 3 42, 3 42 Z" fill="#ffd04a" opacity="0.5"/>
+        </svg>
+      </button>
+    {/if}
+  {/if}
+
   <!-- Pagination Dots -->
   <div class="flex justify-center items-center gap-2 mt-1 h-[14px] shrink-0">
     {#each pages as _, i}
