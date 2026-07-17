@@ -25,7 +25,7 @@
         class="nook-header-btn"
         title="Close App"
       >
-        <X class="w-3.5 h-3.5 stroke-[3px]" />
+        <X class="w-3.5 h-3.5 stroke-[3px] text-[#2d6f78]" />
       </button>
     {/snippet}
   </NookAppHeader>

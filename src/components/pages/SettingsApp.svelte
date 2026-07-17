@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Settings, Clock, Battery, Accessibility, ChevronLeft, Image as ImageIcon, PaintBucket, Search, Smartphone, Info, LayoutList, ChevronDown } from "@lucide/svelte";
+  import { Settings, Clock, Battery, Accessibility, ChevronLeft, Image as ImageIcon, PaintBucket, Search, Smartphone, Info, LayoutList, ChevronDown , X } from '@lucide/svelte';
   import nookState from "@/lib/nookState.svelte";
   import { ALL_WALLPAPERS } from "@/lib/wallpaperData";
   import { getPhoneContext } from "../organisms/phoneContext.svelte";
@@ -7,6 +7,7 @@
   import NookIcon from "../atoms/NookIcon.svelte";
   import NookAppHeader from "../organisms/NookAppHeader.svelte";
 
+  const ctx = getPhoneContext();
   const phone = getPhoneContext();
 
   const toggle24Hour = () => nookState.updateSettings({ use24HourTime: !nookState.settings.use24HourTime });
@@ -68,6 +69,7 @@
           class="w-full bg-white/40 border-2 border-[#d99c45] rounded-full py-1.5 pl-8 pr-3 text-[11px] font-bold text-[#5c3a21] placeholder:text-[#5c3a21]/50 focus:outline-none focus:bg-white focus:border-[#5c3a21]"
         />
       </div>
+      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
     {/snippet}
   </NookAppHeader>
 

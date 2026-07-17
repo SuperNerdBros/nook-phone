@@ -1,11 +1,13 @@
 <script lang="ts">
+  import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   import { onMount } from 'svelte';
   import nookState from '@/lib/nookState.svelte';
   import { fetchNookipediaVillagers, fetchNookipediaItems } from '@/lib/api';
-  import { Search, Star, MessageCircle, Home, Info, ChevronLeft, Phone, Video, Users, Plus, Image as ImageIcon, Camera, Gift, Trash2, Check, UserPlus, Leaf } from '@lucide/svelte';
+  import { Search, Star, MessageCircle, Home, Info, ChevronLeft, Phone, Video, Users, Plus, Image as ImageIcon, Camera, Gift, Trash2, Check, UserPlus, Leaf , X } from '@lucide/svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import AcnhBubble from '@/components/molecules/AcnhBubble.svelte';
   
+  const ctx = getPhoneContext();
   let allVillagers = $state<any[]>([]);
   let isLoading = $state(true);
   let searchQuery = $state("");
@@ -386,7 +388,8 @@
             <Plus class="w-5 h-5" />
           </button>
         {/if}
-      {/snippet}
+        <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
+    {/snippet}
       
       <div class="relative w-full">
         <Search class="w-4 h-4 text-[#649e8a] absolute left-3 top-3" />

@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { X } from '@lucide/svelte';
   import NookAppHeader from "../organisms/NookAppHeader.svelte";
   import NookIcon from "../atoms/NookIcon.svelte";
   import { getPhoneContext } from "../organisms/phoneContext.svelte";
 
+  const ctx = getPhoneContext();
   const phone = getPhoneContext();
   const appData = phone.allApps.find((a: any) => a.id === 'critter') || { name: 'Critterpedia', bg: 'bg-[#fed151]', id: 'critter' };
 </script>
@@ -18,6 +20,16 @@
       <div class="w-6 h-6 mr-1">
         <NookIcon name={appData.id || "critter"} class="w-full h-full drop-shadow-sm text-[#715c34]" />
       </div>
+    {/snippet}
+  
+    {#snippet actions()}
+      <button
+        onclick={ctx.handleHomeButton}
+        class="nook-header-btn"
+        title="Close App"
+      >
+        <X class="w-3.5 h-3.5 stroke-[3px]" />
+      </button>
     {/snippet}
   </NookAppHeader>
   

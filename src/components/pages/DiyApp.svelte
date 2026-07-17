@@ -2,6 +2,9 @@
   import { onMount } from 'svelte';
   import nookState from '@/lib/nookState.svelte';
   import { fetchDIYRecipes, fetchDIYMaterials } from '@/lib/api';
+  import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
+  import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
+  const ctx = getPhoneContext();
   import { 
     Hammer, 
     Grid, 
@@ -18,7 +21,8 @@
     Utensils,
     CakeSlice,
     Coffee,
-    Image as ImageIcon
+    Image as ImageIcon,
+    X as XIcon
   } from "@lucide/svelte";
 
   let searchTerm = $state("");
@@ -141,6 +145,21 @@
 
 <div class="flex flex-col h-full bg-[#f3ebd9] text-[#7a5927] font-['Varela_Round',sans-serif] relative overflow-hidden select-none">
   
+  <NookAppHeader 
+    title="DIY Recipes"
+    subtitle="Workshop"
+    bgClass="bg-[#f39566]"
+  >
+    {#snippet iconSnippet()}
+      <Hammer class="w-5 h-5 drop-shadow-sm mr-1" />
+    {/snippet}
+    {#snippet actions()}
+      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
+        <XIcon class="w-3.5 h-3.5 stroke-[3px]" />
+      </button>
+    {/snippet}
+  </NookAppHeader>
+
   {#if isLoading}
     <div class="flex-1 flex flex-col items-center justify-center">
       <Loader2 class="w-10 h-10 animate-spin opacity-50 mb-4" />

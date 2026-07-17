@@ -1,13 +1,15 @@
 <script lang="ts">
+  import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   import nookState from '@/lib/nookState.svelte';
   import { projectsData } from '@/lib/nookData';
-  import { Search, Globe, Download, CheckCircle, Store, Smartphone, Code, ArrowLeft } from '@lucide/svelte';
+  import { Search, Globe, Download, CheckCircle, Store, Smartphone, Code, ArrowLeft , X } from '@lucide/svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
   import Rating from '../atoms/Rating.svelte';
   import { fetchApps, installAppTracker, rateApp, isProUser } from '@/lib/api';
   import { onMount } from 'svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
 
+  const ctx = getPhoneContext();
   const getBgUrl = (bgName: string): string => {
     let base = "/assets/bgs/";
     if (typeof window !== 'undefined' && window.wpApiSettings?.pluginUrl) {
@@ -140,6 +142,7 @@
         <Smartphone class="w-3.5 h-3.5" />
         {filteredProjects.length} Apps
       </div>
+      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
     {/snippet}
   </NookAppHeader>
 

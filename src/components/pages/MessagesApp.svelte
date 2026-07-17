@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   import { onMount } from 'svelte';
   import { fade, fly } from 'svelte/transition';
-  import { ArrowLeft, Send, Search, CheckCheck, MessageSquare } from '@lucide/svelte';
+  import { ArrowLeft, Send, Search, CheckCheck, MessageSquare , X } from '@lucide/svelte';
   import nookState from '@/lib/nookState.svelte';
   import { fetchConversations, fetchDirectMessages, sendDirectMessage, fetchNookUsers, isProUser } from '@/lib/api';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
@@ -22,6 +23,7 @@
     is_read: boolean;
   }
 
+  const ctx = getPhoneContext();
   let conversations = $state<Conversation[]>([]);
   let users = $state<any[]>([]);
   let activeChatPartner = $state<any | null>(null);
@@ -148,6 +150,7 @@
           <MessageSquare class="w-4 h-4" />
         </button>
       {/if}
+      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
     {/snippet}
   </NookAppHeader>
 

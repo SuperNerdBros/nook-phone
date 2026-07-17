@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   import { onMount } from 'svelte';
   import { fade, fly } from 'svelte/transition';
-  import { Search, Heart, Wifi, WifiOff, MessageSquare, RefreshCw, Send, Check } from '@lucide/svelte';
+  import { Search, Heart, Wifi, WifiOff, MessageSquare, RefreshCw, Send, Check , X } from '@lucide/svelte';
   import nookState from '@/lib/nookState.svelte';
   import { fetchNookUsers, fetchPassports, isProUser, sendDirectMessage } from '@/lib/api';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
@@ -15,6 +16,7 @@
     isBestFriend: boolean;
   }
 
+  const ctx = getPhoneContext();
   let friends = $state<Friend[]>([]);
   let loading = $state(true);
   let searchQuery = $state("");
@@ -151,6 +153,7 @@
       >
         <RefreshCw class="w-4 h-4" />
       </button>
+      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
     {/snippet}
   </NookAppHeader>
 

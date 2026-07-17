@@ -1,9 +1,11 @@
 <script lang="ts">
+  import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   import { onMount, onDestroy } from 'svelte';
   import nookState from '@/lib/nookState.svelte';
-  import { Camera, Image as ImageIcon } from '@lucide/svelte';
+  import { Camera, Image as ImageIcon , X } from '@lucide/svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
 
+  const ctx = getPhoneContext();
   const FILTERS = [
     { id: "normal", name: "Normal", class: "" },
     { id: "monochrome", name: "Monochrome", class: "filter-monochrome" },
@@ -132,6 +134,7 @@
       >
         <ImageIcon class="w-5 h-5" />
       </button>
+      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
     {/snippet}
   </NookAppHeader>
 

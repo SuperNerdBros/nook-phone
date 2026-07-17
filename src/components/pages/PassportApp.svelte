@@ -1,10 +1,12 @@
 <script lang="ts">
+  import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   import nookState from '@/lib/nookState.svelte';
-  import { Edit2, Save, RefreshCw, Cloud, CloudOff } from '@lucide/svelte';
+  import { Edit2, Save, RefreshCw, Cloud, CloudOff , X } from '@lucide/svelte';
   import { fetchPassports, linkPassport, isProUser } from '@/lib/api';
   import { onMount } from 'svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
 
+  const ctx = getPhoneContext();
   const TITLE_PREFIXES = ["Horizon", "Wild", "Friendly", "Active", "Casual", "Island", "Cozy", "Legendary", "Sassy", "Happy"];
   const TITLE_SUFFIXES = ["Dweller", "Resident", "Explorer", "Hustler", "Nookling", "Leader", "Fanatic", "Pioneer", "Artist"];
 
@@ -113,6 +115,7 @@
           <Edit2 class="w-3.5 h-3.5" /> Edit
         {/if}
       </button>
+      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
     {/snippet}
   </NookAppHeader>
 

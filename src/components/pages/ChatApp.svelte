@@ -1,10 +1,11 @@
 <script lang="ts">
+  import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   import nookState from '@/lib/nookState.svelte';
   import { onMount } from 'svelte';
   import { 
     MessageSquare, Send, Trash2, ArrowLeft, Plus, 
     ThumbsUp, Calendar, User, MessageCircle, Hash 
-  } from '@lucide/svelte';
+  , X } from '@lucide/svelte';
   import { fetchThreads, createThread, fetchComments, createComment, isProUser } from '@/lib/api';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NewThreadForm from './NewThreadForm.svelte';
@@ -24,6 +25,7 @@
   }
 
   // Helper to normalize island name for n/ prefix (removes " Island" suffix)
+  const ctx = getPhoneContext();
   const getIslandSublog = () => {
     const raw = nookState.passport.islandName || "Nook";
     const clean = raw.replace(/\s*Island\s*$/gi, "");
@@ -346,6 +348,7 @@
           </button>
         </div>
       {/if}
+      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
     {/snippet}
   </NookAppHeader>
  

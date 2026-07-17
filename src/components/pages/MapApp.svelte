@@ -3,6 +3,9 @@
   import { fetchNookipediaVillagers } from '@/lib/api';
   import { Upload, X, Settings } from "@lucide/svelte";
   import { onMount } from 'svelte';
+  import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
+  import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
+  const ctx = getPhoneContext();
 
   let fileInput: HTMLInputElement;
   let villagers = $state<any[]>([]);
@@ -42,19 +45,31 @@
 </script>
 
 <div id="map-app" class="flex flex-col h-full ac-app-screen relative bg-[#7ed3c4] overflow-hidden">
+  <NookAppHeader 
+    title="Map"
+    subtitle={nookState.passport.islandName}
+    bgClass="bg-[#75cfbe]"
+  >
+    {#snippet iconSnippet()}
+      <svg class="w-5 h-5 drop-shadow-sm mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
+        <line x1="9" y1="3" x2="9" y2="18"></line>
+        <line x1="15" y1="6" x2="15" y2="21"></line>
+      </svg>
+    {/snippet}
+    {#snippet actions()}
+      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
+        <X class="w-3.5 h-3.5 stroke-[3px]" />
+      </button>
+    {/snippet}
+  </NookAppHeader>
+
   <!-- Wavy overlay pattern -->
-  <div class="absolute inset-0 opacity-10 pointer-events-none"
+  <div class="absolute inset-0 opacity-10 pointer-events-none mt-[60px]"
     style="background-image: url('data:image/svg+xml,%3Csvg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M20 10c4 5 12 8 12 15s-8 12-12 15c-4-3-12-6-12-15s8-10 12-15z%22 fill=%22white%22 fill-opacity=%221%22/%3E%3C/svg%3E'); background-size: 40px 40px;">
   </div>
 
-  <!-- Top Ribbon -->
-  <div class="absolute top-4 left-1/2 -translate-x-1/2 z-20">
-    <div class="ac-ribbon shadow-md text-sm tracking-wide">
-      {nookState.passport.islandName}
-    </div>
-  </div>
-
-  <div class="flex-1 flex flex-row items-stretch relative z-10 pt-16 pb-4 px-2 gap-2 overflow-hidden">
+  <div class="flex-1 flex flex-row items-stretch relative z-10 pt-2 pb-4 px-2 gap-2 overflow-hidden">
     
     <!-- Left Sidebar: Residents -->
     <div class="w-[72px] shrink-0 flex flex-col items-center">

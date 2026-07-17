@@ -191,7 +191,7 @@ const INITIAL_STATE: NookOSState = {
   villagerMilestones: {},
   bestFriends: [],
   bestFriendsCommunicationsOn: true,
-  dockApps: ["directory", "messages", "contacts"]
+  dockApps: ["directory", "contacts", "settings"]
 };
 
 class NookStateManager {
@@ -277,7 +277,7 @@ class NookStateManager {
   get bestFriendsCommunicationsOn() { return this.state.bestFriendsCommunicationsOn !== false; }
   set bestFriendsCommunicationsOn(val) { this.state.bestFriendsCommunicationsOn = val; }
 
-  get dockApps() { return this.state.dockApps || ["directory", "messages", "contacts"]; }
+  get dockApps() { return this.state.dockApps || ["directory", "contacts", "settings"]; }
   set dockApps(val) { this.state.dockApps = val; }
 
   activeChatPartner = $state<{ id: number; name: string } | null>(null);
@@ -312,6 +312,9 @@ class NookStateManager {
         const saved = localStorage.getItem(storageKey);
         if (saved) {
           const parsed = JSON.parse(saved);
+          if (parsed.dockApps && parsed.dockApps.length === 3 && parsed.dockApps[0] === "directory" && parsed.dockApps[1] === "messages" && parsed.dockApps[2] === "contacts") {
+            parsed.dockApps = ["directory", "contacts", "settings"];
+          }
           this.state = { ...this.state, ...parsed };
         }
       } catch (e) {
