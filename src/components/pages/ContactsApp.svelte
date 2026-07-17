@@ -438,7 +438,7 @@
           </button>
         {:else}
           <NookToolbarButton onclick={() => { isAddMode = true; searchQuery = ''; selectedSpecies = ''; viewAll = false; }} class="mr-1" title="Add Contact">
-            <Plus class="w-3.5 h-3.5 stroke-[3px]" />
+            <Plus class="w-3.5 h-3.5 stroke-[3px] text-[#649e8a]" />
           </NookToolbarButton>
         {/if}
         <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
@@ -520,7 +520,7 @@
                     {/if}
                   </div>
                   <div class="flex-1 min-w-0 flex justify-between items-center">
-                    <div class="flex flex-col">
+                    <div class="flex flex-col pr-2">
                       <span class="font-black text-[#5c3a21] text-[15px] leading-tight truncate">{villager.name}</span>
                       <span class="text-[11px] font-bold text-[#8a7f66] truncate">{villager.species}</span>
                     </div>
@@ -535,9 +535,22 @@
                         </div>
                       {/if}
                     {:else}
-                      {#if nookState.isBestFriend(villager.id)}
-                        <Star class="w-4 h-4 text-[#f0b157] fill-current shrink-0" />
-                      {/if}
+                      <div class="flex items-center gap-1 shrink-0">
+                        <button
+                          onclick={(e) => { e.stopPropagation(); toggleResident(villager.id); }}
+                          class="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:bg-black/5 active:scale-90 cursor-pointer border-0 bg-transparent p-0"
+                          title={nookState.isResident(villager.id) ? "Evict Resident" : "Move Resident In"}
+                        >
+                          <Home class={`w-4 h-4 transition-colors ${nookState.isResident(villager.id) ? 'text-[#6cd476] fill-current' : 'text-[#e1d9be] hover:text-[#6cd476]'}`} />
+                        </button>
+                        <button
+                          onclick={(e) => { e.stopPropagation(); toggleVip(villager.id); }}
+                          class="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:bg-black/5 active:scale-90 cursor-pointer border-0 bg-transparent p-0"
+                          title={nookState.isBestFriend(villager.id) ? "Remove Best Friend" : "Add Best Friend"}
+                        >
+                          <Star class={`w-4 h-4 transition-colors ${nookState.isBestFriend(villager.id) ? 'text-[#f0b157] fill-current' : 'text-[#e1d9be] hover:text-[#f0b157]'}`} />
+                        </button>
+                      </div>
                     {/if}
                   </div>
                 </button>
@@ -585,7 +598,7 @@
           class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'island' ? 'bg-[#6cd476]/20 text-[#4ca454]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#4ca454]'}"
         >
           <Home class="w-5 h-5 mb-0.5 {activeTab === 'island' ? 'fill-current' : ''}" />
-          <span class="text-[10px] font-black uppercase tracking-wider">Neighbors</span>
+          <span class="text-[10px] font-black uppercase tracking-wider">Neighbors ({nookState.residents.length}/10)</span>
         </button>
       </div>
     {/if}
