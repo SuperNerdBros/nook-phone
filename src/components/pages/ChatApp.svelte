@@ -21,16 +21,16 @@
   }
 
   // Helper to normalize island name for n/ prefix (removes " Island" suffix)
-  const getIslandSubnook = () => {
+  const getIslandSublog = () => {
     const raw = nookState.passport.islandName || "Nook";
     const clean = raw.replace(/\s*Island\s*$/gi, "");
     return "n/" + clean.replace(/\s+/g, "");
   };
 
-  let islandSubnook = $derived(getIslandSubnook());
+  let islandSublog = $derived(getIslandSublog());
 
   // Default villager sublogs
-  const DEFAULT_SUBNOOKS = [
+  const DEFAULT_SUBLOGS = [
     "n/Isabelle",
     "n/TomNook",
     "n/Blathers",
@@ -41,8 +41,8 @@
   let customSublogs = $state<string[]>([]);
   let allSublogs = $derived([
     "n/All",
-    islandSubnook,
-    ...DEFAULT_SUBNOOKS,
+    islandSublog,
+    ...DEFAULT_SUBLOGS,
     ...customSublogs
   ]);
 
