@@ -588,6 +588,12 @@ class NookStateManager {
     if (!this.state.notifications) {
       this.state.notifications = [];
     }
+
+    const isDuplicate = this.state.notifications.some(
+      n => n.title === title && n.message === message && n.sender === sender
+    );
+    if (isDuplicate) return;
+
     const newNotif: NookNotification = {
       id: "n_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9),
       title,
