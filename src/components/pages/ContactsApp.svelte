@@ -303,10 +303,14 @@
     }
   }
 
-  function messageContact(villager: any) {
+  async function messageContact(villager: any) {
     const isResident = nookState.isResident(villager.id);
     if (isResident || nookState.isBestFriend(villager.id)) {
         nookState.sendChatMessage(villager.name, `Hey ${villager.name}!`, false);
+    }
+    if (nookState.settings.soundEffects) {
+      const { playSound } = await import('@/lib/audio');
+      playSound('success');
     }
     nookState.navigate('chat');
   }

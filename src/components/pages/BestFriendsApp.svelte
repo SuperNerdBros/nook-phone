@@ -69,7 +69,11 @@
     loading = false;
   }
 
-  function sendMessageToFriend(friend: Friend) {
+  async function sendMessageToFriend(friend: Friend) {
+    if (nookState.settings.soundEffects) {
+      const { playSound } = await import('@/lib/audio');
+      playSound('success');
+    }
     nookState.activeChatPartner = { id: friend.id, name: friend.name };
     nookState.navigate('messages');
   }

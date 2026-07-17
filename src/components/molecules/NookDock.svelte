@@ -3,6 +3,7 @@
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import nookIncLogo from '@/assets/img/Nook_Inc.svg';
   import NookAppIcon from '../atoms/NookAppIcon.svelte';
+  import { playSound } from '@/lib/audio';
 
   const ctx = getPhoneContext();
   const handleDockDrop = (e: DragEvent) => {
@@ -10,6 +11,7 @@
     e.stopPropagation();
     const appId = e.dataTransfer?.getData('appId');
     if (appId && nookState.dockApps.length < 4 && !nookState.dockApps.includes(appId)) {
+      playSound('pop', !nookState.settings.soundEffects);
       nookState.dockApps = [...nookState.dockApps, appId];
     }
   };
@@ -19,6 +21,7 @@
     e.stopPropagation();
     const appId = e.dataTransfer?.getData('appId');
     if (appId) {
+      playSound('pop', !nookState.settings.soundEffects);
       let newDock = [...nookState.dockApps];
       const oldIndex = newDock.indexOf(appId);
       if (oldIndex !== -1) {

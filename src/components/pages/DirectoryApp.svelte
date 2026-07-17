@@ -237,10 +237,16 @@
 
             <!-- Craftable Banner -->
             <div class="absolute bottom-0 left-0 w-full bg-[#45a38f] text-[#fffdf5] text-[10px] font-black py-1.5 flex items-center justify-center gap-1 shadow-inner z-10 border-t-2 border-[#368875]">
-              {#if isInstalled}
-                Installed
-              {:else}
-                <CloudDownload class="w-3.5 h-3.5" strokeWidth={3} /> Cloud
+              {#if selectedPlatform === 'installable'}
+                {#if isInstalled}
+                  Installed
+                {:else}
+                  <CloudDownload class="w-3.5 h-3.5" strokeWidth={3} /> Cloud
+                {/if}
+              {:else if selectedPlatform === 'ios'}
+                <Smartphone class="w-3.5 h-3.5" strokeWidth={3} /> iOS
+              {:else if selectedPlatform === 'android'}
+                <Smartphone class="w-3.5 h-3.5" strokeWidth={3} /> Android
               {/if}
             </div>
           </button>
@@ -338,7 +344,14 @@
           {#if selectedPlatform === 'installable' && selectedApp.site}
             {#if isInstalled}
               <button
-                onclick={() => { currentView = 'grid'; nookState.navigate(selectedApp.id || selectedApp.name); }}
+                onclick={async () => {
+                  if (nookState.settings.soundEffects) {
+                    const { playSound } = await import('@/lib/audio');
+                    playSound('success');
+                  }
+                  currentView = 'grid';
+                  nookState.navigate(selectedApp.id || selectedApp.name);
+                }}
                 class="w-full bg-[#1bc6b6] text-white py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#15a497] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
               >
                 <Play class="w-4 h-4 mr-1.5 fill-current" /> Open Tool

@@ -117,7 +117,7 @@
   
   <!-- Main OS Frame -->
   <div class="w-full h-full relative overflow-hidden flex flex-col bg-[#fdfcf2] select-none">
-    {#if !nookState.hasCompletedOnboarding}
+    {#if nookState.currentApp === "passport" && !nookState.hasCompletedOnboarding}
       <Onboarding />
     {:else}
       <!-- Dynamic Status Bar -->

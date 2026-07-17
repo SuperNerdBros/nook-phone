@@ -13,6 +13,7 @@ import {
   type MilesChallenge
 } from "./nookData";
 import { fetchRemoteState, saveRemoteState, isProUser } from "./api";
+import { playSound } from "./audio";
 
 export interface PassportInfo {
   name: string;
@@ -92,6 +93,7 @@ export interface NookOSState {
     use24HourTime: boolean;
     showBatteryPercentage: boolean;
     reduceMotion: boolean;
+    soundEffects: boolean;
     gridSize: number;
     defaultApps: Record<string, string>;
   };
@@ -190,6 +192,7 @@ const INITIAL_STATE: NookOSState = {
     use24HourTime: false,
     showBatteryPercentage: true,
     reduceMotion: false,
+    soundEffects: true,
     gridSize: 3,
     defaultApps: {}
   },
@@ -433,6 +436,7 @@ class NookStateManager {
 
   catchCritter(critterId: string) {
     if (!this.state.critters.caught.includes(critterId)) {
+      playSound('success', !this.state.settings.soundEffects);
       this.state.critters.caught.push(critterId);
       this.addBells(100);
       this.triggerAchievementProgress("m2", 1);
@@ -499,8 +503,12 @@ class NookStateManager {
     if (!this.state.catalog.wishlistIds) this.state.catalog.wishlistIds = [];
     if (this.state.catalog.wishlistIds.includes(itemId)) {
       this.state.catalog.wishlistIds = this.state.catalog.wishlistIds.filter(id => id !== itemId);
+      this.setItemQuantity(itemId, 0, 'wishlist');
     } else {
       this.state.catalog.wishlistIds.push(itemId);
+      if (this.getItemQuantity(itemId, 'wishlist') === 0) {
+        this.setItemQuantity(itemId, 1, 'wishlist');
+      }
     }
     this.save();
   }
@@ -509,13 +517,41 @@ class NookStateManager {
   getItemQuantity(itemId: string, type?: 'wishlist' | 'storage' | 'trade'): number {
     if (!this.state.catalog.itemQuantities) this.state.catalog.itemQuantities = {};
     const key = type ? `${itemId}_${type}` : itemId;
-    return this.state.catalog.itemQuantities[key] || 1;
+    return this.state.catalog.itemQuantities[key] !== undefined ? this.state.catalog.itemQuantities[key] : 0;
   }
 
   setItemQuantity(itemId: string, quantity: number, type?: 'wishlist' | 'storage' | 'trade') {
     if (!this.state.catalog.itemQuantities) this.state.catalog.itemQuantities = {};
     const key = type ? `${itemId}_${type}` : itemId;
-    this.state.catalog.itemQuantities[key] = Math.max(1, quantity);
+    const finalQty = Math.max(0, quantity);
+    this.state.catalog.itemQuantities[key] = finalQty;
+
+    if (type === 'wishlist') {
+      if (!this.state.catalog.wishlistIds) this.state.catalog.wishlistIds = [];
+      const hasItem = this.state.catalog.wishlistIds.includes(itemId);
+      if (finalQty >= 1 && !hasItem) {
+        this.state.catalog.wishlistIds.push(itemId);
+      } else if (finalQty === 0 && hasItem) {
+        this.state.catalog.wishlistIds = this.state.catalog.wishlistIds.filter(id => id !== itemId);
+      }
+    } else if (type === 'storage') {
+      if (!this.state.catalog.storageIds) this.state.catalog.storageIds = [];
+      const hasItem = this.state.catalog.storageIds.includes(itemId);
+      if (finalQty >= 1 && !hasItem) {
+        this.state.catalog.storageIds.push(itemId);
+      } else if (finalQty === 0 && hasItem) {
+        this.state.catalog.storageIds = this.state.catalog.storageIds.filter(id => id !== itemId);
+      }
+    } else if (type === 'trade') {
+      if (!this.state.catalog.forTradeIds) this.state.catalog.forTradeIds = [];
+      const hasItem = this.state.catalog.forTradeIds.includes(itemId);
+      if (finalQty >= 1 && !hasItem) {
+        this.state.catalog.forTradeIds.push(itemId);
+      } else if (finalQty === 0 && hasItem) {
+        this.state.catalog.forTradeIds = this.state.catalog.forTradeIds.filter(id => id !== itemId);
+      }
+    }
+
     this.save();
   }
 
@@ -528,8 +564,12 @@ class NookStateManager {
     if (!this.state.catalog.storageIds) this.state.catalog.storageIds = [];
     if (this.state.catalog.storageIds.includes(itemId)) {
       this.state.catalog.storageIds = this.state.catalog.storageIds.filter(id => id !== itemId);
+      this.setItemQuantity(itemId, 0, 'storage');
     } else {
       this.state.catalog.storageIds.push(itemId);
+      if (this.getItemQuantity(itemId, 'storage') === 0) {
+        this.setItemQuantity(itemId, 1, 'storage');
+      }
     }
     this.save();
   }
@@ -543,8 +583,12 @@ class NookStateManager {
     if (!this.state.catalog.forTradeIds) this.state.catalog.forTradeIds = [];
     if (this.state.catalog.forTradeIds.includes(itemId)) {
       this.state.catalog.forTradeIds = this.state.catalog.forTradeIds.filter(id => id !== itemId);
+      this.setItemQuantity(itemId, 0, 'trade');
     } else {
       this.state.catalog.forTradeIds.push(itemId);
+      if (this.getItemQuantity(itemId, 'trade') === 0) {
+        this.setItemQuantity(itemId, 1, 'trade');
+      }
     }
     this.save();
   }
@@ -714,9 +758,11 @@ class NookStateManager {
   installApp(appName: string) {
     if (!this.state.installedApps) this.state.installedApps = [];
     if (!this.state.installedApps.includes(appName)) {
+      playSound('beep', !this.state.settings.soundEffects);
       this.state.installingApp = appName;
       
       setTimeout(() => {
+        playSound('success', !this.state.settings.soundEffects);
         if (!this.state.installedApps) this.state.installedApps = [];
         this.state.installedApps.push(appName);
         if (!this.state.pinnedApps.includes(appName)) {
@@ -796,6 +842,7 @@ class NookStateManager {
     this.save();
     
     if (typeof window !== "undefined") {
+      playSound('bell', !this.state.settings.soundEffects);
       window.dispatchEvent(new CustomEvent("nook-notification", { detail: newNotif }));
     }
   }

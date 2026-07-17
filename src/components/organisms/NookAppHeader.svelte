@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { playSound } from '@/lib/audio';
+  import nookState from '@/lib/nookState.svelte';
   
   let { 
     title, 
@@ -33,7 +35,7 @@
 {#if isCollapsed}
   <!-- Collapsed: Thin pull-tab handle -->
   <button
-    onclick={() => isCollapsed = false}
+    onclick={() => { playSound('pop', !nookState.settings.soundEffects); isCollapsed = false; }}
     class="ext-header-handle {bgClass}"
     style={bgStyle}
   >
@@ -95,7 +97,7 @@
 
     <!-- Collapse handle -->
     <button
-      onclick={() => isCollapsed = true}
+      onclick={() => { playSound('pop', !nookState.settings.soundEffects); isCollapsed = true; }}
       class="ext-header-collapse-trigger"
     >
       <div class="ext-header-collapse-pill"></div>

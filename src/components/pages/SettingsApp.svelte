@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Settings, Clock, Battery, Accessibility, ChevronLeft, Image as ImageIcon, PaintBucket, Search, Smartphone, Info, LayoutList, ChevronDown , X } from '@lucide/svelte';
+  import { Settings, Clock, Battery, Accessibility, Volume2, ChevronLeft, Image as ImageIcon, PaintBucket, Search, Smartphone, Info, LayoutList, ChevronDown , X } from '@lucide/svelte';
   import nookState from "@/lib/nookState.svelte";
   import { ALL_WALLPAPERS } from "@/lib/wallpaperData";
   import { getPhoneContext } from "../organisms/phoneContext.svelte";
@@ -14,6 +14,7 @@
   const toggle24Hour = () => nookState.updateSettings({ use24HourTime: !nookState.settings.use24HourTime });
   const toggleBattery = () => nookState.updateSettings({ showBatteryPercentage: !nookState.settings.showBatteryPercentage });
   const toggleMotion = () => nookState.updateSettings({ reduceMotion: !nookState.settings.reduceMotion });
+  const toggleSound = () => nookState.updateSettings({ soundEffects: !nookState.settings.soundEffects });
 
   const setWallpaper = (id: string) => {
     nookState.activeWallpaperId = id;
@@ -55,7 +56,13 @@
     textClass="text-[#5c3a21]"
   >
     {#snippet iconSnippet()}
-      <button onclick={() => nookState.navigate(null)} class="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center border-0 text-[#5c3a21] hover:bg-white/50 cursor-pointer transition-colors shadow-inner mr-1">
+      <button onclick={async () => {
+        if (nookState.settings.soundEffects) {
+          const { playSound } = await import('@/lib/audio');
+          playSound('thwip');
+        }
+        nookState.navigate(null);
+      }} class="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center border-0 text-[#5c3a21] hover:bg-white/50 cursor-pointer transition-colors shadow-inner mr-1">
         <ChevronLeft class="w-5 h-5 pr-0.5" />
       </button>
     {/snippet}
@@ -125,7 +132,13 @@
               {/each}
               
               <button 
-                onclick={() => nookState.navigate('designs')}
+                onclick={async () => {
+                  if (nookState.settings.soundEffects) {
+                    const { playSound } = await import('@/lib/audio');
+                    playSound('success');
+                  }
+                  nookState.navigate('designs');
+                }}
                 class="flex flex-col items-center gap-2 bg-transparent border-0 p-0 cursor-pointer group opacity-70 hover:opacity-100 hover:scale-105 transition-all"
               >
                 <div class="w-full aspect-[9/16] rounded-2xl border-4 border-dashed border-[#e1d9be] shadow-sm flex items-center justify-center bg-[#fdfcf9] text-[#caa253]">
@@ -181,7 +194,7 @@
                 </button>
               </div>
 
-              <div class="flex items-center justify-between py-3">
+              <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
                 <div class="flex items-center gap-4">
                   <div class="w-10 h-10 rounded-2xl bg-purple-50 border-2 border-purple-200 flex items-center justify-center text-purple-500 shadow-inner">
                     <Accessibility class="w-5 h-5" />
@@ -197,6 +210,25 @@
                   class={`w-14 h-8 rounded-full p-1.5 transition-colors cursor-pointer border-2 shadow-inner flex items-center ${nookState.settings.reduceMotion ? 'bg-[#6cd476] border-[#4ca454]' : 'bg-[#e1d9be] border-[#dcd3be]'}`}
                 >
                   <div class={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${nookState.settings.reduceMotion ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-2xl bg-pink-50 border-2 border-pink-200 flex items-center justify-center text-pink-500 shadow-inner">
+                    <Volume2 class="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div class="font-black text-[#5c5446] text-sm">Sound Effects</div>
+                    <div class="text-[10px] font-bold text-[#8a816f]">Play sounds for interactions</div>
+                  </div>
+                </div>
+                <button 
+                  aria-label="Toggle sound effects"
+                  onclick={toggleSound}
+                  class={`w-14 h-8 rounded-full p-1.5 transition-colors cursor-pointer border-2 shadow-inner flex items-center ${nookState.settings.soundEffects ? 'bg-[#6cd476] border-[#4ca454]' : 'bg-[#e1d9be] border-[#dcd3be]'}`}
+                >
+                  <div class={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${nookState.settings.soundEffects ? 'translate-x-5' : 'translate-x-0'}`}></div>
                 </button>
               </div>
 
@@ -302,7 +334,7 @@
             <div class="bg-white rounded-3xl p-8 border-4 border-[#e1d9be] shadow-[0_4px_0_#dcd3be] flex flex-col items-center justify-center gap-4 text-center">
               <div class="w-24 h-24 bg-[#f0b157]/20 rounded-[2rem] flex items-center justify-center border-4 border-[#f0b157]/40 shadow-inner relative overflow-hidden rotate-3">
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-30"></div>
-                <img src="/wp-content/plugins/super-nerd-bros-dodo-air/public/img/nook-face.svg" alt="Tom Nook" class="w-16 h-16 drop-shadow-md z-10" />
+                <img src="/wp-content/plugins/xophz-nook-phone/public/dist/nook-face.svg" alt="Tom Nook" class="w-16 h-16 drop-shadow-md z-10" />
               </div>
               
               <div>

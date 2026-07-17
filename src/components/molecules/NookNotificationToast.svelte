@@ -2,6 +2,7 @@
   import { fly } from 'svelte/transition';
   import nookState from '@/lib/nookState.svelte';
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
+  import { playSound } from '@/lib/audio';
 
   const ctx = getPhoneContext();
 </script>
@@ -9,8 +10,11 @@
 {#if ctx.activeToast}
   <button
     onclick={() => {
+      playSound('click', !nookState.settings.soundEffects);
       ctx.showNotificationCenter = true;
-      nookState.markAllNotificationsAsRead();
+      if (nookState.markAllNotificationsAsRead) {
+        nookState.markAllNotificationsAsRead();
+      }
       ctx.activeToast = null;
     }}
     transition:fly={{ y: -100, duration: 300 }}

@@ -3,6 +3,7 @@
   import { fly, fade } from 'svelte/transition';
   import { User, MapPin, Globe, Hash } from '@lucide/svelte';
   import AcnhBubble from '../molecules/AcnhBubble.svelte';
+  import { playSound } from '@/lib/audio';
 
   let step = $state(0);
   let name = $state("");
@@ -37,12 +38,14 @@
   ];
 
   function nextStep() {
+    playSound('pop', !nookState.settings.soundEffects);
     if (step < steps.length - 1) {
       if (steps[step].input === 'name' && !name.trim()) return;
       if (steps[step].input === 'island' && !islandName.trim()) return;
       if (steps[step].input === 'friendcode' && friendCode.length > 0 && friendCode.length < 17) return;
       step++;
     } else {
+      playSound('success', !nookState.settings.soundEffects);
       nookState.completeOnboarding(name, islandName + " Island", hemisphere, friendCode);
     }
   }
@@ -56,7 +59,7 @@
   <!-- Tom Nook Avatar -->
   <div class="absolute top-16 left-1/2 -translate-x-1/2 z-10 animate-ac-float">
     <div class="w-32 h-32 bg-[#e0dcc5] rounded-[2.5rem] border-4 border-[#dcd3be] shadow-xl flex items-center justify-center relative rotate-3">
-      <img src="/wp-content/plugins/super-nerd-bros-dodo-air/public/img/nook-face.svg" alt="Tom Nook" class="w-24 h-24 object-contain drop-shadow-sm" />
+      <img src="/wp-content/plugins/xophz-nook-phone/public/dist/nook-face.svg" alt="Tom Nook" class="w-24 h-24 object-contain drop-shadow-sm" />
       <!-- Decorative Leaf -->
       <div class="absolute -top-4 -right-2 text-3xl rotate-12 drop-shadow-md">🍃</div>
     </div>
@@ -86,10 +89,10 @@
         <div transition:fly={{ y: 20, duration: 400 }} class="flex flex-col gap-3 mx-auto w-full max-w-[280px]">
           <label class="text-[#5c5446] font-black text-xs flex items-center gap-1.5 justify-center uppercase tracking-widest"><Globe class="w-3.5 h-3.5" /> Hemisphere</label>
           <div class="grid grid-cols-2 gap-3">
-            <button onclick={() => hemisphere = 'north'} class={`px-4 py-4 rounded-2xl font-black text-sm border-b-4 transition-all cursor-pointer shadow-sm ${hemisphere === 'north' ? 'bg-[#22c55e] text-white border-[#16a34a] -translate-y-1' : 'bg-white text-[#5c5446] border-[#dcd3be] hover:bg-gray-50'}`}>
+            <button onclick={() => { playSound('click', !nookState.settings.soundEffects); hemisphere = 'north'; }} class={`px-4 py-4 rounded-2xl font-black text-sm border-b-4 transition-all cursor-pointer shadow-sm ${hemisphere === 'north' ? 'bg-[#22c55e] text-white border-[#16a34a] -translate-y-1' : 'bg-white text-[#5c5446] border-[#dcd3be] hover:bg-gray-50'}`}>
               Northern
             </button>
-            <button onclick={() => hemisphere = 'south'} class={`px-4 py-4 rounded-2xl font-black text-sm border-b-4 transition-all cursor-pointer shadow-sm ${hemisphere === 'south' ? 'bg-[#22c55e] text-white border-[#16a34a] -translate-y-1' : 'bg-white text-[#5c5446] border-[#dcd3be] hover:bg-gray-50'}`}>
+            <button onclick={() => { playSound('click', !nookState.settings.soundEffects); hemisphere = 'south'; }} class={`px-4 py-4 rounded-2xl font-black text-sm border-b-4 transition-all cursor-pointer shadow-sm ${hemisphere === 'south' ? 'bg-[#22c55e] text-white border-[#16a34a] -translate-y-1' : 'bg-white text-[#5c5446] border-[#dcd3be] hover:bg-gray-50'}`}>
               Southern
             </button>
           </div>

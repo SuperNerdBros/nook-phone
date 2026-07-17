@@ -3,6 +3,7 @@ import nookState from "@/lib/nookState.svelte";
 import { projectsData } from "@/lib/nookData";
 import { ALL_WALLPAPERS } from "@/lib/wallpaperData";
 import { isProUser } from "@/lib/api";
+import { playSound } from "@/lib/audio";
 
 import passportIcon from "@/assets/img/icons/passport_icon.png";
 import cameraIcon from "@/assets/img/icons/camera_icon.png";
@@ -109,6 +110,7 @@ export class PhoneContext {
   activeToast = $state<any>(null);
   showNotificationCenter = $state(false);
   launchingApp = $state<any>(null);
+  isEditMode = $state(false);
 
   allApps = $derived([
     ...CORE_APPS,
@@ -156,11 +158,18 @@ export class PhoneContext {
     const app = this.allApps.find((a) => (a.id || a.name) === appId);
 
     if (app && app.proOnly && !isProUser()) {
+      playSound('error', !nookState.settings.soundEffects);
       this.showPremiumUpsell = true;
       return;
     }
 
+    playSound('success', !nookState.settings.soundEffects);
     this.launchingApp = app || { name: appId, id: appId };
+    
+    // Analytics: Track App Open
+    import("@/lib/analytics").then(({ analytics }) => {
+      analytics.trackAppOpen(app ? app.name : appId);
+    });
 
     setTimeout(() => {
       nookState.navigate(appId);
@@ -170,15 +179,28 @@ export class PhoneContext {
 
   handleHomeButton = () => {
     if (nookState.currentApp) {
+      playSound('thwip', !nookState.settings.soundEffects);
+      import("@/lib/analytics").then(({ analytics }) => {
+        analytics.trackInteraction('home_button_press', 'navigation');
+      });
       nookState.navigate(null);
     }
   };
 
   handlePowerButton = () => {
-    nookState.setPhoneLocked(!nookState.isPhoneLocked);
+    const locking = !nookState.isPhoneLocked;
+    playSound(locking ? 'close' : 'open', !nookState.settings.soundEffects);
+    import("@/lib/analytics").then(({ analytics }) => {
+      analytics.trackInteraction(locking ? 'phone_locked' : 'phone_unlocked', 'engagement');
+    });
+    nookState.setPhoneLocked(locking);
   };
 
   handleUnlock = () => {
+    playSound('open', !nookState.settings.soundEffects);
+    import("@/lib/analytics").then(({ analytics }) => {
+      analytics.trackInteraction('phone_unlocked', 'engagement');
+    });
     nookState.setPhoneLocked(false);
   };
 }

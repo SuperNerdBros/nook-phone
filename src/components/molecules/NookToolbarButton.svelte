@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { playSound } from '@/lib/audio';
+  import nookState from '@/lib/nookState.svelte';
+
   let {
     onclick,
     href,
@@ -20,6 +23,11 @@
     children?: import('svelte').Snippet;
     [key: string]: any;
   }>();
+
+  const handleClick = (e: MouseEvent) => {
+    playSound('click', !nookState.settings.soundEffects);
+    if (onclick) onclick(e);
+  };
 </script>
 
 {#if href}
@@ -37,7 +45,7 @@
   </a>
 {:else}
   <button
-    {onclick}
+    onclick={handleClick}
     {title}
     class="nook-header-btn {variant === 'ghost' ? 'nook-header-btn-ghost' : ''} {className}"
     {...rest}

@@ -5,6 +5,7 @@
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import { isProUser, fetchPatreonAuthUrl } from '@/lib/api';
   import { onMount } from 'svelte';
+  import { playSound } from '@/lib/audio';
 
   const ctx = getPhoneContext();
   let isPro = $state(false);
@@ -18,6 +19,7 @@
   });
 
   function handlePatreonLogin() {
+    playSound('click', !nookState.settings.soundEffects);
     if (authUrl) {
       window.location.href = authUrl;
     } else {

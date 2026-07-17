@@ -229,6 +229,11 @@
       audio.volume = 0.5;
       audio.play().catch(() => {});
     }
+    
+    import("@/lib/analytics").then(({ analytics }) => {
+      analytics.trackInteraction('send_gift', 'shopping', item.name);
+    });
+
     const success = nookState.purchaseCatalogItem({
       id: item.id, name: item.name, price: item.buy_price, currency: "Bells", category: item.category, image: item.imageUrl
     });
@@ -244,6 +249,11 @@
   async function handleNookSearch() {
     if (!nookSearchInput.trim()) return;
     isSearchingNook = true;
+    
+    import("@/lib/analytics").then(({ analytics }) => {
+      analytics.trackInteraction('search_catalog', 'shopping', nookSearchInput);
+    });
+
     try {
       const results = await searchNookipediaItems(nookSearchInput);
       allItems = results || [];
@@ -554,7 +564,7 @@
             <div class="w-full bg-[#fcfaf4] border-y-2 border-[#e1d9be] py-3 px-2 flex items-center justify-around z-20 shadow-sm shrink-0">
               <!-- Wishlist -->
               <div class="flex-1 flex items-center justify-center gap-3">
-                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(1, nookState.getItemQuantity(activeItem.id, 'wishlist') - 1), 'wishlist')}>-</button>
+                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(0, nookState.getItemQuantity(activeItem.id, 'wishlist') - 1), 'wishlist')}>-</button>
                 
                 <button onclick={() => { nookState.toggleWishlistItem(activeItem.id); }} class="relative flex justify-center items-center py-2 transition-all {nookState.isWishlistItem(activeItem.id) ? 'text-[#8c2a2e]' : 'text-[#8c8577] hover:text-[#82c56f]'}">
                   <span class="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[12px] font-black tracking-tight {nookState.isWishlistItem(activeItem.id) ? 'text-[#8c2a2e]' : 'text-[#a89f91]'}">
@@ -570,7 +580,7 @@
 
               <!-- Storage -->
               <div class="flex-1 flex items-center justify-center gap-3">
-                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(1, nookState.getItemQuantity(activeItem.id, 'storage') - 1), 'storage')}>-</button>
+                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(0, nookState.getItemQuantity(activeItem.id, 'storage') - 1), 'storage')}>-</button>
                 
                 <button onclick={() => { nookState.toggleStorageItem(activeItem.id); }} class="relative flex justify-center items-center py-2 transition-all {nookState.isStorageItem(activeItem.id) ? 'text-[#2d5c56]' : 'text-[#8c8577] hover:text-[#82c56f]'}">
                   <span class="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[12px] font-black tracking-tight {nookState.isStorageItem(activeItem.id) ? 'text-[#2d5c56]' : 'text-[#a89f91]'}">
@@ -586,7 +596,7 @@
 
               <!-- Trade -->
               <div class="flex-1 flex items-center justify-center gap-3">
-                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(1, nookState.getItemQuantity(activeItem.id, 'trade') - 1), 'trade')}>-</button>
+                <button class="text-[#8c8577] hover:text-[#82c56f] hover:scale-125 active:scale-95 transition-transform font-black text-xl w-6 h-6 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(0, nookState.getItemQuantity(activeItem.id, 'trade') - 1), 'trade')}>-</button>
                 
                 <button onclick={() => { nookState.toggleForTradeItem(activeItem.id); }} class="relative flex justify-center items-center py-2 transition-all {nookState.isForTradeItem(activeItem.id) ? 'text-[#b36b19]' : 'text-[#8c8577] hover:text-[#82c56f]'}">
                   <span class="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[12px] font-black tracking-tight {nookState.isForTradeItem(activeItem.id) ? 'text-[#b36b19]' : 'text-[#a89f91]'}">

@@ -6,7 +6,7 @@
   import NookIcon from '../atoms/NookIcon.svelte';
   import NookAppHeader from '../organisms/NookAppHeader.svelte';
   import NookToolbarButton from './NookToolbarButton.svelte';
-  import greenWavesBg from '@/assets/wallpapers/Green Waves 2.png?url';
+  import greenWavesBg from '@/assets/wallpapers/Green Waves 3 Dark.png?url';
   import { resolveAssetUrl } from '@/lib/wallpaperData';
 
   const ctx = getPhoneContext();
