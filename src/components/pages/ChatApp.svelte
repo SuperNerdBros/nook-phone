@@ -161,7 +161,7 @@
     const author = nookState.passport.name || "Resident";
     loading = true;
 
-    const subnookTarget = newSubnook || islandSubnook;
+    const subnookTarget = newSubnook || islandSublog;
 
     if (isProUser()) {
       const result = await createThread(newTitle.trim(), newContent.trim());
@@ -368,7 +368,6 @@
         <div class="text-center py-20 text-gray-400 text-sm">
           <MessageSquare class="w-12 h-12 mx-auto opacity-25 mb-2" />
           No discussions found in {selectedSublogFilter}. Tap the + icon above to write a post!
-        </div>
         </div>
       {:else}
         {#each filteredThreads as thread (thread.id)}
