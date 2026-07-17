@@ -6,6 +6,8 @@
   import NookIcon from '../atoms/NookIcon.svelte';
   import NookAppHeader from '../organisms/NookAppHeader.svelte';
   import NookToolbarButton from './NookToolbarButton.svelte';
+  import greenWavesBg from '@/assets/wallpapers/Green Waves 2.png?url';
+  import { resolveAssetUrl } from '@/lib/wallpaperData';
 
   const ctx = getPhoneContext();
 
@@ -25,7 +27,8 @@
       title={nookState.currentApp}
       subtitle={currentProject?.site ? getHostname(currentProject.site) : ""}
       description={currentProject?.description}
-      bgClass="bg-[#5c8e43]"
+      bgClass="bg-transparent"
+      bgStyle={`background-image: linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 100%), url('${resolveAssetUrl(greenWavesBg)}'); background-size: cover; background-position: bottom left;`}
       textClass="text-white"
     >
       {#snippet iconSnippet()}

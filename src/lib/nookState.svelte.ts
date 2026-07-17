@@ -821,6 +821,14 @@ class NookStateManager {
     }
   }
 
+  reorderResidents(oldIndex: number, newIndex: number) {
+    if (!this.state.residents) return;
+    const residents = [...this.state.residents];
+    const [movedItem] = residents.splice(oldIndex, 1);
+    residents.splice(newIndex, 0, movedItem);
+    this.state.residents = residents;
+    this.save();
+  }
 
   toggleResident(contactId: string) {
     if (!this.state.residents) this.state.residents = [];
@@ -893,7 +901,14 @@ class NookStateManager {
         giftedToday: false
       };
     }
+    
     this.state.villagerMilestones[contactId][milestone] = !this.state.villagerMilestones[contactId][milestone];
+    
+    // If a user gifts a villager, it implies they talked to them.
+    if (milestone === 'giftedToday' && this.state.villagerMilestones[contactId].giftedToday) {
+      this.state.villagerMilestones[contactId].talkedToday = true;
+    }
+    
     this.save();
   }
 }

@@ -14,7 +14,7 @@
   let isLoading = $state(true);
   let searchQuery = $state("");
   let selectedVillager = $state<any>(null);
-  let activeTab = $state<'all' | 'bestFriend' | 'island'>('all');
+  let activeTab = $state<'island' | 'bestFriend' | 'all'>('island');
   let isAddMode = $state(false);
   let selectedSpecies = $state("");
   let viewAll = $state(false);
@@ -25,6 +25,38 @@
   let isGiftLoading = $state(false);
   let selectedGift = $state<any | null>(null);
   let giftReaction = $state<{ rating: number; message: string } | null>(null);
+
+  // Drag and Drop state for Island Residents
+  let draggedIndex = $state<number | null>(null);
+  let dragOverIndex = $state<number | null>(null);
+
+  function handleDragStart(e: DragEvent, index: number) {
+    draggedIndex = index;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', index.toString());
+    }
+  }
+
+  function handleDragEnter(e: DragEvent, index: number) {
+    if (draggedIndex !== null && draggedIndex !== index) {
+      dragOverIndex = index;
+    }
+  }
+
+  function handleDrop(e: DragEvent, index: number) {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index) {
+      nookState.reorderResidents(draggedIndex, index);
+    }
+    draggedIndex = null;
+    dragOverIndex = null;
+  }
+  
+  function handleDragEnd() {
+    draggedIndex = null;
+    dragOverIndex = null;
+  }
 
   const SPECIES_EMOJIS: Record<string, string> = {
     "Alligator": "🐊", "Anteater": "🐜", "Bear": "🐻", "Bear cub": "🧸", "Bear Cub": "🧸", "Bird": "🐦",
@@ -186,6 +218,10 @@
 
   const allSpecies = $derived(
     [...new Set(allVillagers.map(v => v.species))].sort()
+  );
+
+  const islandResidentsList = $derived(
+    nookState.residents.map(id => allVillagers.find(v => v.id === id)).filter(Boolean)
   );
 
   const filteredVillagers = $derived(
@@ -386,7 +422,7 @@
                 <MessageCircle class="w-6 h-6 mb-1 {ms.talkedToday ? 'fill-current' : ''}" />
                 <span class="text-[10px] font-bold uppercase">Talked Today</span>
               </button>
-              <button onclick={() => toggleMilestone('giftedToday')} class="flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer {ms.giftedToday ? 'bg-[#f0b157]/10 border-[#f0b157] text-[#d99c45]' : 'bg-gray-50 border-gray-100 text-[#8a7f66]'}">
+              <button onclick={() => toggleMilestone('giftedToday')} class="flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer {ms.giftedToday ? 'bg-[#6db3e6]/10 border-[#6db3e6] text-[#4a90e2]' : 'bg-gray-50 border-gray-100 text-[#8a7f66]'}">
                 <Gift class="w-6 h-6 mb-1 {ms.giftedToday ? 'fill-current' : ''}" />
                 <span class="text-[10px] font-bold uppercase">Gifted Today</span>
               </button>
@@ -498,12 +534,70 @@
               </button>
             </div>
           {/if}
-          {#each Object.entries(groupedVillagers) as [group, vList]}
-            <div class="mb-1">
-              <div class="bg-[#f0ece1] px-4 py-1.5 sticky top-0 z-10 border-y border-[#e1d9be]">
-              <span class="text-xs font-black text-[#8a7f66]">{group}</span>
+          {#if !isAddMode && activeTab === 'island'}
+            <div class="px-2 sm:px-6 py-6 sm:py-8 h-full flex flex-col items-center justify-center min-h-[450px]">
+              <div class="grid grid-cols-3 gap-x-3 sm:gap-x-6 gap-y-8 sm:gap-y-10 w-full max-w-[340px]">
+                {#each Array(10) as _, index}
+                  {@const villager = islandResidentsList[index]}
+                  {#if villager}
+                    {@const ms = nookState.getMilestones(villager.id)}
+                    <div 
+                      draggable="true"
+                      ondragstart={(e) => handleDragStart(e, index)}
+                      ondragenter={(e) => handleDragEnter(e, index)}
+                      ondragover={(e) => e.preventDefault()}
+                      ondragleave={() => dragOverIndex === index ? (dragOverIndex = null) : null}
+                      ondrop={(e) => handleDrop(e, index)}
+                      ondragend={handleDragEnd}
+                      class="flex flex-col items-center gap-2 sm:gap-3 relative transition-all duration-200 {index === 9 ? 'col-start-2' : ''} {draggedIndex === index ? 'opacity-30 scale-95' : ''} {dragOverIndex === index ? 'scale-110' : ''}"
+                    >
+                      <button onclick={() => openContact(villager)} class="flex flex-col items-center w-full transition-transform hover:scale-105 active:scale-95 cursor-pointer">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white shadow-md border-[3px] {dragOverIndex === index ? 'border-[#6cd476] ring-4 ring-[#6cd476]/30' : 'border-[#e1d9be]'} flex items-center justify-center relative p-1.5 transition-all">
+                          {#if villager.image_url}
+                            <img src={villager.image_url} alt={villager.name} class="w-full h-full object-contain pointer-events-none" loading="lazy" />
+                          {:else}
+                            <div class="text-3xl sm:text-4xl pointer-events-none">🐾</div>
+                          {/if}
+                          <div class="absolute -bottom-2 inset-x-0 flex justify-center gap-0.5 sm:gap-1 pointer-events-none">
+                            {#if ms.talkedToday}
+                              <div class="bg-[#6cd476] w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 sm:border-[3px] border-white flex items-center justify-center text-white shadow-sm" title="Talked Today">
+                                <MessageCircle class="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+                              </div>
+                            {/if}
+                            {#if ms.giftedToday}
+                              <div class="bg-[#6db3e6] w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 sm:border-[3px] border-white flex items-center justify-center text-white shadow-sm" title="Gifted Today">
+                                <Gift class="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+                              </div>
+                            {/if}
+                          </div>
+                        </div>
+                        <span class="text-xs sm:text-sm font-black text-[#5c3a21] leading-tight text-center w-full truncate px-1 mt-2 sm:mt-3">{villager.name}</span>
+                      </button>
+                    </div>
+                  {:else}
+                    <div 
+                      ondragenter={(e) => handleDragEnter(e, index)}
+                      ondragover={(e) => e.preventDefault()}
+                      ondragleave={() => dragOverIndex === index ? (dragOverIndex = null) : null}
+                      ondrop={(e) => handleDrop(e, index)}
+                      class="flex flex-col items-center gap-2 sm:gap-3 opacity-40 {index === 9 ? 'col-start-2' : ''} transition-all duration-200 {dragOverIndex === index ? 'scale-110 opacity-100' : ''}"
+                    >
+                      <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[3px] border-dashed {dragOverIndex === index ? 'border-[#6cd476] bg-[#6cd476]/10 ring-4 ring-[#6cd476]/30' : 'border-[#e1d9be] bg-black/5'} flex items-center justify-center transition-all">
+                        <Home class="w-8 h-8 sm:w-10 sm:h-10 {dragOverIndex === index ? 'text-[#6cd476]' : 'text-[#8a7f66]'}" />
+                      </div>
+                      <span class="text-xs sm:text-sm font-bold {dragOverIndex === index ? 'text-[#6cd476]' : 'text-[#8a7f66]'}">Empty</span>
+                    </div>
+                  {/if}
+                {/each}
+              </div>
             </div>
-            <div class="flex flex-col">
+          {:else}
+            {#each Object.entries(groupedVillagers) as [group, vList]}
+              <div class="mb-1">
+                <div class="bg-[#f0ece1] px-4 py-1.5 sticky top-0 z-10 border-y border-[#e1d9be]">
+                <span class="text-xs font-black text-[#8a7f66]">{group}</span>
+              </div>
+              <div class="flex flex-col">
               {#each vList as villager}
                 <button 
                   onclick={() => openContact(villager)}
@@ -573,6 +667,7 @@
           </div>
         {/if}
         {/if}
+        {/if}
       {/if}
     </div>
 
@@ -580,11 +675,11 @@
     {#if !isAddMode}
       <div class="absolute bottom-6 inset-x-4 bg-white/95 backdrop-blur-md border-2 border-[#e1d9be] rounded-3xl p-1.5 flex justify-between z-20 shadow-lg">
         <button 
-          onclick={() => activeTab = 'all'}
-          class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'all' ? 'bg-[#8cc3b0]/20 text-[#649e8a]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#5c3a21]'}"
+          onclick={() => activeTab = 'island'}
+          class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'island' ? 'bg-[#6cd476]/20 text-[#4ca454]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#4ca454]'}"
         >
-          <Users class="w-5 h-5 mb-0.5 {activeTab === 'all' ? 'fill-current' : ''}" />
-          <span class="text-[10px] font-black uppercase tracking-wider">All</span>
+          <Home class="w-5 h-5 mb-0.5 {activeTab === 'island' ? 'fill-current' : ''}" />
+          <span class="text-[10px] font-black uppercase tracking-wider">Neighbors ({nookState.residents.length}/10)</span>
         </button>
         <button 
           onclick={() => activeTab = 'bestFriend'}
@@ -594,11 +689,11 @@
           <span class="text-[10px] font-black uppercase tracking-wider">Best Friends</span>
         </button>
         <button 
-          onclick={() => activeTab = 'island'}
-          class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'island' ? 'bg-[#6cd476]/20 text-[#4ca454]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#4ca454]'}"
+          onclick={() => activeTab = 'all'}
+          class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'all' ? 'bg-[#8cc3b0]/20 text-[#649e8a]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#5c3a21]'}"
         >
-          <Home class="w-5 h-5 mb-0.5 {activeTab === 'island' ? 'fill-current' : ''}" />
-          <span class="text-[10px] font-black uppercase tracking-wider">Neighbors ({nookState.residents.length}/10)</span>
+          <Users class="w-5 h-5 mb-0.5 {activeTab === 'all' ? 'fill-current' : ''}" />
+          <span class="text-[10px] font-black uppercase tracking-wider">All</span>
         </button>
       </div>
     {/if}
@@ -616,9 +711,9 @@
         <div class="w-16"></div> <!-- spacer -->
       </div>
 
-      <!-- Character (Top Half) -->
-      <div class="flex-1 flex flex-col justify-end items-center relative z-10 pb-4 shrink-0">
-        <div class="h-64 flex items-end justify-center relative animate-ac-float mb-2">
+      <!-- Character (Centered) -->
+      <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-32">
+        <div class="h-64 flex items-center justify-center relative animate-ac-float">
           {#if selectedVillager?.image_url}
             <img src={selectedVillager.image_url} alt={selectedVillager.name} class="h-full object-contain drop-shadow-2xl" />
           {:else}
@@ -685,17 +780,20 @@
              {/if}
              
            {:else}
-             <!-- Final Rating -->
-             <div class="mt-4 border-t border-[#e1d9be]/60 pt-4 flex flex-col items-center gap-3 animate-fade-in" style="animation-delay: 500ms;">
-               <div class="flex items-center gap-2">
-                 <span class="text-[10px] font-black text-[#8a7f66] uppercase tracking-wider">Love Rating</span>
-                 <div class="flex gap-0.5">
-                   {#each Array(5) as _, i}
-                     <svg class="w-5 h-5 transition-all {i < giftReaction.rating ? 'text-[#ff6b6b] fill-current animate-bounce-short' : 'text-gray-300'}" style="animation-delay: {i * 100}ms;" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                   {/each}
-                 </div>
-               </div>
-             </div>
+              <!-- Final Rating -->
+              <div class="mt-4 border-t border-[#e1d9be]/60 pt-4 flex flex-col items-center gap-3 animate-fade-in" style="animation-delay: 500ms;">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-[10px] font-black text-[#8a7f66] uppercase tracking-wider">Love Rating</span>
+                  <div class="flex gap-0.5">
+                    {#each Array(5) as _, i}
+                      <svg class="w-5 h-5 transition-all {i < giftReaction.rating ? 'text-[#ff6b6b] fill-current animate-bounce-short' : 'text-gray-300'}" style="animation-delay: {i * 100}ms;" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    {/each}
+                  </div>
+                </div>
+                <button onclick={() => isGiftPickerOpen = false} class="bg-[#8cc3b0] text-white px-6 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#7ab19f] active:scale-95 transition-transform w-full text-center cursor-pointer">
+                  You're welcome!
+                </button>
+              </div>
            {/if}
          </AcnhBubble>
       </div>

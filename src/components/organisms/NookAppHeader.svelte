@@ -7,7 +7,8 @@
     iconSnippet,
     subtitle = '', 
     description = '',
-    bgClass = 'bg-[#8cc3b0]', 
+    bgClass = 'bg-[#8cc3b0]',
+    bgStyle = '',
     textClass = 'text-white', 
     actions,
     leftActions,
@@ -19,6 +20,7 @@
     subtitle?: string;
     description?: string;
     bgClass?: string;
+    bgStyle?: string;
     textClass?: string;
     actions?: Snippet;
     leftActions?: Snippet;
@@ -33,6 +35,7 @@
   <button
     onclick={() => isCollapsed = false}
     class="ext-header-handle {bgClass}"
+    style={bgStyle}
   >
     <div class="ext-header-handle-pill"></div>
     <span class="ext-header-handle-label">{title}</span>
@@ -40,12 +43,14 @@
   </button>
 {:else}
   <!-- Expanded: Full rich header -->
-  <div class="ext-header {bgClass} {textClass}">
+  <div class="ext-header {bgClass} {textClass}" style={bgStyle}>
     <!-- Rich Gradient Overlay -->
     <div class="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/20 via-transparent to-black/20 mix-blend-overlay"></div>
 
     <!-- Leaf pattern overlay -->
-    <div class="ext-header-pattern"></div>
+    {#if !bgStyle}
+      <div class="ext-header-pattern"></div>
+    {/if}
 
     <!-- Top Row -->
     <div class="ext-header-top">
