@@ -14,14 +14,19 @@ export function resolveAssetUrl(assetPath: string) {
 
 export const loadedWallpapers = Object.entries(wallpaperImports).map(([path, url]) => {
   const filename = path.split('/').pop()?.split('.')[0] || 'Unknown';
+  const lcase = filename.toLowerCase();
+  const isDark = lcase.includes('dark') || lcase.includes('sunset') || lcase.includes('starry') || lcase.includes('night') || lcase.includes('campsite') || lcase.includes('blueprint') || lcase.includes('records') || lcase.includes('museum') || lcase.includes('brewster');
+  
   return {
-    id: filename.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    id: lcase.replace(/[^a-z0-9]+/g, '-'),
     name: filename,
-    url: resolveAssetUrl(url as string)
+    url: resolveAssetUrl(url as string),
+    isDark
   };
 });
 
 export const ALL_WALLPAPERS = [
-  { id: 'default', name: 'Nook Inc.', isDefault: true, bg: 'bg-[#e0dcc5]', pattern: 'fill="%235c8e43"', patternClass: 'bg-[#5c8e43]' },
+  { id: 'classic', name: 'Classic', isDefault: true, bg: 'bg-[#fdfcf2]', pattern: 'fill="none"', patternClass: 'bg-transparent', isDark: false },
+  { id: 'default', name: 'Nook Inc.', isDefault: true, bg: 'bg-[#e0dcc5]', pattern: 'fill="%235c8e43"', patternClass: 'bg-[#5c8e43]', isDark: false },
   ...loadedWallpapers
 ];

@@ -12,6 +12,7 @@ import {
   type MapBuilding,
   type MilesChallenge
 } from "./nookData";
+import { fetchRemoteState, saveRemoteState, isProUser } from "./api";
 
 export interface PassportInfo {
   name: string;
@@ -238,6 +239,8 @@ class NookStateManager {
   get unreadDMs() { return this.state.unreadDMs || 0; }
   set unreadDMs(val) { this.state.unreadDMs = val; }
 
+  private syncTimeout: any = null;
+
   constructor() {
     if (typeof window !== "undefined") {
       try {
@@ -271,9 +274,27 @@ class NookStateManager {
         }
       ];
     }
+
+    if (typeof window !== "undefined") {
+      this.initializeAsync();
+    }
   }
 
-  save() {
+  async initializeAsync() {
+    if (isProUser()) {
+      const remoteState = await fetchRemoteState();
+      if (remoteState) {
+        // Cloud Overwrites Local (if cloud exists)
+        this.state = { ...this.state, ...remoteState };
+        this.saveLocal();
+      } else {
+        // Seamless Merge: Cloud is empty, push local state up
+        this.syncToCloud(true);
+      }
+    }
+  }
+
+  saveLocal() {
     if (typeof window !== "undefined") {
       try {
         const userId = window.wpApiSettings?.userId || 0;
@@ -283,6 +304,24 @@ class NookStateManager {
         console.error("Failed to save state to localStorage:", e);
       }
     }
+  }
+
+  syncToCloud(immediate = false) {
+    if (!isProUser()) return;
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    
+    if (immediate) {
+      saveRemoteState(this.state);
+    } else {
+      this.syncTimeout = setTimeout(() => {
+        saveRemoteState(this.state);
+      }, 2000);
+    }
+  }
+
+  save() {
+    this.saveLocal();
+    this.syncToCloud();
   }
 
   // --- ACTIONS ---

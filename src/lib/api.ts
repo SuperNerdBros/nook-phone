@@ -13,7 +13,7 @@ declare global {
 }
 
 export const isProUser = (): boolean => {
-  return typeof window !== 'undefined' && !!window.wpApiSettings && !!window.wpApiSettings.nonce;
+  return typeof window !== 'undefined' && !!window.wpApiSettings && !!window.wpApiSettings.userId && window.wpApiSettings.userId > 0;
 };
 
 export const getApiHeaders = () => {
@@ -204,5 +204,33 @@ export const fetchNookUsers = async () => {
   } catch (e) {
     console.error('Failed to fetch nook users', e);
     return [];
+  }
+};
+
+export const fetchRemoteState = async () => {
+  if (!isProUser()) return null;
+  try {
+    const res = await fetch(getApiUrl('state'), { headers: getApiHeaders() });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.state || null;
+  } catch (e) {
+    console.error('Failed to fetch remote state', e);
+    return null;
+  }
+};
+
+export const saveRemoteState = async (state: any) => {
+  if (!isProUser()) return false;
+  try {
+    const res = await fetch(getApiUrl('state'), {
+      method: 'POST',
+      headers: getApiHeaders(),
+      body: JSON.stringify({ state })
+    });
+    return res.ok;
+  } catch (e) {
+    console.error('Failed to save remote state', e);
+    return false;
   }
 };

@@ -213,8 +213,10 @@
                 NookOS is the premier operating system for island living. Designed by Nook Inc. for a seamless and comfortable getaway package experience.
               </div>
               
-              <div class="mt-4 pt-4 border-t-2 border-dashed border-[#e1d9be] w-full text-[10px] font-black text-[#dcd3be] uppercase tracking-widest">
-                © Nook Inc. All Rights Reserved.
+              <div class="mt-4 pt-4 border-t-2 border-dashed border-[#e1d9be] w-full text-[9px] font-bold text-[#8a816f] leading-relaxed">
+                Animal Crossing™: New Horizons, Dodo Code™, and Dodo Airlines are trademarks of Nintendo Co., Ltd.<br/><br/>
+                Other trademarks are the property of their respective owners.<br/><br/>
+                Nookphone.app is a fan-built website and is not affiliated with Nintendo.
               </div>
             </div>
           </div>
