@@ -441,14 +441,6 @@ class NookStateManager {
   }
 
   // --- RESET SERVICE ---
-  public triggerRescueReset() {
-    if (this.state.miles >= 100) {
-      this.state.miles -= 100;
-      this.notify();
-      return true;
-    }
-    return false;
-  }
 }
 
 // Singleton state manager instance

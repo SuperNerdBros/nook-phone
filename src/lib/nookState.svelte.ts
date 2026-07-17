@@ -100,6 +100,9 @@ export interface NookOSState {
     talkedToday: boolean;
     giftedToday: boolean;
   }>;
+  bestFriends: (string | number)[];
+  bestFriendsCommunicationsOn: boolean;
+  dockApps: string[];
 }
 
 const DEFAULT_GRID_LEAF = [
@@ -172,7 +175,7 @@ const INITIAL_STATE: NookOSState = {
     { id: "d3", name: "Custom Tile", grid: Array(16).fill(null).map(() => Array(16).fill("#ffffff")), creator: "Villager" }
   ],
   activeWallpaperId: "default",
-  pinnedApps: ["camera", "miles", "critter", "diy", "designs", "designer", "map", "chat", "passport", "messages", "shopping"],
+  pinnedApps: ["camera", "miles", "critter", "diy", "designs", "designer", "map", "chat", "passport", "messages", "shopping", "best_friends"],
   installedApps: [],
   hasCompletedOnboarding: false,
   settings: {
@@ -185,7 +188,10 @@ const INITIAL_STATE: NookOSState = {
   unreadDMs: 0,
   vipContacts: [],
   myContacts: [],
-  villagerMilestones: {}
+  villagerMilestones: {},
+  bestFriends: [],
+  bestFriendsCommunicationsOn: true,
+  dockApps: ["directory", "messages", "contacts"]
 };
 
 class NookStateManager {
@@ -264,6 +270,37 @@ class NookStateManager {
 
   get villagerMilestones() { return this.state.villagerMilestones || {}; }
   set villagerMilestones(val) { this.state.villagerMilestones = val; }
+
+  get bestFriends() { return this.state.bestFriends || []; }
+  set bestFriends(val) { this.state.bestFriends = val; }
+
+  get bestFriendsCommunicationsOn() { return this.state.bestFriendsCommunicationsOn !== false; }
+  set bestFriendsCommunicationsOn(val) { this.state.bestFriendsCommunicationsOn = val; }
+
+  get dockApps() { return this.state.dockApps || ["directory", "messages", "contacts"]; }
+  set dockApps(val) { this.state.dockApps = val; }
+
+  activeChatPartner = $state<{ id: number; name: string } | null>(null);
+
+  toggleBestFriend(friendId: string | number) {
+    if (!this.state.bestFriends) this.state.bestFriends = [];
+    if (this.state.bestFriends.includes(friendId as any)) {
+      this.state.bestFriends = this.state.bestFriends.filter(id => id !== friendId);
+    } else {
+      this.state.bestFriends.push(friendId as any);
+    }
+    this.save();
+  }
+
+  isBestFriend(friendId: string | number): boolean {
+    if (!this.state.bestFriends) return false;
+    return this.state.bestFriends.includes(friendId as any);
+  }
+
+  toggleBestFriendsCommunications() {
+    this.state.bestFriendsCommunicationsOn = !this.bestFriendsCommunicationsOn;
+    this.save();
+  }
 
   private syncTimeout: any = null;
 
@@ -662,14 +699,6 @@ class NookStateManager {
     this.save();
   }
 
-  triggerRescueReset() {
-    if (this.state.miles >= 100) {
-      this.state.miles -= 100;
-      this.save();
-      return true;
-    }
-    return false;
-  }
 
   addNotification(title: string, message: string, sender: string) {
     if (!this.state.notifications) {

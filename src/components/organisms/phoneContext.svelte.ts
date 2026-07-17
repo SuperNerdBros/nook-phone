@@ -13,6 +13,7 @@ import designsIcon from '@/assets/img/icons/design_icon.png';
 import mapIcon from '@/assets/img/icons/map_icon.png';
 import chatIcon from '@/assets/img/icons/chat_icon.png';
 import messagesIcon from '@/assets/img/icons/best_friends_icon.png';
+import mailIcon from '@/assets/img/icons/mail_icon.png';
 import rescueIcon from '@/assets/img/icons/help_icon.png';
 import shoppingIcon from '@/assets/img/icons/shopping_icon.png';
 import designerIcon from '@/assets/img/icons/terraform_icon.png';
@@ -29,29 +30,28 @@ export interface CoreApp {
 }
 
 export const CORE_APPS: CoreApp[] = [
-  { id: "directory", name: "Call Islander", icon: "directory", bg: "bg-[#f3cd4a]" },
-  { id: "passport", name: "Passport", icon: "passport", bg: "bg-[#7cb988]", image: passportIcon },
   { id: "camera", name: "Camera", icon: "camera", bg: "bg-[#9663d6]", image: cameraIcon },
   { id: "miles", name: "Nook Miles", icon: "miles", bg: "bg-[#79a9dc]", image: milesIcon },
   { id: "critter", name: "Critterpedia", icon: "critter", bg: "bg-[#fed151]", image: critterIcon },
   { id: "diy", name: "DIY Recipes", icon: "diy", bg: "bg-[#f39566]", image: diyIcon },
+  { id: "shopping", name: "Nook Shopping", icon: "shopping", bg: "bg-[#ebce3f]", image: shoppingIcon },
+  { id: "designer", name: "Island Designer", icon: "designer", bg: "bg-[#9f854b]", image: designerIcon },
   { id: "designs", name: "Custom Designs", icon: "designs", bg: "bg-[#fdafb2]", image: designsIcon },
   { id: "map", name: "Map", icon: "map", bg: "bg-[#75cfbe]", image: mapIcon },
+  { id: "passport", name: "Passport", icon: "passport", bg: "bg-[#7cb988]", image: passportIcon },
   { id: "chat", name: "Chat Log", icon: "chat", bg: "bg-[#d3e551]", image: chatIcon, proOnly: true },
-  { id: "messages", name: "Best Friends List", icon: "best_friend", bg: "bg-[#f18e5b]", image: messagesIcon, proOnly: true },
-  { id: "rescue", name: "Rescue Service", icon: "rescue", bg: "bg-[#ec6241]", image: rescueIcon },
-  { id: "shopping", name: "Nook Shopping", icon: "shopping", bg: "bg-[#ebce3f]", image: shoppingIcon },
+  { id: "settings", name: "Settings", icon: "settings", bg: "bg-[#8ba6a4]", image: settingsIcon },
+  { id: "directory", name: "Call Islander", icon: "directory", bg: "bg-[#f3cd4a]" },
+  { id: "messages", name: "Messages", icon: "messages", bg: "bg-[#8bd168]", image: mailIcon, proOnly: true },
   { id: "contacts", name: "Contacts", icon: "best_friend", bg: "bg-[#8cc3b0]", image: contactsIcon },
-  { id: "designer", name: "Island Designer", icon: "designer", bg: "bg-[#9f854b]", image: designerIcon },
-  { id: "settings", name: "Settings", icon: "settings", bg: "bg-[#8ba6a4]", image: settingsIcon }
+  { id: "best_friends", name: "Best Friends", icon: "best_friend", bg: "bg-[#ffd375]", image: messagesIcon, proOnly: true },
+  { id: "rescue", name: "Rescue Service", icon: "rescue", bg: "bg-[#ec6241]" }
 ];
 
-const DOCK_APP_IDS = ["passport", "contacts", "chat", "directory", "settings"];
 
 export class PhoneContext {
   isBooting = $state(true);
   timeStr = $state("12:00 PM");
-  isAppDrawerOpen = $state(false);
   activeToast = $state<any>(null);
   showNotificationCenter = $state(false);
   launchingApp = $state<any>(null);
@@ -62,8 +62,8 @@ export class PhoneContext {
   ]);
   
   homeScreenApps = $derived(this.allApps.filter(a => nookState.isAppPinned(a.id || a.name)));
-  dockApps = $derived(this.allApps.filter(a => a.id && DOCK_APP_IDS.includes(a.id)));
-  desktopApps = $derived(this.homeScreenApps.filter(a => !DOCK_APP_IDS.includes(a.id || a.name)));
+  dockApps = $derived(nookState.dockApps.map(id => this.allApps.find(a => (a.id || a.name) === id)).filter(Boolean) as CoreApp[]);
+  desktopApps = $derived(this.allApps.filter(a => !nookState.dockApps.includes(a.id || a.name)));
 
   customWallpaper = $derived(nookState.customDesigns.find(d => d.id === nookState.activeWallpaperId));
   currentWallpaper = $derived(this.customWallpaper 
@@ -103,9 +103,6 @@ export class PhoneContext {
   handleHomeButton = () => {
     if (nookState.currentApp) {
       nookState.navigate(null);
-      this.isAppDrawerOpen = false;
-    } else {
-      this.isAppDrawerOpen = !this.isAppDrawerOpen;
     }
   }
 

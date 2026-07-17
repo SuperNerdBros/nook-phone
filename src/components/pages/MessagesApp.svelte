@@ -55,6 +55,10 @@
     } else {
       conversations = MOCK_CONVERSATIONS;
     }
+    if (nookState.activeChatPartner) {
+      loadChat(nookState.activeChatPartner.id, nookState.activeChatPartner.name);
+      nookState.activeChatPartner = null;
+    }
     loading = false;
   });
 

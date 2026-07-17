@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import nookState from '@/lib/nookState.svelte';
-  import { fetchNookipediaVillagers } from '@/lib/api';
-  import { Search, Star, MessageCircle, Home, Info, ChevronLeft, Phone, Video, Users, Plus, Image as ImageIcon, Camera, Gift, Trash2, Check, UserPlus } from '@lucide/svelte';
+  import { fetchNookipediaVillagers, fetchNookipediaItems } from '@/lib/api';
+  import { Search, Star, MessageCircle, Home, Info, ChevronLeft, Phone, Video, Users, Plus, Image as ImageIcon, Camera, Gift, Trash2, Check, UserPlus, Leaf } from '@lucide/svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
+  import AcnhBubble from '@/components/molecules/AcnhBubble.svelte';
   
   let allVillagers = $state<any[]>([]);
   let isLoading = $state(true);
@@ -11,6 +12,127 @@
   let selectedVillager = $state<any>(null);
   let activeTab = $state<'all' | 'vip' | 'island'>('all');
   let isAddMode = $state(false);
+
+  let isGiftPickerOpen = $state(false);
+  let giftSearchQuery = $state("");
+  let allGiftItems = $state<any[]>([]);
+  let isGiftLoading = $state(false);
+  let selectedGift = $state<any | null>(null);
+  let giftReaction = $state<{ rating: number; message: string } | null>(null);
+
+  async function openGiftPicker() {
+    isGiftPickerOpen = true;
+    giftSearchQuery = "";
+    selectedGift = null;
+    giftReaction = null;
+    
+    if (allGiftItems.length === 0) {
+      isGiftLoading = true;
+      try {
+        allGiftItems = await fetchNookipediaItems();
+      } catch (e) {
+        console.error("Failed to load gifts", e);
+      } finally {
+        isGiftLoading = false;
+      }
+    }
+  }
+
+  const filteredGifts = $derived(
+    allGiftItems.filter(item => {
+      const q = giftSearchQuery.toLowerCase();
+      return item.name.toLowerCase().includes(q) || 
+             (item.category || "").toLowerCase().includes(q);
+    })
+  );
+
+  function getGiftReaction(villager: any, item: any) {
+    const hashVal = (villager.name.charCodeAt(0) + item.name.charCodeAt(0) + (villager.personality || '').charCodeAt(0)) % 100;
+    
+    let rating = 1;
+    let message = "";
+    
+    const category = item.category || 'Other';
+    const personality = villager.personality || 'Normal';
+    
+    if (personality === 'Jock') {
+      if (category === 'Furniture' || category === 'Daily Selection') {
+        rating = hashVal % 2 === 0 ? 5 : 4;
+      } else if (category === 'Fashion') {
+        rating = 2;
+      } else {
+        rating = 3;
+      }
+    } else if (personality === 'Snooty') {
+      if (item.buy_price > 5000) {
+        rating = 5;
+      } else if (category === 'Fashion') {
+        rating = 4;
+      } else if (item.buy_price < 500) {
+        rating = 1;
+      } else {
+        rating = 3;
+      }
+    } else if (personality === 'Lazy') {
+      if (category === 'Other' || category === 'Daily Selection') {
+        rating = 5;
+      } else if (category === 'Fashion') {
+        rating = 2;
+      } else {
+        rating = 4;
+      }
+    } else {
+      if (hashVal < 20) rating = 1;
+      else if (hashVal < 40) rating = 2;
+      else if (hashVal < 70) rating = 3;
+      else if (hashVal < 90) rating = 4;
+      else rating = 5;
+    }
+    
+    switch (rating) {
+      case 1:
+        if (personality === 'Cranky') message = `Bah! What am I supposed to do with this? Thanks, I guess...`;
+        else if (personality === 'Snooty') message = `Oh... a ${item.name}. How... ordinary. Thank you, I suppose.`;
+        else if (personality === 'Jock') message = `Uh, thanks, but this doesn't help my gains at all! Still, appreciate the gesture.`;
+        else message = `Oh, thank you! It's the thought that counts, right?`;
+        break;
+      case 2:
+        if (personality === 'Cranky') message = `A ${item.name}? Hmm. Not bad, not bad. Thanks, kid.`;
+        else if (personality === 'Lazy') message = `Oh, cool! A ${item.name}. I might use this for something later. Thanks!`;
+        else message = `Oh, a ${item.name}! Thank you, I will find a good spot for this.`;
+        break;
+      case 3:
+        if (personality === 'Peppy') message = `Oh my gosh, a ${item.name}! That is so cute! Thanks a million!`;
+        else if (personality === 'Smug') message = `Ah, a ${item.name}. You have an exquisite eye for design, my friend. Thank you!`;
+        else message = `Wow, a ${item.name}! I really like this. Thank you so much!`;
+        break;
+      case 4:
+        if (personality === 'Peppy') message = `Yay! A ${item.name}! This is literally the best gift ever! You're amazing!`;
+        else if (personality === 'Sisterly') message = `Hey, you really hit the nail on the head with this ${item.name}! Thanks, you're a true friend.`;
+        else message = `Oh, I love it! A ${item.name} is exactly what I wanted. Thank you so much!`;
+        break;
+      case 5:
+        if (personality === 'Lazy') message = `HOORAY! A ${item.name}! This makes me so happy, I think my bugs are celebrating too! Thank you!`;
+        else if (personality === 'Smug') message = `Magnifique! A ${item.name}! This is a masterpiece of a gift. I am truly touched by your sophistication!`;
+        else if (personality === 'Cranky') message = `No way! A ${item.name}?! I've been looking for one of these for ages! You're alright, kid. Thanks!`;
+        else message = `Oh my goodness! A ${item.name}! I absolutely love this so much! You know me so well!`;
+        break;
+    }
+    
+    return { rating, message };
+  }
+
+  function sendGift(item: any) {
+    if (!selectedVillager) return;
+    
+    giftReaction = getGiftReaction(selectedVillager, item);
+    
+    // Set daily gifted milestone if not already set
+    const milestones = nookState.getMilestones(selectedVillager.id);
+    if (!milestones.giftedToday) {
+      nookState.toggleMilestone(selectedVillager.id, 'giftedToday');
+    }
+  }
 
   onMount(async () => {
     allVillagers = await fetchNookipediaVillagers();
@@ -121,11 +243,11 @@
 
       <!-- Avatar & Name -->
       <div class="flex flex-col items-center pt-8 pb-6 px-6 bg-gradient-to-b from-[#8cc3b0]/10 to-transparent">
-        <div class="w-28 h-28 rounded-full border-4 border-white shadow-xl bg-white overflow-hidden mb-4 relative group">
+        <div class="h-32 mb-4 relative group flex items-end justify-center">
           {#if selectedVillager.image_url}
-            <img src={selectedVillager.image_url} alt={selectedVillager.name} class="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-500" />
+            <img src={selectedVillager.image_url} alt={selectedVillager.name} class="h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500" />
           {:else}
-            <div class="w-full h-full bg-[#e1d9be] flex items-center justify-center text-4xl">🐾</div>
+            <div class="w-28 h-28 rounded-full border-4 border-white bg-[#e1d9be] flex items-center justify-center text-4xl">🐾</div>
           {/if}
         </div>
         <h1 class="text-3xl font-black text-[#5c3a21] tracking-tight">{selectedVillager.name}</h1>
@@ -134,6 +256,12 @@
 
       <!-- Action Buttons -->
       <div class="flex justify-center gap-4 px-6 mb-8">
+        <button onclick={openGiftPicker} class="flex flex-col items-center gap-1 cursor-pointer">
+          <div class="w-12 h-12 rounded-full bg-[#ff8a8a] text-white flex items-center justify-center shadow-md active:scale-95 transition-transform hover:bg-[#ff7575]">
+            <Gift class="w-6 h-6 fill-current" />
+          </div>
+          <span class="text-[10px] font-bold text-[#5c3a21]">Gift</span>
+        </button>
         <button onclick={() => messageContact(selectedVillager)} class="flex flex-col items-center gap-1 cursor-pointer">
           <div class="w-12 h-12 rounded-full bg-[#6cd476] text-white flex items-center justify-center shadow-md active:scale-95 transition-transform hover:bg-[#5bc265]">
             <MessageCircle class="w-6 h-6 fill-current" />
@@ -289,9 +417,9 @@
                   onclick={() => openContact(villager)}
                   class="flex items-center gap-3 px-4 py-3 bg-white hover:bg-[#fcfbf7] border-b border-[#f0ece1] transition-colors text-left active:bg-[#f0ece1] cursor-pointer"
                 >
-                  <div class="w-12 h-12 rounded-full bg-[#f0ece1] overflow-hidden flex-shrink-0 border-2 border-white shadow-sm relative">
+                  <div class="w-12 h-12 rounded-2xl bg-[#f5f4e8] p-1 flex items-center justify-center flex-shrink-0 relative border-2 border-[#e1d9be]/50 shadow-sm">
                     {#if villager.image_url}
-                      <img src={villager.image_url} alt={villager.name} class="w-full h-full object-cover scale-110" loading="lazy" />
+                      <img src={villager.image_url} alt={villager.name} class="w-full h-full object-contain" loading="lazy" />
                     {:else}
                       <div class="w-full h-full flex items-center justify-center text-lg">🐾</div>
                     {/if}
@@ -368,5 +496,120 @@
         </button>
       </div>
     {/if}
+  {/if}
+
+  {#if isGiftPickerOpen}
+    <div class="absolute inset-0 z-50 bg-[#fdfcf2] flex flex-col overflow-hidden animate-fade-in">
+      <!-- Header -->
+      <div class="flex items-center justify-between p-4 bg-[#ff8a8a]/10 border-b border-[#ff8a8a]/20 sticky top-0 backdrop-blur-md z-40">
+        <button onclick={() => isGiftPickerOpen = false} class="flex items-center text-[#5c3a21] font-bold text-sm bg-white/50 px-3 py-1.5 rounded-full shadow-sm hover:bg-white active:scale-95 transition-all cursor-pointer">
+          <ChevronLeft class="w-4 h-4 mr-1" /> Cancel
+        </button>
+        <span class="font-black text-[#5c3a21] text-lg">Send Gift</span>
+        <div class="w-16"></div> <!-- spacer to balance back button -->
+      </div>
+
+      <!-- Search Input -->
+      <div class="p-4 bg-[#fbf9f0] border-b border-[#e1d9be] shrink-0">
+        <div class="relative w-full">
+          <Search class="w-4 h-4 text-[#8a7f66]/60 absolute left-3 top-3.5" />
+          <input 
+            type="text" 
+            placeholder="Search items to gift..." 
+            bind:value={giftSearchQuery}
+            class="w-full bg-white pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold border-2 border-transparent focus:outline-none focus:border-[#ff8a8a] text-[#5c3a21] placeholder:text-[#8a7f66]/60 shadow-inner"
+          />
+        </div>
+      </div>
+
+      <!-- Scrollable list of items -->
+      <div class="flex-1 overflow-y-auto p-4 pb-20 ac-scrollbar grid grid-cols-2 gap-3">
+        {#if isGiftLoading}
+          <div class="col-span-2 flex flex-col items-center justify-center py-20 text-[#8a7f66]">
+            <div class="w-8 h-8 border-4 border-[#ff8a8a] border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p class="font-bold text-sm">Browsing inventory...</p>
+          </div>
+        {:else}
+          {#each filteredGifts as item}
+            <button 
+              onclick={() => sendGift(item)}
+              class="p-3 bg-white border-2 border-[#e1d9be] hover:border-[#ff8a8a] rounded-2xl flex flex-col items-center justify-between transition-all hover:scale-[1.02] cursor-pointer min-h-[130px] shadow-sm active:scale-98"
+            >
+              <div class="w-16 h-16 flex items-center justify-center mb-2">
+                {#if item.imageUrl}
+                  <img src={item.imageUrl} alt={item.name} class="max-w-full max-h-full object-contain drop-shadow-sm" loading="lazy" />
+                {:else}
+                  <Leaf class="w-10 h-10 text-[#c6b199]" />
+                {/if}
+              </div>
+              <span class="font-extrabold text-[11px] text-[#5c3a21] leading-tight text-center truncate w-full px-1 capitalize">
+                {item.name}
+              </span>
+            </button>
+          {:else}
+            <div class="col-span-2 text-center py-12 text-gray-400 text-sm">
+              No items match your search.
+            </div>
+          {/each}
+        {/if}
+      </div>
+
+      <!-- Dialog reaction overlay -->
+      {#if giftReaction}
+        <div class="absolute inset-0 z-50 bg-[#fdfcf0] flex flex-col justify-end p-5 pb-10 overflow-hidden animate-fade-in">
+          <!-- Dots Pattern -->
+          <div class="absolute inset-0 ac-bg-dots opacity-40 z-0 pointer-events-none"></div>
+
+          <!-- Full Body Villager Image -->
+          <div class="absolute top-16 left-1/2 -translate-x-1/2 z-10 animate-ac-float">
+            <div class="h-64 flex items-end justify-center relative">
+              {#if selectedVillager.image_url}
+                <img src={selectedVillager.image_url} alt={selectedVillager.name} class="h-full object-contain drop-shadow-xl" />
+              {:else}
+                <div class="text-7xl">🐾</div>
+              {/if}
+            </div>
+          </div>
+
+          <!-- Dialog Bubble Container -->
+          <div class="relative z-20 w-full max-w-lg mx-auto flex flex-col gap-6">
+            <AcnhBubble
+              title={selectedVillager.name}
+              dialogText={giftReaction.message}
+              isActive={true}
+              class="w-full"
+            >
+              <!-- Rating and Action -->
+              <div class="mt-4 border-t border-[#e1d9be]/60 pt-3 flex flex-col items-center gap-3 animate-fade-in" style="animation-delay: 500ms;">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-black text-[#8a7f66] uppercase tracking-wider">Love Rating</span>
+                  <div class="flex gap-0.5">
+                    {#each Array(5) as _, i}
+                      <svg 
+                        class="w-5 h-5 transition-all {i < giftReaction.rating ? 'text-[#ff6b6b] fill-current animate-bounce-short' : 'text-gray-300'}" 
+                        style="animation-delay: {i * 100}ms;"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      </svg>
+                    {/each}
+                  </div>
+                </div>
+
+                <button 
+                  onclick={() => {
+                    isGiftPickerOpen = false;
+                    giftReaction = null;
+                  }}
+                  class="bg-[#f0b157] text-[#5c3a21] font-black py-2.5 px-6 rounded-full border-b-4 border-[#d99c45] hover:bg-[#f2bd70] active:border-b-0 active:translate-y-1 transition-all cursor-pointer shadow-md text-sm"
+                >
+                  You're Welcome!
+                </button>
+              </div>
+            </AcnhBubble>
+          </div>
+        </div>
+      {/if}
+    </div>
   {/if}
 </div>

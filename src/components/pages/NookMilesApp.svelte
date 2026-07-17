@@ -1,18 +1,32 @@
 <script lang="ts">
+  import { X } from '@lucide/svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
-  // Old native NookMilesApp retired and replaced with acmiles.com iframe
+  import NookIcon from '@/components/atoms/NookIcon.svelte';
+  import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
+
+  const ctx = getPhoneContext();
+  const appData = ctx.allApps.find(a => a.id === 'miles');
 </script>
 
 <div id="miles-app" class="flex flex-col h-full ac-app-screen relative">
   <!-- Header -->
   <NookAppHeader 
-    title="Nook Miles+"
+    title={appData?.name || "Nook Miles"}
     subtitle="Powered by acmiles.com"
-    bgClass="bg-[#fcf8e3]"
-    textClass="text-emerald-700"
+    bgClass={appData?.bg || "bg-[#79a9dc]"}
+    textClass="text-white"
   >
     {#snippet iconSnippet()}
-      <span class="mr-1 flex items-center justify-center w-6 h-6 text-2xl leading-none">🎈</span>
+      <NookIcon name="miles" class="w-full h-full object-contain drop-shadow-sm p-1.5 z-10 relative" />
+    {/snippet}
+    {#snippet actions()}
+      <button
+        onclick={ctx.handleHomeButton}
+        class="nook-header-btn"
+        title="Close App"
+      >
+        <X class="w-3.5 h-3.5 stroke-[3px]" />
+      </button>
     {/snippet}
   </NookAppHeader>
 

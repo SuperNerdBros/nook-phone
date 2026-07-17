@@ -41,18 +41,23 @@
 
   $effect(() => {
     if (activeView === "camera") {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-        .then((stream) => {
-          cameraStream = stream;
-          activeStream = stream;
-          if (videoElement) {
-            videoElement.srcObject = stream;
-          }
-        })
-        .catch((err) => {
-          console.warn("Camera permissions denied or not supported:", err);
-          permissionError = true;
-        });
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+          .then((stream) => {
+            cameraStream = stream;
+            activeStream = stream;
+            if (videoElement) {
+              videoElement.srcObject = stream;
+            }
+          })
+          .catch((err) => {
+            console.warn("Camera permissions denied or not supported:", err);
+            permissionError = true;
+          });
+      } else {
+        console.warn("navigator.mediaDevices or getUserMedia is not supported in this environment");
+        permissionError = true;
+      }
     } else {
       stopCamera();
     }

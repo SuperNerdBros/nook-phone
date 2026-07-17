@@ -61,6 +61,15 @@ export const projectsData: ProjectItem[] = [
 // 		tools: ['turnips']
 // 	},
 	{
+		name: 'ACNH Critterpedia',
+		appIcon: 'critter',
+		description: 'A clean and simple tracking and logging tool for all bugs, fish, and sea creatures in Animal Crossing: New Horizons.',
+		languages: ['en'],
+		site: 'https://acnhcritterpedia.com/',
+		information: ['critters'],
+		tools: ['checklist']
+	},
+	{
 		name: 'Dodo Air',
 		appIcon: 'directory',
 		description: 'Dodo Airlines Flight Hub. Schedule, track, and manage flights for your island! Dodo Air is always ready for take-off!',

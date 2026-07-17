@@ -15,6 +15,7 @@
   import MapApp from '../pages/MapApp.svelte';
   import ChatApp from '../pages/ChatApp.svelte';
   import MessagesApp from '../pages/MessagesApp.svelte';
+  import BestFriendsApp from '../pages/BestFriendsApp.svelte';
   import RescueApp from '../pages/RescueApp.svelte';
   import ShoppingApp from '../pages/ShoppingApp.svelte';
   import ContactsApp from '../pages/ContactsApp.svelte';
@@ -26,7 +27,6 @@
   import NookLockScreen from '../molecules/NookLockScreen.svelte';
   import NookHomeScreen from '../molecules/NookHomeScreen.svelte';
   import PremiumUpsellModal from './PremiumUpsellModal.svelte';
-  import NookAppDrawer from '../molecules/NookAppDrawer.svelte';
   import NookDock from '../molecules/NookDock.svelte';
   import NookNotificationCenter from '../molecules/NookNotificationCenter.svelte';
   import NookNotificationToast from '../molecules/NookNotificationToast.svelte';
@@ -127,14 +127,14 @@
 
       <!-- Dynamic Display Screens -->
       <div 
-        class={`flex-1 relative overflow-hidden flex flex-col h-full bg-[#fdfcf2] ${(!ctx.customWallpaper && ctx.currentWallpaper?.isDefault) ? ctx.currentWallpaper.bg : ''}`}
+        class={`flex-1 relative overflow-hidden flex flex-col h-full bg-[#fdfcf2] ${(!ctx.customWallpaper && (ctx.currentWallpaper as any)?.isDefault) ? (ctx.currentWallpaper as any).bg : ''}`}
         style={ctx.wallpaperStyle}
       >
         <!-- Wallpaper Star/Leaf Pattern Overlay -->
-        {#if !ctx.customWallpaper && ctx.currentWallpaper?.isDefault}
+        {#if !ctx.customWallpaper && (ctx.currentWallpaper as any)?.isDefault}
           <div 
             class="absolute inset-0 opacity-[0.14] pointer-events-none z-0" 
-            style={`background-image: url('data:image/svg+xml,%3Csvg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M20 5l5 10h10l-8 7 3 10-10-6-10 6 3-10-8-7h10z%22 ${ctx.currentWallpaper.pattern} fill-opacity=%220.4%22/%3E%3C/svg%3E'); background-size: 56px 56px;`}
+            style={`background-image: url('data:image/svg+xml,%3Csvg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M20 5l5 10h10l-8 7 3 10-10-6-10 6 3-10-8-7h10z%22 ${(ctx.currentWallpaper as any).pattern} fill-opacity=%220.4%22/%3E%3C/svg%3E'); background-size: 56px 56px;`}
           ></div>
         {/if}
         {#if nookState.currentApp}
@@ -150,6 +150,7 @@
             {#if nookState.currentApp === "map"} <MapApp /> {/if}
             {#if nookState.currentApp === "chat"} <ChatApp /> {/if}
             {#if nookState.currentApp === "messages"} <MessagesApp /> {/if}
+            {#if nookState.currentApp === "best_friends"} <BestFriendsApp /> {/if}
             {#if nookState.currentApp === "rescue"} <RescueApp /> {/if}
             {#if nookState.currentApp === "shopping"} <ShoppingApp /> {/if}
             {#if nookState.currentApp === "contacts"} <ContactsApp /> {/if}
@@ -164,7 +165,6 @@
           <div class="flex-1 flex flex-col justify-between p-4 pb-2 relative h-full overflow-hidden bg-transparent z-10">
             <div class="flex flex-col gap-3.5 relative z-10 flex-1">
               <div class="relative flex-1">
-                <NookAppDrawer />
                 <NookHomeScreen />
               </div>
             </div>

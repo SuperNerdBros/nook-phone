@@ -4,42 +4,131 @@
   import NookAppIcon from '../atoms/NookAppIcon.svelte';
 
   const ctx = getPhoneContext();
+
+  let cols = $derived(nookState.settings.gridSize || 3);
+  let rows = 3;
+  let appsPerPage = $derived(cols * rows);
+
+  let pages = $derived.by(() => {
+    const apps = ctx.desktopApps;
+    const result = [];
+    for (let i = 0; i < apps.length; i += appsPerPage) {
+      result.push(apps.slice(i, i + appsPerPage));
+    }
+    return result.length > 0 ? result : [[]];
+  });
+  
+  let currentPage = $state(0);
+  let sliderRef: HTMLDivElement;
+
+  let isDragging = $state(false);
+  let startX = 0;
+  let scrollLeft = 0;
+
+  const handlePointerDown = (e: PointerEvent) => {
+    isDragging = true;
+    startX = e.pageX - sliderRef.offsetLeft;
+    scrollLeft = sliderRef.scrollLeft;
+    // Don't prevent default here to allow clicking buttons, but we'll prevent default on move if it's a drag
+  };
+
+  const handlePointerMove = (e: PointerEvent) => {
+    if (!isDragging) return;
+    e.preventDefault(); // Stop text selection/other drag behavior
+    const x = e.pageX - sliderRef.offsetLeft;
+    const walk = (x - startX) * 1.5; // Scroll speed multiplier
+    sliderRef.scrollLeft = scrollLeft - walk;
+  };
+
+  const handlePointerUp = () => {
+    isDragging = false;
+    // Snap to nearest page is handled automatically by CSS scroll-snap!
+  };
+
+  const handleHomeDrop = (e: DragEvent) => {
+    e.preventDefault();
+    const appId = e.dataTransfer?.getData('appId');
+    if (appId) {
+      // If dropped anywhere on the homescreen that isn't the dock, remove it from the dock!
+      const newDock = [...nookState.dockApps];
+      const index = newDock.indexOf(appId);
+      if (index !== -1) {
+        newDock.splice(index, 1);
+        nookState.dockApps = newDock;
+      }
+    }
+  };
+
+  const handleHomeDragOver = (e: DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleScroll = () => {
+    if (!sliderRef) return;
+    const scrollX = sliderRef.scrollLeft;
+    const width = sliderRef.clientWidth;
+    // adding width/2 to scrollX to round to the nearest page
+    if (width > 0) {
+      currentPage = Math.floor((scrollX + width / 2) / width);
+    }
+  };
 </script>
 
-<div class="absolute inset-0 flex flex-col">
-  <div class="text-center text-[#807256] font-['Varela_Round',sans-serif] text-[35px] font-bold mt-[30px] mb-[15px] min-h-[42px] drop-shadow-sm flex items-center justify-center">
+<div 
+  class="absolute inset-0 flex flex-col pb-2"
+  ondrop={handleHomeDrop}
+  ondragover={handleHomeDragOver}
+>
+  <div class="text-center text-[#807256] font-['Varela_Round',sans-serif] text-[35px] font-bold mt-[30px] mb-[15px] min-h-[42px] drop-shadow-sm flex items-center justify-center shrink-0">
     {ctx.hoveredAppName}
   </div>
   
-  <div class="flex-1 overflow-y-auto ac-scrollbar relative">
-    <div class={`grid gap-y-[24px] gap-x-[10px] px-[30px] pt-[10px] justify-items-center content-start pb-10 ${nookState.settings.gridSize === 4 ? 'grid-cols-4 gap-x-2' : nookState.settings.gridSize === 5 ? 'grid-cols-5 gap-x-1' : 'grid-cols-3'}`}>
-      {#each ctx.desktopApps as app (app.id || app.name)}
-        <NookAppIcon 
-          app={app} 
-          size="lg" 
-          showText={false}
-          onClick={() => ctx.handleAppLaunch(app.id || app.name)}
-          onMouseEnter={() => ctx.hoveredAppName = app.name}
-          onMouseLeave={() => ctx.hoveredAppName = "NookPhone"}
-        >
-          <!-- Remove button -->
-          <button 
-            onclick={(e) => { e.stopPropagation(); nookState.toggleAppPin(app.id || app.name); }}
-            class="absolute -top-1 right-0.5 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full border border-white flex items-center justify-center cursor-pointer shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-150 active:scale-95 text-[9px] font-black z-30"
-            title="Remove from Homescreen"
-          >
-            ✕
-          </button>
-        </NookAppIcon>
-      {/each}
-
-      {#if ctx.desktopApps.length === 0}
-        <div class="col-span-full flex flex-col items-center justify-center py-20 text-[#5d5a4a]/50 text-sm font-bold text-center">
-          <div class="text-4xl mb-4 opacity-50">📱</div>
-          Your desktop is empty.<br/>
-          Use the App Store to install apps or change pinning in Settings!
+  <div 
+    bind:this={sliderRef}
+    onscroll={handleScroll}
+    onpointerdown={handlePointerDown}
+    onpointermove={handlePointerMove}
+    onpointerup={handlePointerUp}
+    onpointerleave={handlePointerUp}
+    class={`flex-1 flex overflow-x-auto hide-scrollbar relative z-10 w-full ${isDragging ? '' : 'snap-x snap-mandatory'}`}
+    style="touch-action: pan-y;"
+  >
+    {#each pages as page, i}
+      <div class="w-full h-full shrink-0 snap-center flex flex-col items-center">
+        <div class={`w-full max-w-full grid gap-y-[24px] gap-x-[10px] px-[30px] pt-[10px] justify-items-center content-start ${cols === 4 ? 'grid-cols-4 gap-x-2' : cols === 5 ? 'grid-cols-5 gap-x-1' : 'grid-cols-3'}`}>
+          {#each page as app (app.id || app.name)}
+            <NookAppIcon 
+              app={app} 
+              size="lg" 
+              showText={false}
+              onClick={() => ctx.handleAppLaunch(app.id || app.name)}
+              onMouseEnter={() => ctx.hoveredAppName = app.name}
+              onMouseLeave={() => ctx.hoveredAppName = "NookPhone"}
+            />
+          {/each}
         </div>
-      {/if}
-    </div>
+      </div>
+    {/each}
+  </div>
+
+  <!-- Pagination Dots -->
+  <div class="flex justify-center items-center gap-2 mt-1 h-[14px] shrink-0">
+    {#each pages as _, i}
+      <button 
+        onclick={() => sliderRef?.scrollTo({ left: i * sliderRef.clientWidth, behavior: 'smooth' })}
+        class={`h-2 rounded-full transition-all duration-300 border-0 p-0 cursor-pointer ${i === currentPage ? 'bg-[#5fbba9] w-4' : 'bg-[#e0d6b8] w-2 hover:bg-[#c2b694]'}`}
+        aria-label={`Go to page ${i + 1}`}
+      ></button>
+    {/each}
   </div>
 </div>
+
+<style>
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+</style>
