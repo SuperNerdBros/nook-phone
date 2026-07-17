@@ -40,7 +40,7 @@
     if (step < steps.length - 1) {
       if (steps[step].input === 'name' && !name.trim()) return;
       if (steps[step].input === 'island' && !islandName.trim()) return;
-      if (steps[step].input === 'friendcode' && friendCode.length < 17) return;
+      if (steps[step].input === 'friendcode' && friendCode.length > 0 && friendCode.length < 17) return;
       step++;
     } else {
       nookState.completeOnboarding(name, islandName + " Island", hemisphere, friendCode);
@@ -120,10 +120,10 @@
 
     <button 
       onclick={nextStep}
-      disabled={(steps[step].input === 'name' && !name.trim()) || (steps[step].input === 'island' && !islandName.trim()) || (steps[step].input === 'friendcode' && friendCode.length < 17)}
+      disabled={(steps[step].input === 'name' && !name.trim()) || (steps[step].input === 'island' && !islandName.trim()) || (steps[step].input === 'friendcode' && friendCode.length > 0 && friendCode.length < 17)}
       class="bg-[#f0b157] disabled:bg-gray-300 disabled:border-gray-400 disabled:text-gray-500 text-[#5c3a21] font-black py-4 px-6 rounded-full w-full max-w-[220px] mx-auto border-b-4 border-[#d99c45] hover:bg-[#f2bd70] active:border-b-0 active:translate-y-1 transition-all cursor-pointer shadow-md text-lg flex items-center justify-center gap-2"
     >
-      {step === steps.length - 1 ? 'Start Life!' : 'Next'}
+      {step === steps.length - 1 ? 'Start Life!' : (steps[step].input === 'friendcode' && friendCode.length === 0) ? 'Skip' : 'Next'}
     </button>
   </div>
 </div>

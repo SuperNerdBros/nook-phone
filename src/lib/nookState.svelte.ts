@@ -87,6 +87,7 @@ export interface NookOSState {
     reduceMotion: boolean;
     gridSize: number;
   };
+  unreadDMs: number;
 }
 
 const DEFAULT_GRID_LEAF = [
@@ -158,7 +159,7 @@ const INITIAL_STATE: NookOSState = {
     { id: "d3", name: "Custom Tile", grid: Array(16).fill(null).map(() => Array(16).fill("#ffffff")), creator: "Villager" }
   ],
   activeWallpaperId: "default",
-  pinnedApps: ["directory", "passport", "miles", "chat", "shopping"],
+  pinnedApps: ["directory", "passport", "chat", "messages", "shopping"],
   installedApps: [],
   hasCompletedOnboarding: false,
   settings: {
@@ -167,7 +168,8 @@ const INITIAL_STATE: NookOSState = {
 
     reduceMotion: false,
     gridSize: 3
-  }
+  },
+  unreadDMs: 0
 };
 
 class NookStateManager {
@@ -233,10 +235,15 @@ class NookStateManager {
   get settings() { return this.state.settings; }
   set settings(val) { this.state.settings = val; }
 
+  get unreadDMs() { return this.state.unreadDMs || 0; }
+  set unreadDMs(val) { this.state.unreadDMs = val; }
+
   constructor() {
     if (typeof window !== "undefined") {
       try {
-        const saved = localStorage.getItem("nook_os_state_v1");
+        const userId = window.wpApiSettings?.userId || 0;
+        const storageKey = `nook_os_state_v1_user_${userId}`;
+        const saved = localStorage.getItem(storageKey);
         if (saved) {
           const parsed = JSON.parse(saved);
           this.state = { ...this.state, ...parsed };
@@ -269,7 +276,9 @@ class NookStateManager {
   save() {
     if (typeof window !== "undefined") {
       try {
-        localStorage.setItem("nook_os_state_v1", JSON.stringify(this.state));
+        const userId = window.wpApiSettings?.userId || 0;
+        const storageKey = `nook_os_state_v1_user_${userId}`;
+        localStorage.setItem(storageKey, JSON.stringify(this.state));
       } catch (e) {
         console.error("Failed to save state to localStorage:", e);
       }

@@ -17,7 +17,9 @@
     Bell,
     Trash2,
     Inbox,
-    X
+    X,
+    Globe,
+    Code
   } from "@lucide/svelte";
 
   import Onboarding from './Onboarding.svelte';
@@ -30,6 +32,7 @@
   import CustomDesignsApp from '../pages/CustomDesignsApp.svelte';
   import MapApp from '../pages/MapApp.svelte';
   import ChatApp from '../pages/ChatApp.svelte';
+  import MessagesApp from '../pages/MessagesApp.svelte';
   import RescueApp from '../pages/RescueApp.svelte';
   import ShoppingApp from '../pages/ShoppingApp.svelte';
   import DesignerApp from '../pages/DesignerApp.svelte';
@@ -158,6 +161,7 @@
     { id: "designs", name: "Custom Editor", icon: "designs", bg: "bg-[#e483b3]" },
     { id: "map", name: "Island Map", icon: "map", bg: "bg-[#ebd15b]" },
     { id: "chat", name: "Resident Chat", icon: "chat", bg: "bg-[#6ca5d8]" },
+    { id: "messages", name: "Messages", icon: "messages", bg: "bg-[#8bd168]" },
     { id: "rescue", name: "Rescue", icon: "rescue", bg: "bg-[#c74536]" },
     { id: "shopping", name: "Nook Shop", icon: "shopping", bg: "bg-[#5ea8d3]" },
     { id: "designer", name: "Designer", icon: "designer", bg: "bg-[#d79a61]" },
@@ -217,7 +221,7 @@
         
         <div class="flex flex-col items-center gap-2">
           <h1 class="text-xl font-bold tracking-widest text-[#fdfcf0] m-0 font-sans uppercase animate-boot-text">
-            NookPhone
+            NookPhone.app
           </h1>
           <p class="text-[9px] text-[#afd485] font-black tracking-widest uppercase m-0 opacity-80 animate-pulse">
             Powered by YouMeOS
@@ -245,7 +249,7 @@
       <Onboarding />
     {:else}
       <!-- Dynamic Status Bar -->
-    <div class="bg-[#e0dcc5]/80 backdrop-blur-md px-6 pt-3 pb-2 flex justify-between items-center text-[11px] text-[#5d5a4a] font-black select-none z-50 shrink-0 border-b border-[#d1cbb0]">
+    <div class="bg-[#e0dcc5]/80 backdrop-blur-md px-6 pt-3 pb-2 flex justify-between items-center text-[11px] text-[#5d5a4a] font-black select-none z-[70] shrink-0 border-b border-[#d1cbb0]">
       <div class="flex items-center gap-2">
         <button 
           onclick={() => {
@@ -262,7 +266,6 @@
             <span class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
           {/if}
         </button>
-        <span class="font-sans font-bold">NookLink</span>
       </div>
       
       <div class="flex items-center gap-1.5 text-xs text-[#5d5a4a] tracking-tight font-black font-sans">
@@ -290,7 +293,7 @@
     {#if nookState.isPhoneLocked}
       <div
         transition:fly={{ y: -20, duration: 300 }}
-        class={`absolute inset-0 flex flex-col justify-between p-6 z-40 overflow-hidden ${(!customWallpaper && currentWallpaper?.isDefault) ? currentWallpaper.bg : ''}`}
+        class={`absolute inset-0 flex flex-col justify-between p-6 z-[60] overflow-hidden ${(!customWallpaper && currentWallpaper?.isDefault) ? currentWallpaper.bg : ''}`}
         style={wallpaperStyle}
       >
         <!-- Wallpaper Pattern -->
@@ -301,16 +304,16 @@
           ></div>
         {/if}
 
-        <div class="flex flex-col items-center mt-12 gap-1.5 text-center relative z-10">
-          <span class="text-[#5d5a4a] text-xs font-black uppercase tracking-widest block">
+        <div class="flex flex-col items-center mt-12 gap-1.5 text-center relative z-10 flex-1 min-h-0">
+          <span class="text-white/90 text-xs font-black uppercase tracking-widest block drop-shadow-md shrink-0">
             {new Date().toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })}
           </span>
-          <h1 class="text-4xl font-mono font-black text-[#5d5a4a] tracking-tight">
+          <h1 class="text-5xl font-mono font-black text-white tracking-tight drop-shadow-lg m-0 mt-1 shrink-0">
             {timeStr}
           </h1>
           <!-- Lock Screen Notifications -->
-          <div class="mt-4 w-full max-w-[280px] flex flex-col gap-2 shrink-0 max-h-[180px] overflow-y-auto pr-1 ac-scrollbar">
-            {#each nookState.notifications.slice(0, 2) as notif (notif.id)}
+          <div class="mt-4 w-full max-w-[280px] flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto pr-1 pb-4 w-full" style="scrollbar-width: none;">
+            {#each nookState.notifications.slice(0, 10) as notif (notif.id)}
               <div class="bg-white/85 backdrop-blur-sm border border-white/60 rounded-2xl p-2.5 shadow-sm flex gap-2 items-start text-left relative animate-fade-in">
                 <div class="w-8 h-8 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center text-lg shrink-0 mt-0.5">
                   {notif.sender === "Tom Nook" ? "🍃" : notif.sender === "Isabelle" ? "🐶" : notif.sender === "Lottie" ? "🌸" : "🔔"}
@@ -367,6 +370,7 @@
           {#if nookState.currentApp === "designs"} <CustomDesignsApp /> {/if}
           {#if nookState.currentApp === "map"} <MapApp /> {/if}
           {#if nookState.currentApp === "chat"} <ChatApp /> {/if}
+          {#if nookState.currentApp === "messages"} <MessagesApp /> {/if}
           {#if nookState.currentApp === "rescue"} <RescueApp /> {/if}
           {#if nookState.currentApp === "shopping"} <ShoppingApp /> {/if}
           {#if nookState.currentApp === "designer"} <DesignerApp /> {/if}
@@ -381,9 +385,34 @@
                   <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-lg shadow-inner overflow-hidden relative">
                     <NookIcon name={currentProject?.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-1 z-10 relative" />
                   </div>
-                  <div class="flex items-baseline gap-2 min-w-0">
-                    <h1 class="text-sm font-bold m-0 shrink-0">{nookState.currentApp}</h1>
-                    <p class="text-[9px] opacity-85 m-0 font-bold">{currentProject?.description || ''}</p>
+                  <div class="flex flex-col min-w-0 justify-center">
+                    <h1 class="text-sm font-bold m-0 shrink-0 leading-tight">{nookState.currentApp}</h1>
+                    {#if currentProject?.site || currentProject?.git}
+                      <div class="flex items-center gap-1.5 mt-1 select-none">
+                        {#if currentProject.site}
+                          <a 
+                            href={currentProject.site} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            class="text-[8px] bg-white/35 text-[#1a4335] hover:bg-white/60 px-2 py-0.5 rounded-full font-black transition flex items-center gap-0.5 no-underline shadow-sm active:scale-95"
+                          >
+                            <Globe class="w-2.5 h-2.5" /> Live
+                          </a>
+                        {/if}
+                        {#if currentProject.git}
+                          <a 
+                            href={currentProject.git} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            class="text-[8px] bg-white/35 text-[#1a4335] hover:bg-white/60 px-2 py-0.5 rounded-full font-black transition flex items-center gap-0.5 no-underline shadow-sm active:scale-95"
+                          >
+                            <Code class="w-2.5 h-2.5" /> Code
+                          </a>
+                        {/if}
+                      </div>
+                    {:else}
+                      <p class="text-[9px] opacity-85 m-0 font-bold leading-none mt-0.5">{currentProject?.description || ''}</p>
+                    {/if}
                   </div>
                 </div>
                 <button

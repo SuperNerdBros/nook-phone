@@ -7,6 +7,7 @@ declare global {
       root: string;
       nonce: string;
       pluginUrl: string;
+      userId?: number;
     };
   }
 }
@@ -151,5 +152,57 @@ export const createComment = async (threadId: number, content: string) => {
   } catch (e) {
     console.error('Failed to create comment', e);
     return false;
+  }
+};
+
+export const fetchConversations = async () => {
+  if (!isProUser()) return [];
+  try {
+    const res = await fetch(getApiUrl('dms/conversations'), { headers: getApiHeaders() });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to fetch conversations', e);
+    return [];
+  }
+};
+
+export const fetchDirectMessages = async (userId: number) => {
+  if (!isProUser()) return [];
+  try {
+    const res = await fetch(getApiUrl(`dms/${userId}`), { headers: getApiHeaders() });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to fetch direct messages', e);
+    return [];
+  }
+};
+
+export const sendDirectMessage = async (recipientId: number, content: string) => {
+  if (!isProUser()) return null;
+  try {
+    const res = await fetch(getApiUrl('dms/send'), {
+      method: 'POST',
+      headers: getApiHeaders(),
+      body: JSON.stringify({ recipient_id: recipientId, content })
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to send direct message', e);
+    return null;
+  }
+};
+
+export const fetchNookUsers = async () => {
+  if (!isProUser()) return [];
+  try {
+    const res = await fetch(getApiUrl('users'), { headers: getApiHeaders() });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to fetch nook users', e);
+    return [];
   }
 };
