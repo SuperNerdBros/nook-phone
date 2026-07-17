@@ -310,18 +310,18 @@
       {/if}
       <div>
         <h1 class="text-xl font-bold flex items-center gap-1.5 leading-none">💬 Resident Log</h1>
-        <p class="text-[10px] opacity-90 mt-0.5">Bulleted Subnook boards & local logs</p>
+        <p class="text-[10px] opacity-90 mt-0.5">Bulleted Sublog boards & local logs</p>
       </div>
     </div>
     
     {#if view === "list"}
       <div class="flex items-center gap-1">
         <button
-          onclick={() => view = "create_subnook"}
+          onclick={() => view = "create_sublog"}
           class="text-[#344d18] bg-white/40 px-2 py-1 rounded-full hover:bg-white/60 transition cursor-pointer flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider"
-          title="Create Subnook"
+          title="Create Sublog"
         >
-          <Plus class="w-3.5 h-3.5 stroke-[2.5px]" /> Subnook
+          <Plus class="w-3.5 h-3.5 stroke-[2.5px]" /> Sublog
         </button>
         <button
           onclick={() => { view = "new"; newSubnook = islandSubnook; }}
@@ -340,21 +340,21 @@
       </div>
     {/if}
   </div>
-
-  <!-- Subnooks Horizontal Selector Bar -->
+ 
+  <!-- Sublogs Horizontal Selector Bar -->
   {#if view === "list"}
     <div class="bg-[#f4f1e3] border-b border-[#e1d9be] py-2 px-3 flex gap-2 overflow-x-auto shrink-0 ac-scrollbar">
-      {#each allSubnooks as sub}
+      {#each allSublogs as sub}
         <button
-          onclick={() => selectedSubnookFilter = sub}
-          class={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider transition-all border shrink-0 cursor-pointer ${selectedSubnookFilter === sub ? 'bg-[#afd485] border-[#8aab5d] text-white shadow-sm scale-105' : 'bg-white hover:bg-gray-50 border-[#dcd3be] text-gray-700 active:scale-95'}`}
+          onclick={() => selectedSublogFilter = sub}
+          class={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider transition-all border shrink-0 cursor-pointer ${selectedSublogFilter === sub ? 'bg-[#afd485] border-[#8aab5d] text-white shadow-sm scale-105' : 'bg-white hover:bg-gray-50 border-[#dcd3be] text-gray-700 active:scale-95'}`}
         >
           {sub}
         </button>
       {/each}
     </div>
   {/if}
-
+ 
   <!-- Main View Router -->
   <div class="flex-1 overflow-y-auto p-4 ac-scrollbar bg-[#fdfdfc]/80 flex flex-col gap-3.5">
     {#if loading}
@@ -367,7 +367,8 @@
       {#if filteredThreads.length === 0}
         <div class="text-center py-20 text-gray-400 text-sm">
           <MessageSquare class="w-12 h-12 mx-auto opacity-25 mb-2" />
-          No discussions found in {selectedSubnookFilter}. Tap the + icon above to write a post!
+          No discussions found in {selectedSublogFilter}. Tap the + icon above to write a post!
+        </div>
         </div>
       {:else}
         {#each filteredThreads as thread (thread.id)}
@@ -504,15 +505,15 @@
           />
         </div>
 
-        <!-- Subnook Selection -->
+        <!-- Sublog Selection -->
         <div class="flex flex-col gap-1">
-          <label for="new-thread-subnook" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Post to Subnook</label>
+          <label for="new-thread-subnook" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Post to Sublog</label>
           <select
             id="new-thread-subnook"
             bind:value={newSubnook}
             class="bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-semibold cursor-pointer appearance-none"
           >
-            {#each allSubnooks.filter(s => s !== "n/All") as sub}
+            {#each allSublogs.filter(s => s !== "n/All") as sub}
               <option value={sub}>{sub}</option>
             {/each}
           </select>
@@ -548,26 +549,26 @@
         </div>
       </div>
 
-    {:else if view === "create_subnook"}
-      <!-- CREATE NEW SUBNOOK FORM -->
+    {:else if view === "create_sublog"}
+      <!-- CREATE NEW SUBLOG FORM -->
       <div class="bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-sm text-left flex flex-col gap-4">
         <h2 class="text-sm font-black text-[#5c3a21] border-b-2 border-dashed border-[#e1d9be] pb-2 uppercase tracking-wide">
-          Create Custom Subnook
+          Create Custom Sublog
         </h2>
 
         <div class="flex flex-col gap-1">
-          <label for="new-subnook-name" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Subnook Name</label>
+          <label for="new-subnook-name" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sublog Name</label>
           <div class="flex gap-2 items-center">
             <span class="text-sm font-black text-[#8a7f66]">n/</span>
             <input
               id="new-subnook-name"
               type="text"
               placeholder="e.g. TurnipFarmers"
-              bind:value={newSubnookName}
+              bind:value={newSublogName}
               class="flex-1 bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-semibold"
             />
           </div>
-          <p class="text-[9px] text-gray-400 font-bold mt-1">Spaces will be stripped automatically to form a cute subnook tag.</p>
+          <p class="text-[9px] text-gray-400 font-bold mt-1">Spaces will be stripped automatically to form a cute sublog tag.</p>
         </div>
 
         <div class="flex justify-between items-center gap-3 mt-2">
@@ -578,8 +579,8 @@
             Cancel
           </button>
           <button
-            onclick={handleCreateSubnook}
-            disabled={!newSubnookName.trim()}
+            onclick={handleCreateSublog}
+            disabled={!newSublogName.trim()}
             class="px-6 py-2 bg-[#afd485] hover:bg-opacity-95 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Create
