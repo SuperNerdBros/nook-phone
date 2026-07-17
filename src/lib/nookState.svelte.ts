@@ -72,6 +72,7 @@ export interface NookOSState {
     wishlistIds: string[];
     storageIds: string[];
     forTradeIds: string[];
+    itemQuantities: Record<string, number>;
   };
   map: {
     buildings: MapBuilding[];
@@ -95,7 +96,7 @@ export interface NookOSState {
     defaultApps: Record<string, string>;
   };
   unreadDMs: number;
-  vipContacts: string[];
+  bestFriends: string[];
   myContacts: string[];
   villagerMilestones: Record<string, {
     hasPoster: boolean;
@@ -163,7 +164,8 @@ const INITIAL_STATE: NookOSState = {
     purchasedIds: [],
     wishlistIds: [],
     storageIds: [],
-    forTradeIds: []
+    forTradeIds: [],
+    itemQuantities: {}
   },
   map: {
     buildings: [...mapData]
@@ -192,7 +194,7 @@ const INITIAL_STATE: NookOSState = {
     defaultApps: {}
   },
   unreadDMs: 0,
-  vipContacts: [],
+  bestFriends: [],
   myContacts: [],
   villagerMilestones: {},
   bestFriends: [],
@@ -268,8 +270,8 @@ class NookStateManager {
   get unreadDMs() { return this.state.unreadDMs || 0; }
   set unreadDMs(val) { this.state.unreadDMs = val; }
 
-  get vipContacts() { return this.state.vipContacts || []; }
-  set vipContacts(val) { this.state.vipContacts = val; }
+  get bestFriends() { return this.state.bestFriends || []; }
+  set bestFriends(val) { this.state.bestFriends = val; }
 
   get myContacts() { return this.state.myContacts || []; }
   set myContacts(val) { this.state.myContacts = val; }
@@ -277,8 +279,6 @@ class NookStateManager {
   get villagerMilestones() { return this.state.villagerMilestones || {}; }
   set villagerMilestones(val) { this.state.villagerMilestones = val; }
 
-  get bestFriends() { return this.state.bestFriends || []; }
-  set bestFriends(val) { this.state.bestFriends = val; }
 
   get bestFriendsCommunicationsOn() { return this.state.bestFriendsCommunicationsOn !== false; }
   set bestFriendsCommunicationsOn(val) { this.state.bestFriendsCommunicationsOn = val; }
@@ -325,6 +325,7 @@ class NookStateManager {
             if (!parsed.catalog.wishlistIds) parsed.catalog.wishlistIds = [];
             if (!parsed.catalog.storageIds) parsed.catalog.storageIds = [];
             if (!parsed.catalog.forTradeIds) parsed.catalog.forTradeIds = [];
+            if (!parsed.catalog.itemQuantities) parsed.catalog.itemQuantities = {};
           }
           this.state = { ...this.state, ...parsed };
         }
@@ -501,6 +502,18 @@ class NookStateManager {
     } else {
       this.state.catalog.wishlistIds.push(itemId);
     }
+    this.save();
+  }
+
+  
+  getItemQuantity(itemId: string): number {
+    if (!this.state.catalog.itemQuantities) this.state.catalog.itemQuantities = {};
+    return this.state.catalog.itemQuantities[itemId] || 1;
+  }
+
+  setItemQuantity(itemId: string, quantity: number) {
+    if (!this.state.catalog.itemQuantities) this.state.catalog.itemQuantities = {};
+    this.state.catalog.itemQuantities[itemId] = Math.max(1, quantity);
     this.save();
   }
 
@@ -805,20 +818,7 @@ class NookStateManager {
       this.save();
     }
   }
-  toggleVipContact(contactId: string) {
-    if (!this.state.vipContacts) this.state.vipContacts = [];
-    if (this.state.vipContacts.includes(contactId)) {
-      this.state.vipContacts = this.state.vipContacts.filter(id => id !== contactId);
-    } else {
-      this.state.vipContacts.push(contactId);
-    }
-    this.save();
-  }
 
-  isVipContact(contactId: string): boolean {
-    if (!this.state.vipContacts) return false;
-    return this.state.vipContacts.includes(contactId);
-  }
 
   toggleResident(contactId: string) {
     if (!this.state.residents) this.state.residents = [];
@@ -853,8 +853,8 @@ class NookStateManager {
     this.state.myContacts = this.state.myContacts.filter(id => id !== contactId);
     
     // Also remove from VIPs and residents to keep state clean
-    if (this.state.vipContacts) {
-      this.state.vipContacts = this.state.vipContacts.filter(id => id !== contactId);
+    if (this.state.bestFriends) {
+      this.state.bestFriends = this.state.bestFriends.filter(id => id !== contactId);
     }
     if (this.state.residents) {
       this.state.residents = this.state.residents.filter(id => id !== contactId);

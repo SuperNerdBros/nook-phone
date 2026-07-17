@@ -1,12 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fetchNookipediaItems, searchNookipediaItems } from '@/lib/api';
+  import { fetchNookipediaItems, searchNookipediaItems, fetchNookipediaVillagers } from '@/lib/api';
   import NookAppTemplate from '@/components/organisms/NookAppTemplate.svelte';
   import NookIcon from '@/components/atoms/NookIcon.svelte';
   import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   const ctx = getPhoneContext();
   import nookState from '@/lib/nookState.svelte';
   import AcnhBubble from '@/components/molecules/AcnhBubble.svelte';
+  import GiftReactionOverlay from '@/components/molecules/GiftReactionOverlay.svelte';
   import { 
     Grid, 
     Armchair, 
@@ -45,8 +46,59 @@
   let selectedItem = $state<any | null>(null);
   
   let allItems = $state<any[]>([]);
+  let allVillagers = $state<any[]>([]);
+  let isFriendPickerOpen = $state(false);
+  let selectedGiftItem = $state<any | null>(null);
+  let selectedGiftFriend = $state<any | null>(null);
+  let giftReaction = $state<{ rating: number; message: string } | null>(null);
+
+  $effect(() => {
+    fetchNookipediaVillagers().then(v => {
+      allVillagers = v || [];
+    });
+  });
+
+  let bestFriendsList = $derived(allVillagers.filter(v => nookState.isBestFriend(v.id)));
+
+  function getGiftReaction(villager: any, item: any) {
+    const hashVal = (villager.name.charCodeAt(0) + item.name.charCodeAt(0) + (villager.personality || '').charCodeAt(0)) % 100;
+    let rating = 1; let message = "";
+    const category = item.category || 'Other';
+    const personality = villager.personality || 'Normal';
+    if (personality === 'Jock') {
+      if (category === 'Furniture' || category === 'Daily Selection') rating = hashVal % 2 === 0 ? 5 : 4;
+      else if (category === 'Fashion') rating = 2;
+      else rating = 3;
+    } else if (personality === 'Snooty') {
+      if (item.buy_price > 5000) rating = 5;
+      else if (category === 'Fashion') rating = 4;
+      else if (item.buy_price < 500) rating = 1;
+      else rating = 3;
+    } else if (personality === 'Lazy') {
+      if (category === 'Other' || category === 'Daily Selection') rating = 5;
+      else if (category === 'Fashion') rating = 2;
+      else rating = 4;
+    } else {
+      if (hashVal < 20) rating = 1;
+      else if (hashVal < 40) rating = 2;
+      else if (hashVal < 70) rating = 3;
+      else if (hashVal < 90) rating = 4;
+      else rating = 5;
+    }
+
+    switch (rating) {
+      case 1: message = personality === 'Cranky' ? "Bah! What am I supposed to do with this? Thanks, I guess..." : "Oh, thank you! It's the thought that counts, right?"; break;
+      case 2: message = personality === 'Lazy' ? `Oh, cool! A ${item.name}. I might use this for something later. Thanks!` : `Oh, a ${item.name}! Thank you.`; break;
+      case 3: message = personality === 'Peppy' ? `Oh my gosh, a ${item.name}! That is so cute! Thanks a million!` : `Wow, a ${item.name}! I really like this.`; break;
+      case 4: message = personality === 'Sisterly' ? `Hey, you really hit the nail on the head with this ${item.name}! Thanks.` : `Oh, I love it! A ${item.name} is exactly what I wanted.`; break;
+      case 5: message = personality === 'Smug' ? `Magnifique! A ${item.name}! This is a masterpiece of a gift.` : `Oh my goodness! A ${item.name}! I absolutely love this so much!`; break;
+    }
+    return { rating, message };
+  }
+
   let categories = [
     "All", 
+    "Daily Selection",
     "Housewares", 
     "Miscellaneous", 
     "Wall-mounted", 
@@ -76,6 +128,7 @@
   const getCategoryIcon = (cat: string) => {
     switch (cat.toLowerCase()) {
       case "all": return Grid;
+      case "daily selection": return Sparkles;
       case "housewares": return Armchair;
       case "miscellaneous": return ShoppingBag;
       case "wall-mounted": return Star;
@@ -156,7 +209,8 @@
           const items = await fetchNookipediaItems();
           allItems = items || [];
         } else {
-          const results = await searchNookipediaItems(query, cat);
+          const searchCat = cat === "Daily Selection" ? undefined : cat;
+          const results = await searchNookipediaItems(query, searchCat);
           allItems = results || [];
         }
       } catch (e) {
@@ -166,6 +220,24 @@
       }
     }, 400);
   });
+
+  async function sendGift(friend: any, item: any) {
+    if (nookState.settings.soundEffects) {
+      const audio = new Audio('/audio/ACNH_Buy_Item.wav');
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+    }
+    const success = nookState.purchaseCatalogItem({
+      id: item.id, name: item.name, price: item.buy_price, currency: "Bells", category: item.category, image: item.imageUrl
+    });
+    if (success) {
+      selectedGiftFriend = friend;
+      giftReaction = getGiftReaction(friend, item);
+      selectedGiftItem = null; // Wait for reaction
+    } else {
+      alert("Not enough Bells!");
+    }
+  }
 
   async function handleNookSearch() {
     if (!nookSearchInput.trim()) return;
@@ -187,21 +259,26 @@
     }
   }
 
-  let filteredItems = $derived(allItems.filter((r) => {
+  let filteredItems = $derived(allItems.filter((r, i) => {
     if (activeTab === "storage" && !nookState.isStorageItem(r.name)) return false;
     if (activeTab === "wishlist" && !nookState.isWishlistItem(r.name)) return false;
     if (activeTab === "for-trade" && !nookState.isForTradeItem(r.name)) return false;
-    const matchesCategory = activeCategory === "All" || r.category === activeCategory;
+    
+    let matchesCategory = activeCategory === "All" || r.category === activeCategory;
+    if (activeCategory === "Daily Selection") {
+      matchesCategory = r.is_orderable && (i % 7 === 0);
+    }
+    
     const matchesSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
-  }));
+  }).slice(0, activeCategory === "Daily Selection" ? 8 : undefined));
 
   let selectedListIndex = $state(0);
   let activeItem = $derived(filteredItems[selectedListIndex] || null);
 
   const navigateToCategory = (cat: string) => {
     activeCategory = cat;
-    selectedItem = null;
+    selectedListIndex = 0;
     currentView = "browse";
   };
 
@@ -224,13 +301,74 @@
   ];
 </script>
 
+<NookAppTemplate
+  title="Nook Shopping"
+  subtitle="Catalog"
+  headerBgClass="bg-transparent"
+  bgClass="nook-shop-bg"
+  textClass="text-[#4c4637]"
+  showSearch={hasSearched}
+  bind:searchTerm={searchTerm}
+  searchPlaceholder="Search catalog..."
+  searchThemeColorClass="text-[#caa253]"
+  searchFocusBorderClass="focus:border-[#82c56f]"
+  searchBorderColorClass="border-[#dcd3be]"
+  searchBgClass="bg-white"
+  searchTextColorClass="text-[#4c4637]"
+  categories={currentView === "browse" ? categories : []}
+  bind:activeCategory={activeCategory}
+  categoryLayoutStyle="wrap"
+  getCategoryIcon={getCategoryIcon}
+  getCategoryLabel={(cat) => cat}
+  categoryActiveBgClass="bg-[#82c56f]"
+  categoryInactiveTextClass="text-[#c2bcab] hover:text-[#a09a8a]"
+  categoryBgClass="bg-transparent"
+  categoryBorderClass="border-0 shadow-none"
+  categoryLabelBgClass="bg-[#82c56f]"
+  categoryLabelTextClass="text-white"
+  showBottomNav={currentView !== "home"}
+  bottomNavBgClass="bg-[#fcfaf4]"
+  bottomNavBorderClass="border-t-4 border-[#edd8aa]"
+>
+  {#snippet iconSnippet()}
+    <ShoppingBag class="w-5 h-5 drop-shadow-sm mr-1" />
+  {/snippet}
+
+  {#snippet headerActions()}
+    <button onclick={navigateHome} class="nook-header-btn" title="Home">
+      <Store class="w-3.5 h-3.5 stroke-[3px] text-[#4c4637]" />
+    </button>
+    <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
+      <X class="w-3.5 h-3.5 stroke-[3px] text-[#4c4637]" />
+    </button>
+  {/snippet}
+
+  {#snippet bottomNav()}
+    {#each [
+      { id: 'in-stock', label: 'Shop', icon: Store },
+      { id: 'storage', label: 'Storage', icon: Archive },
+      { id: 'wishlist', label: 'Wishlist', icon: Heart },
+      { id: 'for-trade', label: 'For Trade', icon: ArrowLeftRight }
+    ] as tab}
+      <button
+        onclick={() => activeTab = tab.id as any}
+        class={`flex flex-col items-center justify-center w-16 h-12 rounded-2xl transition-all border-0 p-0 cursor-pointer ${
+          activeTab === tab.id 
+            ? 'bg-[#82c56f] text-white shadow-inner scale-105' 
+            : 'bg-transparent text-[#caa253] hover:bg-[#eaf6e3]/50'
+        }`}
+      >
+        <tab.icon class="w-5 h-5 mb-1" strokeWidth={activeTab === tab.id ? 3 : 2} />
+        <span class="text-[9px] font-black uppercase tracking-wider">{tab.label}</span>
+      </button>
+    {/each}
+  {/snippet}
+
 {#if currentView === "home"}
   <!-- ══════════════════════════════════════════════════ -->
   <!-- NOOK SHOPPING HOME — Game-Accurate Landing Page   -->
   <!-- ══════════════════════════════════════════════════ -->
   <div class="nook-shop-home">
-    <!-- Leaf watermark pattern background -->
-    <div class="nook-shop-home__pattern"></div>
 
     <!-- Top bar: title + bells counter -->
     <div class="nook-shop-home__topbar">
@@ -356,175 +494,86 @@
     </div>
   {/if}
 
-{:else}
-  <!-- ══════════════════════════════════════════════════ -->
-  <!-- BROWSE / DETAIL — Standard NookAppTemplate View   -->
-  <!-- ══════════════════════════════════════════════════ -->
-  <NookAppTemplate
-    title="Nook Shopping"
-    subtitle="Catalog"
-    headerBgClass="bg-[#ebce3f]"
-    bgClass="bg-[#fbf9f0]"
-    textClass="text-[#4c4637]"
-    showSearch={hasSearched}
-    bind:searchTerm={searchTerm}
-    searchPlaceholder="Search catalog..."
-    searchThemeColorClass="text-[#caa253]"
-    searchFocusBorderClass="focus:border-[#82c56f]"
-    searchBorderColorClass="border-[#dcd3be]"
-    searchBgClass="bg-white"
-    searchTextColorClass="text-[#4c4637]"
-    categories={currentView === "browse" ? categories : []}
-    bind:activeCategory={activeCategory}
-    categoryLayoutStyle="scroll"
-    getCategoryIcon={getCategoryIcon}
-    getCategoryLabel={(cat) => cat}
-    categoryActiveBgClass="bg-[#82c56f]"
-    categoryInactiveTextClass="text-[#c2bcab] hover:text-[#a09a8a]"
-    categoryBgClass="bg-[#fcfaf4]"
-    categoryBorderClass="border-0 shadow-sm"
-    categoryLabelBgClass="bg-[#82c56f]"
-    categoryLabelTextClass="text-white"
-    bottomNavBgClass="bg-[#fcfaf4]"
-    bottomNavBorderClass="border-t-4 border-[#edd8aa]"
-  >
-    {#snippet iconSnippet()}
-      <ShoppingBag class="w-5 h-5 drop-shadow-sm mr-1" />
-    {/snippet}
-
-    {#snippet headerActions()}
-      <button onclick={navigateHome} class="nook-header-btn" title="Home">
-        <Store class="w-3.5 h-3.5 stroke-[3px] text-[#4c4637]" />
-      </button>
-      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
-        <X class="w-3.5 h-3.5 stroke-[3px] text-[#4c4637]" />
-      </button>
-    {/snippet}
-
-    {#snippet bottomNav()}
-      {#each [
-        { id: 'in-stock', label: 'Shop', icon: Store },
-        { id: 'storage', label: 'Storage', icon: Archive },
-        { id: 'wishlist', label: 'Wishlist', icon: Heart },
-        { id: 'for-trade', label: 'For Trade', icon: ArrowLeftRight }
-      ] as tab}
-        <button
-          onclick={() => activeTab = tab.id as any}
-          class={`flex flex-col items-center justify-center w-16 h-12 rounded-2xl transition-all border-0 p-0 cursor-pointer ${
-            activeTab === tab.id 
-              ? 'bg-[#82c56f] text-white shadow-inner scale-105' 
-              : 'bg-transparent text-[#caa253] hover:bg-[#eaf6e3]/50'
-          }`}
-        >
-          <tab.icon class="w-5 h-5 mb-1" strokeWidth={activeTab === tab.id ? 3 : 2} />
-          <span class="text-[9px] font-black uppercase tracking-wider">{tab.label}</span>
-        </button>
-      {/each}
-    {/snippet}
-
-    {#if isLoading}
+{:else if isLoading}
       <div class="flex-1 flex flex-col items-center justify-center h-full">
         <Loader2 class="w-10 h-10 animate-spin opacity-50 mb-4 text-[#82c56f]" />
         <p class="text-sm font-bold opacity-70">Loading catalog...</p>
       </div>
     {:else}
       <!-- Main Content (Hero + List layout) -->
-      <div class="flex-1 flex flex-col min-h-0 relative overflow-hidden nook-catalog-main bg-[#fbf5cd] nook-shop-home__pattern-container">
-        <div class="nook-shop-home__pattern"></div>
+      <div class="flex-1 flex flex-col min-h-0 relative overflow-hidden nook-catalog-main bg-transparent">
         
-        <!-- Hero Section -->
-        <div class="nook-catalog-hero border-b-2 border-[#e1d9be] bg-[#fdfbed]/80 backdrop-blur-sm shadow-sm z-10 p-2 flex flex-col h-[280px]">
+                <!-- Hero Section -->
+        <div class="nook-catalog-hero border-b-2 border-[#e1d9be] z-10 p-4 flex gap-4 h-[210px] items-stretch relative">
           {#if activeItem}
-            <div class="w-full flex justify-between items-start px-2 mt-1">
-              <div class="nook-catalog-price-tag bg-[#82c56f] px-3 py-1 rounded-full text-white font-black flex items-center gap-1.5 shadow-sm text-sm border-2 border-white">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C10.5 2 9.5 3 9.5 4C9.5 4.5 10 5 10 5H14C14 5 14.5 4.5 14.5 4C14.5 3 13.5 2 12 2Z" fill="#ffb75e"/>
-                  <path d="M6.5 7C6.5 7 4.5 13 4.5 17C4.5 21 7.5 23 12 23C16.5 23 19.5 21 19.5 17C19.5 13 17.5 7 17.5 7H6.5Z" fill="#ffd470"/>
-                  <path d="M10 13L12 16L14 13" stroke="#d99c45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                {activeItem.is_orderable ? activeItem.buy_price.toLocaleString() : 'N/A'}
+            <!-- Left Side: Details and Actions -->
+            <div class="flex-1 flex flex-col justify-between py-1">
+              <div class="text-left">
+                <div class="text-[#5a4a18] text-[22px] font-black leading-tight drop-shadow-sm truncate capitalize">{activeItem.name}</div>
+                <div class="text-[#a89f91] text-[10px] font-bold uppercase tracking-wider mt-0.5">{activeItem.category}</div>
               </div>
-              
-              {#if activeItem.is_orderable}
-                <button 
-                  onclick={() => {
-                    const catalogItem = {
-                      id: activeItem.id,
-                      name: activeItem.name,
-                      price: activeItem.buy_price,
-                      currency: "Bells",
-                      category: activeItem.category,
-                      image: activeItem.imageUrl
-                    };
-                    const success = nookState.purchaseCatalogItem(catalogItem);
-                    if (success) {
-                      alert(`Ordered ${activeItem.name}!`);
-                    } else {
-                      alert(`Not enough Bells!`);
-                    }
-                  }}
-                  class="bg-[#bedad4] text-[#2d5c56] px-3 py-1 rounded-full font-black flex items-center gap-1 shadow-sm text-sm hover:bg-[#a8cdc5] transition-colors border-2 border-white cursor-pointer"
-                >
-                  <ShoppingBag class="w-3.5 h-3.5" strokeWidth={3} />
-                  Order
+
+              <div class="flex flex-col gap-2">
+                {#if activeTab !== 'in-stock'}
+                  <!-- Counter for Wishlist, Storage, For Trade -->
+                  <div class="flex items-center justify-between py-1.5 px-4 bg-[#8cbe7b] text-white rounded-full font-bold shadow-sm">
+                    <button class="text-white text-xl leading-none hover:scale-110 active:scale-95 transition-transform px-2" onclick={() => nookState.setItemQuantity(activeItem.id, nookState.getItemQuantity(activeItem.id) - 1)}>-</button>
+                    <span>{nookState.getItemQuantity(activeItem.id)}</span>
+                    <button class="text-white text-xl leading-none hover:scale-110 active:scale-95 transition-transform px-2" onclick={() => nookState.setItemQuantity(activeItem.id, nookState.getItemQuantity(activeItem.id) + 1)}>+</button>
+                  </div>
+                {/if}
+
+                <div class="flex items-center gap-1">
+                  <div class="flex items-center gap-1.5 px-2 py-2 bg-black/5 text-[#5a4a18] rounded-full font-bold shadow-sm flex-1 justify-center truncate">
+                    <svg class="w-3.5 h-3.5 text-[#cfb036] opacity-90 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C10.5 2 9.5 3 9.5 4C9.5 4.5 10 5 10 5H14C14 5 14.5 4.5 14.5 4C14.5 3 13.5 2 12 2Z" fill="#ffb75e"/>
+                      <path d="M6.5 7C6.5 7 4.5 13 4.5 17C4.5 21 7.5 23 12 23C16.5 23 19.5 21 19.5 17C19.5 13 17.5 7 17.5 7H6.5Z" fill="#ffd470"/>
+                    </svg>
+                    <span class="text-[10px] whitespace-nowrap">
+                      {activeItem.sell_price ? `Sells for ${activeItem.sell_price.toLocaleString()}` : 'Not for sale'}
+                    </span>
+                  </div>
+
+                  {#if activeItem.is_orderable}
+                    <button 
+                      onclick={() => { selectedGiftItem = activeItem; isFriendPickerOpen = true; }}
+                      class="flex-1 bg-[#darkred] text-[#white] py-2 px-2 rounded-full font-black flex items-center justify-center gap-1.5 shadow-sm text-[10px] hover:bg-[#a8cdc5] transition-colors border-2 border-white cursor-pointer whitespace-nowrap"
+                    >
+                      <ShoppingBag class="w-3 h-3 flex-shrink-0" strokeWidth={3} />
+                      Gift
+                    </button>
+                  {/if}
+                </div>
+              </div>
+
+              <!-- List Management Icons -->
+              <div class="flex items-center justify-between gap-1 mt-auto bg-[#fcfaf4] p-1.5 rounded-2xl border border-[#e1d9be]">
+                <button onclick={() => { nookState.toggleWishlistItem(activeItem.id); }} class="flex-1 flex flex-col items-center py-1 transition-all rounded-xl {nookState.isWishlistItem(activeItem.id) ? 'bg-[#fdafb2]/20 text-[#8c2a2e]' : 'text-[#8c8577] hover:bg-gray-50'}">
+                  <Heart class="w-5 h-5 mb-0.5 {nookState.isWishlistItem(activeItem.id) ? 'fill-current' : ''}" />
                 </button>
-              {/if}
+                <div class="w-px h-6 bg-[#e1d9be]"></div>
+                <button onclick={() => { nookState.toggleStorageItem(activeItem.id); }} class="flex-1 flex flex-col items-center py-1 transition-all rounded-xl {nookState.isStorageItem(activeItem.id) ? 'bg-[#bedad4]/20 text-[#2d5c56]' : 'text-[#8c8577] hover:bg-gray-50'}">
+                  <Archive class="w-5 h-5 mb-0.5" strokeWidth={nookState.isStorageItem(activeItem.id) ? 3 : 2} />
+                </button>
+                <div class="w-px h-6 bg-[#e1d9be]"></div>
+                <button onclick={() => { nookState.toggleForTradeItem(activeItem.id); }} class="flex-1 flex flex-col items-center py-1 transition-all rounded-xl {nookState.isForTradeItem(activeItem.id) ? 'bg-[#ffebd1]/30 text-[#b36b19]' : 'text-[#8c8577] hover:bg-gray-50'}">
+                  <ArrowLeftRight class="w-5 h-5 mb-0.5" strokeWidth={nookState.isForTradeItem(activeItem.id) ? 3 : 2} />
+                </button>
+              </div>
             </div>
-            
-            <div class="flex-1 flex justify-center items-center pb-2">
+
+            <!-- Right Side: Naked Image -->
+            <div class="flex-1 flex justify-center items-center h-full relative">
               {#if activeItem.imageUrl}
-                <img src={activeItem.imageUrl} alt={activeItem.name} class="w-[110px] h-[110px] object-contain drop-shadow-lg" />
+                <img src={activeItem.imageUrl} alt={activeItem.name} class="w-full h-full max-h-[140px] object-contain drop-shadow-xl" />
               {:else}
-                <Leaf class="w-16 h-16 text-[#c6b199]" />
+                <Leaf class="w-20 h-20 text-[#c6b199]" />
               {/if}
             </div>
-
-            <!-- List Management Actions (Increment / Decrement) -->
-            <div class="grid grid-cols-3 gap-2 w-full mt-auto px-1">
-              <!-- Wishlist -->
-              <div class="flex flex-col items-center justify-between p-1 rounded-xl border border-[#e1d9be] bg-[#fcfaf4]">
-                <span class="text-[9px] font-black uppercase text-[#8c8577]">Wishlist</span>
-                <div class="flex items-center gap-2 mt-1">
-                  <button onclick={() => {
-                    const idx = nookState.catalog.wishlistIds.lastIndexOf(activeItem.name);
-                    if (idx > -1) { nookState.catalog.wishlistIds.splice(idx, 1); nookState.save(); }
-                  }} class="w-5 h-5 rounded-full bg-white border border-[#e1d9be] text-[#8c8577] flex items-center justify-center font-bold pb-0.5 hover:bg-red-50">-</button>
-                  <span class="text-xs font-bold text-[#8c2a2e] w-3 text-center">{nookState.catalog.wishlistIds.filter(x => x === activeItem.name).length}</span>
-                  <button onclick={() => {
-                    nookState.catalog.wishlistIds.push(activeItem.name); nookState.save();
-                  }} class="w-5 h-5 rounded-full bg-[#fdafb2] text-white flex items-center justify-center font-bold pb-0.5 hover:bg-[#f29a9d]">+</button>
-                </div>
-              </div>
-
-              <!-- Storage -->
-              <div class="flex flex-col items-center justify-between p-1 rounded-xl border border-[#e1d9be] bg-[#fcfaf4]">
-                <span class="text-[9px] font-black uppercase text-[#8c8577]">Storage</span>
-                <div class="flex items-center gap-2 mt-1">
-                  <button onclick={() => {
-                    const idx = nookState.catalog.storageIds.lastIndexOf(activeItem.name);
-                    if (idx > -1) { nookState.catalog.storageIds.splice(idx, 1); nookState.save(); }
-                  }} class="w-5 h-5 rounded-full bg-white border border-[#e1d9be] text-[#8c8577] flex items-center justify-center font-bold pb-0.5 hover:bg-teal-50">-</button>
-                  <span class="text-xs font-bold text-[#2d5c56] w-3 text-center">{nookState.catalog.storageIds.filter(x => x === activeItem.name).length}</span>
-                  <button onclick={() => {
-                    nookState.catalog.storageIds.push(activeItem.name); nookState.save();
-                  }} class="w-5 h-5 rounded-full bg-[#bedad4] text-white flex items-center justify-center font-bold pb-0.5 hover:bg-[#a8cdc5]">+</button>
-                </div>
-              </div>
-
-              <!-- For Trade -->
-              <div class="flex flex-col items-center justify-between p-1 rounded-xl border border-[#e1d9be] bg-[#fcfaf4]">
-                <span class="text-[9px] font-black uppercase text-[#8c8577]">For Trade</span>
-                <div class="flex items-center gap-2 mt-1">
-                  <button onclick={() => {
-                    const idx = nookState.catalog.forTradeIds.lastIndexOf(activeItem.name);
-                    if (idx > -1) { nookState.catalog.forTradeIds.splice(idx, 1); nookState.save(); }
-                  }} class="w-5 h-5 rounded-full bg-white border border-[#e1d9be] text-[#8c8577] flex items-center justify-center font-bold pb-0.5 hover:bg-orange-50">-</button>
-                  <span class="text-xs font-bold text-[#b36b19] w-3 text-center">{nookState.catalog.forTradeIds.filter(x => x === activeItem.name).length}</span>
-                  <button onclick={() => {
-                    nookState.catalog.forTradeIds.push(activeItem.name); nookState.save();
-                  }} class="w-5 h-5 rounded-full bg-[#ffebd1] text-white flex items-center justify-center font-bold pb-0.5 hover:bg-[#f5d0a9]">+</button>
-                </div>
-              </div>
+          {:else}
+            <div class="flex-1 flex flex-col items-center justify-center text-[#8c8577] opacity-50 w-full">
+              <Leaf class="w-12 h-12 mb-2" />
+              <p class="font-bold text-sm">No item selected</p>
             </div>
           {/if}
         </div>
@@ -542,12 +591,8 @@
                 `}
                 onclick={() => selectedListIndex = i}
               >
-                <!-- Cursor (Hand pointer) -->
-                <div class="w-8 flex justify-center flex-shrink-0">
-                  {#if selectedListIndex === i}
-                    <span class="text-xl -ml-2 drop-shadow-sm">👉</span>
-                  {/if}
-                </div>
+                <!-- Cursor removed -->
+                <div class="w-2 flex-shrink-0"></div>
                 
                 <!-- Category Icon -->
                 <div class="w-8 h-8 flex items-center justify-center mr-2 flex-shrink-0 bg-white/50 rounded-full p-1">
@@ -583,10 +628,82 @@
         </div>
       </div>
     {/if}
-  </NookAppTemplate>
+  
+{#if isFriendPickerOpen}
+  <div class="absolute inset-0 z-50 bg-[#fdfcf0]/90 backdrop-blur-md flex flex-col p-4 animate-fade-in">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-black text-[#5a4a18]">Send to Best Friend</h2>
+      <button onclick={() => isFriendPickerOpen = false} class="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center text-[#5a4a18]">
+        <X class="w-5 h-5" strokeWidth={3} />
+      </button>
+    </div>
+    
+    <div class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-2">
+      {#each bestFriendsList as friend}
+        <button 
+          onclick={() => sendGift(friend, selectedGiftItem)}
+          class="flex items-center gap-3 p-3 bg-white rounded-2xl border-2 border-[#e1d9be] shadow-sm active:scale-95 transition-transform"
+        >
+          <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-[#f0b157] bg-[#fcfaf4] flex-shrink-0">
+            <img src={friend.image_url} alt={friend.name} class="w-full h-full object-cover" />
+          </div>
+          <div class="flex-1 text-left">
+            <h3 class="font-bold text-[#5a4a18]">{friend.name}</h3>
+            <p class="text-[10px] uppercase font-black text-[#8c8577]">{friend.personality}</p>
+          </div>
+          <div class="w-8 h-8 bg-[#bedad4] text-[#2d5c56] rounded-full flex items-center justify-center">
+            <Send class="w-4 h-4 ml-0.5" strokeWidth={3} />
+          </div>
+        </button>
+      {/each}
+      
+      {#if bestFriendsList.length === 0}
+        <div class="text-center py-10 opacity-60">
+          <Heart class="w-10 h-10 mx-auto mb-2 text-[#8c8577]" />
+          <p class="font-bold text-sm text-[#8c8577]">No best friends yet!</p>
+        </div>
+      {/if}
+    </div>
+  </div>
 {/if}
 
+{#if giftReaction}
+  <GiftReactionOverlay 
+    villager={selectedGiftFriend}
+    reaction={giftReaction}
+    onClose={() => {
+      isFriendPickerOpen = false;
+      giftReaction = null;
+      selectedGiftFriend = null;
+    }}
+  />
+{/if}
+
+  </NookAppTemplate>
+
 <style>
+  /* ══════════════════════════════════════════════════════ */
+  /* NOOK SHOPPING GLOBAL BACKGROUND                       */
+  /* ══════════════════════════════════════════════════════ */
+  :global(.nook-shop-bg) {
+    background-color: #fdf6a8 !important;
+  }
+  :global(.nook-shop-bg::before) {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.4;
+    pointer-events: none;
+    background-image: url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M20 6c3 4.5 9 7.5 9 15s-6 10.5-9 15c-3-4.5-9-7.5-9-15s6-10.5 9-15z" fill="%23dfac2d" fill-opacity="0.5"/%3E%3C/svg%3E');
+    background-size: 50px 50px;
+    animation: movePatternGlobal 15s linear infinite;
+    z-index: 0;
+  }
+  @keyframes -global-movePatternGlobal {
+    from { background-position: 0 0; }
+    to { background-position: -50px -50px; }
+  }
+
   /* ══════════════════════════════════════════════════════ */
   /* NOOK SHOPPING HOME — Game-Accurate Styles             */
   /* ══════════════════════════════════════════════════════ */
@@ -598,7 +715,7 @@
     justify-content: center;
     height: 100%;
     width: 100%;
-    background: #ebce3f;
+    background: transparent;
     position: relative;
     overflow: hidden;
     font-family: 'Varela Round', sans-serif;
@@ -607,17 +724,6 @@
     user-select: none;
   }
 
-  /* Nook leaf watermark pattern (like the game background) */
-  .nook-shop-home__pattern {
-    position: absolute;
-    inset: 0;
-    opacity: 0.08;
-    pointer-events: none;
-    background-image: url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M20 6c3 4.5 9 7.5 9 15s-6 10.5-9 15c-3-4.5-9-7.5-9-15s6-10.5 9-15z" fill="%23987a2e" fill-opacity="0.6"/%3E%3C/svg%3E');
-    background-size: 36px 36px;
-  }
-
-  /* ── Top Bar ─────────────────────────────────────────── */
   .nook-shop-home__topbar {
     display: flex;
     align-items: center;

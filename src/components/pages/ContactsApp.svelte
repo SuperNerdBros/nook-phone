@@ -6,13 +6,14 @@
   import { Search, Star, MessageCircle, Home, Info, ChevronLeft, Phone, Video, Users, Plus, Image as ImageIcon, Camera, Gift, Trash2, Check, UserPlus, Leaf, X as XIcon } from '@lucide/svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import AcnhBubble from '@/components/molecules/AcnhBubble.svelte';
+  import GiftReactionOverlay from '@/components/molecules/GiftReactionOverlay.svelte';
   
   const ctx = getPhoneContext();
   let allVillagers = $state<any[]>([]);
   let isLoading = $state(true);
   let searchQuery = $state("");
   let selectedVillager = $state<any>(null);
-  let activeTab = $state<'all' | 'vip' | 'island'>('all');
+  let activeTab = $state<'all' | 'bestFriend' | 'island'>('all');
   let isAddMode = $state(false);
 
   let isGiftPickerOpen = $state(false);
@@ -146,7 +147,7 @@
   const filteredVillagers = $derived(
     (isAddMode ? allVillagers : myContactsList).filter(v => {
       if (!isAddMode) {
-        if (activeTab === 'vip' && !nookState.isVipContact(v.id)) return false;
+        if (activeTab === 'bestFriend' && !nookState.isBestFriend(v.id)) return false;
         if (activeTab === 'island' && !nookState.isResident(v.id)) return false;
       }
       
@@ -166,9 +167,9 @@
         groups['🏝️ Island Residents'] = residents;
       }
 
-      const vips = filteredVillagers.filter(v => nookState.isVipContact(v.id));
-      if (vips.length > 0) {
-        groups['⭐ VIPs'] = vips;
+      const bestFriends = filteredVillagers.filter(v => nookState.isBestFriend(v.id));
+      if (bestFriends.length > 0) {
+        groups['⭐ Best Friends'] = bestFriends;
       }
     }
     
@@ -199,7 +200,7 @@
   }
 
   function toggleVip(villagerId: string) {
-    nookState.toggleVipContact(villagerId);
+    nookState.toggleBestFriend(villagerId);
   }
 
   function toggleResident(villagerId: string) {
@@ -221,7 +222,7 @@
 
   function messageContact(villager: any) {
     const isResident = nookState.isResident(villager.id);
-    if (isResident || nookState.isVipContact(villager.id)) {
+    if (isResident || nookState.isBestFriend(villager.id)) {
         nookState.sendChatMessage(villager.name, `Hey ${villager.name}!`, false);
     }
     nookState.navigate('chat');
@@ -239,7 +240,7 @@
           <ChevronLeft class="w-4 h-4 mr-1" /> Back
         </button>
         <button onclick={() => toggleVip(selectedVillager.id)} class="text-[#f0b157] bg-white/50 p-2 rounded-full shadow-sm hover:bg-white active:scale-95 transition-all cursor-pointer">
-          <Star class="w-5 h-5 {nookState.isVipContact(selectedVillager.id) ? 'fill-current' : ''}" />
+          <Star class="w-5 h-5 {nookState.isBestFriend(selectedVillager.id) ? 'fill-current' : ''}" />
         </button>
       </div>
 
@@ -374,7 +375,7 @@
   {:else}
     <!-- List View -->
     <NookAppHeader
-      title={isAddMode ? 'Add Contacts' : activeTab === 'vip' ? 'VIP Contacts' : activeTab === 'island' ? 'Island Residents' : 'Contacts'}
+      title={isAddMode ? 'Add Contacts' : activeTab === 'bestFriend' ? 'Best Friend Contacts' : activeTab === 'island' ? 'Island Residents' : 'Contacts'}
       bgClass="bg-[#8cc3b0]"
       textClass="text-white"
     >
@@ -446,7 +447,7 @@
                         </div>
                       {/if}
                     {:else}
-                      {#if nookState.isVipContact(villager.id)}
+                      {#if nookState.isBestFriend(villager.id)}
                         <Star class="w-4 h-4 text-[#f0b157] fill-current shrink-0" />
                       {/if}
                     {/if}
@@ -484,11 +485,11 @@
           <span class="text-[10px] font-black uppercase tracking-wider">All</span>
         </button>
         <button 
-          onclick={() => activeTab = 'vip'}
-          class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'vip' ? 'bg-[#f0b157]/20 text-[#d99c45]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#d99c45]'}"
+          onclick={() => activeTab = 'bestFriend'}
+          class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'bestFriend' ? 'bg-[#f0b157]/20 text-[#d99c45]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#d99c45]'}"
         >
-          <Star class="w-5 h-5 mb-0.5 {activeTab === 'vip' ? 'fill-current' : ''}" />
-          <span class="text-[10px] font-black uppercase tracking-wider">VIPs</span>
+          <Star class="w-5 h-5 mb-0.5 {activeTab === 'bestFriend' ? 'fill-current' : ''}" />
+          <span class="text-[10px] font-black uppercase tracking-wider">Best Friends</span>
         </button>
         <button 
           onclick={() => activeTab = 'island'}
@@ -559,59 +560,14 @@
 
       <!-- Dialog reaction overlay -->
       {#if giftReaction}
-        <div class="absolute inset-0 z-50 bg-[#fdfcf0] flex flex-col justify-end p-5 pb-10 overflow-hidden animate-fade-in">
-          <!-- Dots Pattern -->
-          <div class="absolute inset-0 ac-bg-dots opacity-40 z-0 pointer-events-none"></div>
-
-          <!-- Full Body Villager Image -->
-          <div class="absolute top-16 left-1/2 -translate-x-1/2 z-10 animate-ac-float">
-            <div class="h-64 flex items-end justify-center relative">
-              {#if selectedVillager.image_url}
-                <img src={selectedVillager.image_url} alt={selectedVillager.name} class="h-full object-contain drop-shadow-xl" />
-              {:else}
-                <div class="text-7xl">🐾</div>
-              {/if}
-            </div>
-          </div>
-
-          <!-- Dialog Bubble Container -->
-          <div class="relative z-20 w-full max-w-lg mx-auto flex flex-col gap-6">
-            <AcnhBubble
-              title={selectedVillager.name}
-              dialogText={giftReaction.message}
-              isActive={true}
-              class="w-full"
-            >
-              <!-- Rating and Action -->
-              <div class="mt-4 border-t border-[#e1d9be]/60 pt-3 flex flex-col items-center gap-3 animate-fade-in" style="animation-delay: 500ms;">
-                <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-black text-[#8a7f66] uppercase tracking-wider">Love Rating</span>
-                  <div class="flex gap-0.5">
-                    {#each Array(5) as _, i}
-                      <svg 
-                        class="w-5 h-5 transition-all {i < giftReaction.rating ? 'text-[#ff6b6b] fill-current animate-bounce-short' : 'text-gray-300'}" 
-                        style="animation-delay: {i * 100}ms;"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                      </svg>
-                    {/each}
-                  </div>
-                </div>
-
-                <button 
-                  onclick={() => {
-                    isGiftPickerOpen = false;
-                    giftReaction = null;
-                  }}
-                  class="bg-[#f0b157] text-[#5c3a21] font-black py-2.5 px-6 rounded-full border-b-4 border-[#d99c45] hover:bg-[#f2bd70] active:border-b-0 active:translate-y-1 transition-all cursor-pointer shadow-md text-sm"
-                >
-                  You're Welcome!
-                </button>
-              </div>
-            </AcnhBubble>
-          </div>
-        </div>
+        <GiftReactionOverlay 
+          villager={selectedVillager}
+          reaction={giftReaction}
+          onClose={() => {
+            isGiftPickerOpen = false;
+            giftReaction = null;
+          }}
+        />
       {/if}
     </div>
   {/if}

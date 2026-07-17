@@ -49,6 +49,7 @@
 
     // Bottom Navigation Bar snippet
     bottomNav,
+    showBottomNav = true,
     bottomNavBgClass = "bg-[#fffdf5]",
     bottomNavBorderClass = "border-t-4 border-[#bedad4]",
 
@@ -84,6 +85,7 @@
     categoryLabelBgClass?: string;
     categoryLabelTextClass?: string;
     bottomNav?: Snippet;
+    showBottomNav?: boolean;
     bottomNavBgClass?: string;
     bottomNavBorderClass?: string;
     children?: Snippet;
@@ -155,14 +157,14 @@
   {/if}
 
   <!-- Main Content List / Views -->
-  <div class="flex-1 relative overflow-hidden w-full h-full">
+  <div class="flex-1 flex flex-col relative overflow-hidden w-full h-full">
     {#if children}
       {@render children()}
     {/if}
   </div>
 
   <!-- Bottom App Bar / Navigation -->
-  {#if bottomNav}
+  {#if bottomNav && showBottomNav}
     <div class={`shrink-0 ${bottomNavBgClass} ${bottomNavBorderClass} px-4 pt-3 pb-6 flex items-center justify-around z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] rounded-t-3xl mt-[-10px] relative`}>
       {@render bottomNav()}
     </div>
