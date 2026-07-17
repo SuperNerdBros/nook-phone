@@ -3,6 +3,7 @@
   import { Edit2, Save, RefreshCw, Cloud, CloudOff } from '@lucide/svelte';
   import { fetchPassports, linkPassport, isProUser } from '@/lib/api';
   import { onMount } from 'svelte';
+  import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
 
   const TITLE_PREFIXES = ["Horizon", "Wild", "Friendly", "Active", "Casual", "Island", "Cozy", "Legendary", "Sassy", "Happy"];
   const TITLE_SUFFIXES = ["Dweller", "Resident", "Explorer", "Hustler", "Nookling", "Leader", "Fanatic", "Pioneer", "Artist"];
@@ -50,7 +51,20 @@
 
   function handleSelectPassport(e: Event) {
     const selectedId = (e.target as HTMLSelectElement).value;
-    if (selectedId === 'new') return;
+    
+    if (selectedId === 'upgrade') {
+      alert("You need a PRO account to create and sync multiple passports across devices!");
+      (e.target as HTMLSelectElement).value = ''; // reset selection
+      return;
+    }
+    
+    if (selectedId === 'new') {
+      // Logic for creating new cloud passport could go here
+      return;
+    }
+    
+    if (selectedId === 'local' || selectedId === '') return;
+
     const selected = cloudPassports.find(p => p.id.toString() === selectedId);
     if (selected && selected.data) {
       nookState.updatePassport({
@@ -81,44 +95,55 @@
 </script>
 
 <div id="passport-app" class="flex flex-col h-full ac-app-screen">
-  <!-- Wave Header -->
-  <div class="bg-[#83ccca] text-[#1b4c4b] p-4 pt-6 ac-wavy-header flex justify-between items-center">
-    <div>
-      <h1 class="text-xl font-bold flex items-center gap-1.5">📇 Island Passport</h1>
-      <p class="text-xs opacity-90">View and update your residency profile</p>
-    </div>
-    <button
-      onclick={isEditing ? handleSave : () => isEditing = true}
-      class="bg-white text-[#1b4c4b] px-3 py-1.5 rounded-full text-xs font-bold hover:bg-opacity-90 transition-all flex items-center gap-1.5 shadow-sm"
-    >
-      {#if isEditing}
-        <Save class="w-3.5 h-3.5" /> Save
-      {:else}
-        <Edit2 class="w-3.5 h-3.5" /> Edit
-      {/if}
-    </button>
-  </div>
+  <NookAppHeader 
+    title="Island Passport" 
+    icon="📇" 
+    subtitle="View and update your residency profile" 
+    bgClass="bg-[#83ccca]" 
+    textClass="text-[#1b4c4b]"
+  >
+    {#snippet actions()}
+      <button
+        onclick={isEditing ? handleSave : () => isEditing = true}
+        class="bg-white text-[#1b4c4b] px-3 py-1.5 rounded-full text-xs font-bold hover:bg-opacity-90 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+      >
+        {#if isEditing}
+          <Save class="w-3.5 h-3.5" /> Save
+        {:else}
+          <Edit2 class="w-3.5 h-3.5" /> Edit
+        {/if}
+      </button>
+    {/snippet}
+  </NookAppHeader>
 
   <div class="flex-1 overflow-y-auto p-4 ac-scrollbar flex flex-col gap-4">
-    {#if isPro}
-      <div class="bg-white p-3 rounded-2xl shadow-sm border-2 border-[#83ccca] flex items-center justify-between gap-3 text-xs">
+    <div class="bg-white p-3 rounded-2xl shadow-sm border-2 border-[#83ccca] flex flex-col gap-2 text-xs">
+      <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-1.5 text-[#1b4c4b] font-bold">
-          <Cloud class="w-4 h-4 text-[#83ccca]" /> 
-          {#if syncing}Syncing...{:else}Cloud Passports{/if}
+          {#if isPro}
+            <Cloud class="w-4 h-4 text-[#83ccca]" /> 
+          {:else}
+            <CloudOff class="w-4 h-4 text-gray-400" />
+          {/if}
+          {#if syncing}Syncing...{:else}Passports{/if}
         </div>
-        <select class="flex-1 bg-[#fbf9f0] border-2 border-[#edd8aa] rounded-xl p-1.5 text-[#5c5446] font-bold" onchange={handleSelectPassport}>
+        <select class="flex-1 bg-[#fbf9f0] border-2 border-[#edd8aa] rounded-xl p-1.5 text-[#5c5446] font-bold outline-none" onchange={handleSelectPassport}>
           <option value="">Switch Passport...</option>
+          <option value="local">Current Local Passport</option>
           {#each cloudPassports as cp}
             <option value={cp.id}>{cp.title}</option>
           {/each}
-          <option value="new">+ New Cloud Passport</option>
+          {#if isPro}
+            <option value="new">+ New Cloud Passport</option>
+          {:else}
+            <option value="upgrade">+ New Passport (PRO)</option>
+          {/if}
         </select>
       </div>
-    {:else}
-      <div class="bg-white/50 p-2 rounded-xl text-center text-[10px] text-gray-500 font-bold border border-white/60">
-        <CloudOff class="w-3 h-3 inline mb-0.5" /> PRO users can save and sync multiple passports across devices.
-      </div>
-    {/if}
+      {#if !isPro}
+        <p class="text-[9px] text-gray-400 font-bold text-center mt-1">Upgrade to PRO to save and sync multiple passports across devices.</p>
+      {/if}
+    </div>
 
     <!-- Physical Passport Card Mockup -->
     <div class="bg-[#fbf9f0] border-4 border-[#edd8aa] rounded-3xl p-4 shadow-sm relative overflow-hidden flex flex-col gap-3">

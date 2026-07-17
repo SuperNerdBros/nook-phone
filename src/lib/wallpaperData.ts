@@ -1,4 +1,4 @@
-export const wallpaperImports = import.meta.glob('../../assets/wallpapers/*.{png,webp,jpg}', { eager: true, query: '?url', import: 'default' });
+export const wallpaperImports = import.meta.glob('../assets/wallpapers/*.{png,webp,jpg}', { eager: true, query: '?url', import: 'default' });
 
 export function resolveAssetUrl(assetPath: string) {
   if (!assetPath) return assetPath;
@@ -27,6 +27,6 @@ export const loadedWallpapers = Object.entries(wallpaperImports).map(([path, url
 
 export const ALL_WALLPAPERS = [
   { id: 'classic', name: 'Classic', isDefault: true, bg: 'bg-[#fdfcf2]', pattern: 'fill="none"', patternClass: 'bg-transparent', isDark: false },
-  { id: 'default', name: 'Nook Inc.', isDefault: true, bg: 'bg-[#e0dcc5]', pattern: 'fill="%235c8e43"', patternClass: 'bg-[#5c8e43]', isDark: false },
+  { id: 'default', name: 'Nook Inc.', isDefault: true, bg: 'bg-[#fdfcf2]', pattern: 'fill="%235c8e43"', patternClass: 'bg-[#5c8e43]', isDark: false },
   ...loadedWallpapers
 ];

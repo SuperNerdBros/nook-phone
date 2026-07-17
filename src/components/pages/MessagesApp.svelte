@@ -4,6 +4,7 @@
   import { ArrowLeft, Send, Search, CheckCheck, MessageSquare } from '@lucide/svelte';
   import nookState from '@/lib/nookState.svelte';
   import { fetchConversations, fetchDirectMessages, sendDirectMessage, fetchNookUsers, isProUser } from '@/lib/api';
+  import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
 
   interface Conversation {
     partner_id: number;
@@ -118,31 +119,33 @@
 
 <div class="flex flex-col h-full bg-[#f9f8f2] ac-app-screen relative">
   <!-- HEADER -->
-  <div class="bg-[#8bd168] text-white p-3 pt-5 ac-wavy-header shadow-sm shrink-0 flex justify-between items-center z-20">
-    <div class="flex items-center gap-2">
+  <NookAppHeader 
+    title={view === "inbox" ? "Messages" : view === "chat" ? activeChatPartner?.name : "New Message"}
+    subtitle={view === "inbox" ? "Direct Messages" : ""}
+    bgClass="bg-[#8bd168]"
+    textClass="text-white"
+  >
+    {#snippet iconSnippet()}
       {#if view !== "inbox"}
         <button 
           onclick={() => view = "inbox"}
-          class="bg-white/30 hover:bg-white/50 text-white border-0 p-1.5 rounded-full cursor-pointer transition active:scale-95"
+          class="bg-white/30 hover:bg-white/50 text-white border-0 p-1.5 rounded-full cursor-pointer transition active:scale-95 mr-2"
         >
           <ArrowLeft class="w-4 h-4" />
         </button>
       {/if}
-      <h1 class="text-sm font-black m-0 drop-shadow-sm uppercase tracking-wider">
-        {#if view === "inbox"}Messages
-        {:else if view === "chat"}{activeChatPartner?.name}
-        {:else}New Message{/if}
-      </h1>
-    </div>
-    {#if view === "inbox"}
-      <button 
-        onclick={loadNewChat}
-        class="bg-white/30 hover:bg-white/50 text-white border-0 p-1.5 rounded-full cursor-pointer transition active:scale-95"
-      >
-        <MessageSquare class="w-4 h-4" />
-      </button>
-    {/if}
-  </div>
+    {/snippet}
+    {#snippet actions()}
+      {#if view === "inbox"}
+        <button 
+          onclick={loadNewChat}
+          class="bg-white/30 hover:bg-white/50 text-white border-0 p-1.5 rounded-full cursor-pointer transition active:scale-95"
+        >
+          <MessageSquare class="w-4 h-4" />
+        </button>
+      {/if}
+    {/snippet}
+  </NookAppHeader>
 
   <!-- VIEWS -->
   <div class="flex-1 overflow-hidden relative">

@@ -1,3 +1,6 @@
 [submodule "docs"]
 	path = docs
 	url = git@github.com:SuperNerdBros/nook-phone.wiki.git
+[submodule "apps/happy-island-designer"]
+	path = apps/happy-island-designer
+	url = git@github.com:SuperNerdBros/HappyIslandDesigner.git

@@ -9,6 +9,7 @@
   import NookIcon from '../atoms/NookIcon.svelte';
   import NewThreadForm from './NewThreadForm.svelte';
   import CreateSublogForm from './CreateSublogForm.svelte';
+  import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
 
   interface Thread {
     id: number;
@@ -300,48 +301,53 @@
 
 <div id="chat-app" class="flex flex-col h-full ac-app-screen relative">
   <!-- Header -->
-  <div class="bg-[#afd485] text-[#344d18] p-4 pt-6 ac-wavy-header flex justify-between items-center z-10 shrink-0">
-    <div class="flex items-center gap-2">
+  <NookAppHeader 
+    title="Resident Log"
+    subtitle="Bulleted Sublog boards & local logs"
+    bgClass="bg-[#afd485]"
+    textClass="text-[#344d18]"
+  >
+    {#snippet iconSnippet()}
       {#if view !== "list"}
         <button 
           onclick={() => view = "list"}
-          class="text-[#344d18] p-1 rounded-full hover:bg-black/5 cursor-pointer flex items-center justify-center"
+          class="text-[#344d18] p-1 rounded-full hover:bg-black/5 cursor-pointer flex items-center justify-center mr-1"
         >
           <ArrowLeft class="w-5 h-5 stroke-[2.5px]" />
         </button>
+      {:else}
+        <span class="mr-1 flex items-center justify-center w-6 h-6 text-2xl leading-none">💬</span>
       {/if}
-      <div>
-        <h1 class="text-xl font-bold flex items-center gap-1.5 leading-none">💬 Resident Log</h1>
-        <p class="text-[10px] opacity-90 mt-0.5">Bulleted Sublog boards & local logs</p>
-      </div>
-    </div>
+    {/snippet}
     
-    {#if view === "list"}
-      <div class="flex items-center gap-1">
-        <button
-          onclick={() => view = "create_sublog"}
-          class="text-[#344d18] bg-white/40 px-2 py-1 rounded-full hover:bg-white/60 transition cursor-pointer flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider"
-          title="Create Sublog"
-        >
-          <Plus class="w-3.5 h-3.5 stroke-[2.5px]" /> Sublog
-        </button>
-        <button
-          onclick={() => { view = "new"; newSubnook = islandSublog; }}
-          class="text-[#344d18] bg-white/40 p-2 rounded-full hover:bg-white/60 transition cursor-pointer flex items-center justify-center"
-          title="New thread"
-        >
-          <Plus class="w-4 h-4 stroke-[2.5px]" />
-        </button>
-        <button
-          onclick={handleClearLog}
-          class="text-[#344d18] p-2 rounded-full hover:bg-black/5 cursor-pointer flex items-center justify-center"
-          title="Reset mockup logs"
-        >
-          <Trash2 class="w-4 h-4" />
-        </button>
-      </div>
-    {/if}
-  </div>
+    {#snippet actions()}
+      {#if view === "list"}
+        <div class="flex items-center gap-1">
+          <button
+            onclick={() => view = "create_sublog"}
+            class="text-[#344d18] bg-white/40 px-2 py-1 rounded-full hover:bg-white/60 transition cursor-pointer flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider"
+            title="Create Sublog"
+          >
+            <Plus class="w-3.5 h-3.5 stroke-[2.5px]" /> Sublog
+          </button>
+          <button
+            onclick={() => { view = "new"; newSubnook = islandSublog; }}
+            class="text-[#344d18] bg-white/40 p-2 rounded-full hover:bg-white/60 transition cursor-pointer flex items-center justify-center"
+            title="New thread"
+          >
+            <Plus class="w-4 h-4 stroke-[2.5px]" />
+          </button>
+          <button
+            onclick={handleClearLog}
+            class="text-[#344d18] p-2 rounded-full hover:bg-black/5 cursor-pointer flex items-center justify-center"
+            title="Reset mockup logs"
+          >
+            <Trash2 class="w-4 h-4" />
+          </button>
+        </div>
+      {/if}
+    {/snippet}
+  </NookAppHeader>
  
   <!-- Sublogs Horizontal Selector Bar -->
   {#if view === "list"}

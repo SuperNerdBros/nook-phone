@@ -15,7 +15,7 @@
   >
     <div class="shrink-0 flex flex-col items-center pt-3 pb-2 border-b border-gray-100 relative">
       <div class="w-12 h-1.5 bg-gray-300 rounded-full mb-3"></div>
-      <h2 class="text-xs font-black text-gray-500 uppercase tracking-widest m-0">All Apps</h2>
+      <h2 class="text-xs font-black text-gray-500 uppercase tracking-widest m-0">{ctx.hoveredAppName === "NookPhone" ? "All Apps" : ctx.hoveredAppName}</h2>
       <button onclick={() => ctx.isAppDrawerOpen = false} class="absolute right-4 top-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-6 h-6 flex items-center justify-center border-0 cursor-pointer">
         ✕
       </button>
@@ -27,7 +27,10 @@
           <NookAppIcon 
             app={app} 
             size="md" 
+            showText={false}
             onClick={() => ctx.handleAppLaunch(app.id || app.name)}
+            onMouseEnter={() => ctx.hoveredAppName = app.name}
+            onMouseLeave={() => ctx.hoveredAppName = "NookPhone"}
           >
             <!-- Pin Button -->
             <button 

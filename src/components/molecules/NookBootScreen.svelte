@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
-  import nookIncLogo from '../../../assets/img/Nook_Inc.svg';
+  import nookIncLogo from '@/assets/img/Nook_Inc.svg';
   import { fade } from 'svelte/transition';
 
   const ctx = getPhoneContext();

@@ -1,7 +1,13 @@
 <script lang="ts">
-  import { Settings, Clock, Battery, Accessibility, ChevronLeft, Image as ImageIcon, PaintBucket, Search, Smartphone, Info } from "@lucide/svelte";
+  import { Settings, Clock, Battery, Accessibility, ChevronLeft, Image as ImageIcon, PaintBucket, Search, Smartphone, Info, LayoutList, ChevronDown } from "@lucide/svelte";
   import nookState from "@/lib/nookState.svelte";
   import { ALL_WALLPAPERS } from "@/lib/wallpaperData";
+  import { getPhoneContext } from "../organisms/phoneContext.svelte";
+  import { resolveAssetUrl } from "@/lib/utils";
+  import NookIcon from "../atoms/NookIcon.svelte";
+  import NookAppHeader from "../organisms/NookAppHeader.svelte";
+
+  const phone = getPhoneContext();
 
   const toggle24Hour = () => nookState.updateSettings({ use24HourTime: !nookState.settings.use24HourTime });
   const toggleBattery = () => nookState.updateSettings({ showBatteryPercentage: !nookState.settings.showBatteryPercentage });
@@ -18,21 +24,42 @@
   const categories = [
     { id: 'personalization', name: 'Personalization', icon: ImageIcon },
     { id: 'device', name: 'Device Settings', icon: Smartphone },
+    { id: 'apps', name: 'Default Apps', icon: LayoutList },
     { id: 'about', name: 'About NookOS', icon: Info },
   ];
+
+  const INTENT_CATEGORIES = [
+    { id: 'miles', name: 'Nook Miles', icon: 'miles', filter: (app: any) => app.id === 'miles' || app.name?.toLowerCase().includes('miles') || app.information?.includes('gameplay') },
+    { id: 'critter', name: 'Critterpedia', icon: 'critter', filter: (app: any) => app.id === 'critter' || app.information?.includes('critters') },
+    { id: 'shopping', name: 'Nook Shopping', icon: 'shopping', filter: (app: any) => app.id === 'shopping' || app.information?.includes('items') || app.tools?.includes('marketplace') },
+    { id: 'diy', name: 'DIY Recipes', icon: 'diy', filter: (app: any) => app.id === 'diy' || app.information?.includes('items') },
+    { id: 'map', name: 'Island Map', icon: 'map', filter: (app: any) => app.id === 'map' },
+    { id: 'designer', name: 'Island Designer', icon: 'designer', filter: (app: any) => app.id === 'designer' || app.tools?.includes('simulator') },
+    { id: 'chat', name: 'Chat Log', icon: 'chat', filter: (app: any) => app.id === 'chat' },
+  ];
+
+  const getEligibleApps = (intentId: string) => {
+    const category = INTENT_CATEGORIES.find(c => c.id === intentId);
+    if (!category) return [];
+    return phone.allApps.filter(app => category.filter(app));
+  };
 </script>
 
 <div class="h-full bg-[#fdfcf9] flex flex-col font-sans ac-bg-dots">
   <!-- Top Bar (Chrome OS style but AC themed) -->
-  <div class="bg-[#f0b157] text-[#5c3a21] p-3 pt-5 ac-wavy-header flex flex-col relative z-10 shadow-sm border-b-4 border-[#d99c45] shrink-0">
-    <div class="flex items-center gap-3">
-      <button onclick={() => nookState.navigate(null)} class="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center border-0 text-[#5c3a21] hover:bg-white/50 cursor-pointer transition-colors shadow-inner">
+  <NookAppHeader
+    title="Settings"
+    bgClass="bg-[#f0b157] border-b-4 border-[#d99c45]"
+    textClass="text-[#5c3a21]"
+  >
+    {#snippet iconSnippet()}
+      <button onclick={() => nookState.navigate(null)} class="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center border-0 text-[#5c3a21] hover:bg-white/50 cursor-pointer transition-colors shadow-inner mr-1">
         <ChevronLeft class="w-5 h-5 pr-0.5" />
       </button>
-      <h1 class="text-xl font-black m-0 flex items-center gap-2 drop-shadow-sm tracking-tight">
-        Settings
-      </h1>
-      <div class="ml-auto relative w-40 sm:w-48 hidden sm:block">
+    {/snippet}
+    
+    {#snippet actions()}
+      <div class="relative w-40 sm:w-48 hidden sm:block">
         <Search class="w-3.5 h-3.5 absolute left-3 top-2 text-[#5c3a21]/50" />
         <input 
           type="text" 
@@ -41,8 +68,8 @@
           class="w-full bg-white/40 border-2 border-[#d99c45] rounded-full py-1.5 pl-8 pr-3 text-[11px] font-bold text-[#5c3a21] placeholder:text-[#5c3a21]/50 focus:outline-none focus:bg-white focus:border-[#5c3a21]"
         />
       </div>
-    </div>
-  </div>
+    {/snippet}
+  </NookAppHeader>
 
   <div class="flex flex-1 overflow-hidden">
     <!-- Sidebar -->
@@ -189,6 +216,75 @@
                   {/each}
                 </div>
               </div>
+            </div>
+          </div>
+        {/if}
+
+        {#if selectedCategory === 'apps'}
+          <!-- Default Apps -->
+          <div class="flex flex-col gap-4 animate-fade-in pb-20">
+            <h2 class="text-lg font-black text-[#5c5446] border-b-4 border-[#e1d9be] pb-2 m-0">Default Apps</h2>
+            <div class="text-[11px] font-bold text-[#8a816f] mb-2 leading-relaxed">
+              Choose which apps to launch when you click on core icons or links. Built-in apps and installed community apps will appear here if they support the feature.
+            </div>
+            
+            <div class="bg-white rounded-3xl p-5 border-4 border-[#e1d9be] shadow-[0_4px_0_#dcd3be] flex flex-col gap-0 divide-y-2 divide-dashed divide-[#f4f2e8]">
+              {#each INTENT_CATEGORIES as intent}
+                {@const eligibleApps = getEligibleApps(intent.id)}
+                {@const currentAppId = (nookState.settings.defaultApps && nookState.settings.defaultApps[intent.id]) || intent.id}
+                {@const currentApp = phone.allApps.find((a: any) => (a.id || a.name) === currentAppId) || phone.allApps.find((a: any) => a.id === intent.id)}
+                
+                <div class="py-4 first:pt-1 last:pb-1 flex flex-col gap-2">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                      <div class="w-10 h-10 rounded-2xl bg-[#fdfcf9] border-2 border-[#e1d9be] flex items-center justify-center shadow-inner overflow-hidden relative">
+                        {#if currentApp?.image}
+                          <img src={resolveAssetUrl(currentApp.image)} alt={intent.name} class="w-7 h-7 object-contain drop-shadow-sm" />
+                        {:else if currentApp?.id}
+                          <NookIcon name={currentApp.id} class="w-7 h-7 object-contain drop-shadow-sm p-1" />
+                        {:else if currentApp?.appIcon}
+                          <NookIcon name={currentApp.appIcon} class="w-7 h-7 object-contain drop-shadow-sm p-1" />
+                        {:else}
+                          <div class="font-black text-[#5c5446] text-[10px]">{currentApp?.name?.charAt(0) || intent.name.charAt(0)}</div>
+                        {/if}
+                      </div>
+                      <div>
+                        <div class="font-black text-[#5c5446] text-sm">{intent.name}</div>
+                        <div class="text-[10px] font-bold text-[#8a816f]">Default: {currentApp?.name || 'System Default'}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {#if eligibleApps.length > 1}
+                    <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {#each eligibleApps as app}
+                        <button
+                          onclick={() => nookState.setDefaultApp(intent.id, app.id || app.name)}
+                          class={`flex items-center gap-3 p-2 rounded-xl border-2 text-left cursor-pointer transition-colors ${currentAppId === (app.id || app.name) ? 'bg-[#6cd476]/10 border-[#6cd476] shadow-sm' : 'bg-transparent border-[#f4f2e8] hover:border-[#dcd3be]'}`}
+                        >
+                          <div class={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${app.bg || 'bg-[#fdfcf9]'} overflow-hidden relative shadow-inner border-2 border-[#e1d9be]`}>
+                            {#if app.image}
+                              <img src={resolveAssetUrl(app.image)} alt={app.name} class="w-4 h-4 object-contain drop-shadow-sm" />
+                            {:else if app.id}
+                              <NookIcon name={app.id} class="w-4 h-4 object-contain drop-shadow-sm p-0.5" />
+                            {:else if app.appIcon}
+                              <NookIcon name={app.appIcon} class="w-4 h-4 object-contain drop-shadow-sm p-0.5" />
+                            {/if}
+                          </div>
+                          <span class={`text-[10px] font-black truncate flex-1 ${(currentAppId === (app.id || app.name)) ? 'text-[#4ca454]' : 'text-[#8a816f]'}`}>{app.name}</span>
+                          {#if currentAppId === (app.id || app.name)}
+                            <div class="w-4 h-4 rounded-full bg-[#6cd476] text-white flex items-center justify-center shadow-sm">
+                              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                          {/if}
+                        </button>
+                      {/each}
+                    </div>
+                  {:else}
+                    <div class="mt-1 text-[10px] font-bold text-[#caa253]/80 italic">No alternative apps installed for this category.</div>
+                  {/if}
+                </div>
+              {/each}
             </div>
           </div>
         {/if}

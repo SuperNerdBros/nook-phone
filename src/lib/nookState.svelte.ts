@@ -72,7 +72,9 @@ export interface NookOSState {
   };
   map: {
     buildings: MapBuilding[];
+    imageUrl?: string;
   };
+  residents: string[];
   milesChallenges: MilesChallenge[];
   chatLog: ChatMessage[];
   notifications: NookNotification[];
@@ -87,8 +89,17 @@ export interface NookOSState {
     showBatteryPercentage: boolean;
     reduceMotion: boolean;
     gridSize: number;
+    defaultApps: Record<string, string>;
   };
   unreadDMs: number;
+  vipContacts: string[];
+  myContacts: string[];
+  villagerMilestones: Record<string, {
+    hasPoster: boolean;
+    hasPhoto: boolean;
+    talkedToday: boolean;
+    giftedToday: boolean;
+  }>;
 }
 
 const DEFAULT_GRID_LEAF = [
@@ -148,6 +159,7 @@ const INITIAL_STATE: NookOSState = {
   map: {
     buildings: [...mapData]
   },
+  residents: [],
   milesChallenges: [...milesData],
   chatLog: [
     { id: "c1", sender: "Tom Nook", content: "Welcome to NookOS, yes, yes! Use your phone to manage your island and check the directories!", timestamp: "10:00 AM", isNpc: true, avatar: "🍃" }
@@ -160,17 +172,20 @@ const INITIAL_STATE: NookOSState = {
     { id: "d3", name: "Custom Tile", grid: Array(16).fill(null).map(() => Array(16).fill("#ffffff")), creator: "Villager" }
   ],
   activeWallpaperId: "default",
-  pinnedApps: ["directory", "passport", "chat", "messages", "shopping"],
+  pinnedApps: ["camera", "miles", "critter", "diy", "designs", "designer", "map", "chat", "passport", "messages", "shopping"],
   installedApps: [],
   hasCompletedOnboarding: false,
   settings: {
     use24HourTime: false,
     showBatteryPercentage: true,
-
     reduceMotion: false,
-    gridSize: 3
+    gridSize: 3,
+    defaultApps: {}
   },
-  unreadDMs: 0
+  unreadDMs: 0,
+  vipContacts: [],
+  myContacts: [],
+  villagerMilestones: {}
 };
 
 class NookStateManager {
@@ -206,6 +221,8 @@ class NookStateManager {
   get map() { return this.state.map; }
   set map(val) { this.state.map = val; }
 
+  get residents() { return this.state.residents || []; }
+
   get milesChallenges() { return this.state.milesChallenges; }
   set milesChallenges(val) { this.state.milesChallenges = val; }
 
@@ -238,6 +255,15 @@ class NookStateManager {
 
   get unreadDMs() { return this.state.unreadDMs || 0; }
   set unreadDMs(val) { this.state.unreadDMs = val; }
+
+  get vipContacts() { return this.state.vipContacts || []; }
+  set vipContacts(val) { this.state.vipContacts = val; }
+
+  get myContacts() { return this.state.myContacts || []; }
+  set myContacts(val) { this.state.myContacts = val; }
+
+  get villagerMilestones() { return this.state.villagerMilestones || {}; }
+  set villagerMilestones(val) { this.state.villagerMilestones = val; }
 
   private syncTimeout: any = null;
 
@@ -427,6 +453,11 @@ class NookStateManager {
     this.save();
   }
 
+  setMapImage(url: string | undefined) {
+    this.state.map.imageUrl = url;
+    this.save();
+  }
+
   triggerAchievementProgress(challengeId: string, amount: number) {
     const challenge = this.state.milesChallenges.find((c) => c.id === challengeId);
     if (challenge && !challenge.isClaimed) {
@@ -609,6 +640,14 @@ class NookStateManager {
     this.save();
   }
 
+  setDefaultApp(intent: string, appIdOrName: string) {
+    if (!this.state.settings.defaultApps) {
+      this.state.settings.defaultApps = {};
+    }
+    this.state.settings.defaultApps[intent] = appIdOrName;
+    this.save();
+  }
+
   snapPhoto() {
     this.triggerAchievementProgress("m1", 1);
     this.save();
@@ -678,7 +717,97 @@ class NookStateManager {
       this.save();
     }
   }
+  toggleVipContact(contactId: string) {
+    if (!this.state.vipContacts) this.state.vipContacts = [];
+    if (this.state.vipContacts.includes(contactId)) {
+      this.state.vipContacts = this.state.vipContacts.filter(id => id !== contactId);
+    } else {
+      this.state.vipContacts.push(contactId);
+    }
+    this.save();
+  }
+
+  isVipContact(contactId: string): boolean {
+    if (!this.state.vipContacts) return false;
+    return this.state.vipContacts.includes(contactId);
+  }
+
+  toggleResident(contactId: string) {
+    if (!this.state.residents) this.state.residents = [];
+    if (this.state.residents.includes(contactId)) {
+      this.state.residents = this.state.residents.filter(id => id !== contactId);
+    } else {
+      if (this.state.residents.length < 10) {
+        this.state.residents.push(contactId);
+      } else {
+        this.addNotification("Island Full!", "You can only have up to 10 residents on your island.", "Tom Nook");
+        return;
+      }
+    }
+    this.save();
+  }
+
+  isResident(contactId: string): boolean {
+    if (!this.state.residents) return false;
+    return this.state.residents.includes(contactId);
+  }
+
+  addContact(contactId: string) {
+    if (!this.state.myContacts) this.state.myContacts = [];
+    if (!this.state.myContacts.includes(contactId)) {
+      this.state.myContacts.push(contactId);
+      this.save();
+    }
+  }
+
+  removeContact(contactId: string) {
+    if (!this.state.myContacts) return;
+    this.state.myContacts = this.state.myContacts.filter(id => id !== contactId);
+    
+    // Also remove from VIPs and residents to keep state clean
+    if (this.state.vipContacts) {
+      this.state.vipContacts = this.state.vipContacts.filter(id => id !== contactId);
+    }
+    if (this.state.residents) {
+      this.state.residents = this.state.residents.filter(id => id !== contactId);
+    }
+    this.save();
+  }
+
+  isContact(contactId: string): boolean {
+    if (!this.state.myContacts) return false;
+    return this.state.myContacts.includes(contactId);
+  }
+
+  getMilestones(contactId: string) {
+    const defaultMilestones = {
+      hasPoster: false,
+      hasPhoto: false,
+      talkedToday: false,
+      giftedToday: false
+    };
+
+    if (!this.state.villagerMilestones) return defaultMilestones;
+    if (!this.state.villagerMilestones[contactId]) return defaultMilestones;
+    
+    return this.state.villagerMilestones[contactId];
+  }
+
+  toggleMilestone(contactId: string, milestone: 'hasPoster' | 'hasPhoto' | 'talkedToday' | 'giftedToday') {
+    if (!this.state.villagerMilestones) this.state.villagerMilestones = {};
+    if (!this.state.villagerMilestones[contactId]) {
+      this.state.villagerMilestones[contactId] = {
+        hasPoster: false,
+        hasPhoto: false,
+        talkedToday: false,
+        giftedToday: false
+      };
+    }
+    this.state.villagerMilestones[contactId][milestone] = !this.state.villagerMilestones[contactId][milestone];
+    this.save();
+  }
 }
 
 export const nookState = new NookStateManager();
 export default nookState;
+

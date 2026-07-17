@@ -1,10 +1,29 @@
 <script lang="ts">
-  import { Unlock } from "@lucide/svelte";
+  import { Unlock, LogIn } from "@lucide/svelte";
   import { fly } from 'svelte/transition';
   import nookState from '@/lib/nookState.svelte';
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
+  import { isProUser, fetchPatreonAuthUrl } from '@/lib/api';
+  import { onMount } from 'svelte';
 
   const ctx = getPhoneContext();
+  let isPro = $state(false);
+  let authUrl = $state('');
+
+  onMount(async () => {
+    isPro = isProUser();
+    if (!isPro) {
+      authUrl = await fetchPatreonAuthUrl() || '';
+    }
+  });
+
+  function handlePatreonLogin() {
+    if (authUrl) {
+      window.location.href = authUrl;
+    } else {
+      alert("Patreon authentication is currently unavailable. Please contact the administrator.");
+    }
+  }
 </script>
 
 {#if nookState.isPhoneLocked}
@@ -28,37 +47,60 @@
       <h1 class="text-5xl font-mono font-black text-white tracking-tight drop-shadow-lg m-0 mt-1 shrink-0">
         {ctx.timeStr}
       </h1>
-      <!-- Lock Screen Notifications -->
-      <div class="mt-4 w-full max-w-[280px] flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto pr-1 pb-4" style="scrollbar-width: none;">
-        {#each nookState.notifications.slice(0, 10) as notif (notif.id)}
-          <div class="bg-white/85 backdrop-blur-sm border border-white/60 rounded-2xl p-2.5 shadow-sm flex gap-2 items-start text-left relative animate-fade-in">
-            <div class="w-8 h-8 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center text-lg shrink-0 mt-0.5">
-              {notif.sender === "Tom Nook" ? "🍃" : notif.sender === "Isabelle" ? "🐶" : notif.sender === "Lottie" ? "🌸" : "🔔"}
+      <!-- Lock Screen Notifications or Paywall -->
+      {#if isPro}
+        <div class="mt-4 w-full max-w-[280px] flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto pr-1 pb-4" style="scrollbar-width: none;">
+          {#each nookState.notifications.slice(0, 10) as notif (notif.id)}
+            <div class="bg-white/85 backdrop-blur-sm border border-white/60 rounded-2xl p-2.5 shadow-sm flex gap-2 items-start text-left relative animate-fade-in">
+              <div class="w-8 h-8 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center text-lg shrink-0 mt-0.5">
+                {notif.sender === "Tom Nook" ? "🍃" : notif.sender === "Isabelle" ? "🐶" : notif.sender === "Lottie" ? "🌸" : "🔔"}
+              </div>
+              <div class="flex-1 flex flex-col gap-0.5 pr-2">
+                <span class="text-[7.5px] font-black text-orange-800/80 tracking-widest uppercase block">
+                  {notif.sender} • {notif.timestamp}
+                </span>
+                <span class="font-extrabold text-[12px] text-[#5c5446] leading-tight block">{notif.title}</span>
+                <p class="text-[9.5px] text-gray-500 mt-0.5 leading-relaxed m-0">
+                  {notif.message}
+                </p>
+              </div>
             </div>
-            <div class="flex-1 flex flex-col gap-0.5 pr-2">
-              <span class="text-[7.5px] font-black text-orange-800/80 tracking-widest uppercase block">
-                {notif.sender} • {notif.timestamp}
-              </span>
-              <span class="font-extrabold text-[12px] text-[#5c5446] leading-tight block">{notif.title}</span>
-              <p class="text-[9.5px] text-gray-500 mt-0.5 leading-relaxed m-0">
-                {notif.message}
-              </p>
+          {:else}
+            <div class="bg-white/40 backdrop-blur-sm border border-dashed border-white/40 rounded-2xl p-4 text-center text-[#5d5a4a]/75 text-[11px] font-bold">
+              No recent notifications
             </div>
+          {/each}
+        </div>
+      {:else}
+        <div class="mt-8 w-full max-w-[280px] flex flex-col items-center gap-3 relative animate-fade-in">
+          <div class="bg-[#f0b157]/90 backdrop-blur-md border-4 border-[#d99c45] rounded-3xl p-5 shadow-lg text-center flex flex-col items-center">
+            <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mb-3 shadow-inner">
+              <span class="text-3xl drop-shadow-sm">🔒</span>
+            </div>
+            <h2 class="text-[#5c3a21] font-black text-lg m-0 leading-tight">NookPhone+</h2>
+            <p class="text-[11px] text-[#5c3a21]/80 font-bold mt-1 leading-snug">
+              Unlock the full potential of your NookPhone with a Pro account!
+            </p>
           </div>
-        {:else}
-          <div class="bg-white/40 backdrop-blur-sm border border-dashed border-white/40 rounded-2xl p-4 text-center text-[#5d5a4a]/75 text-[11px] font-bold">
-            No recent notifications
-          </div>
-        {/each}
-      </div>
+        </div>
+      {/if}
     </div>
 
-    <!-- Slider Button -->
-    <button
-      onclick={ctx.handleUnlock}
-      class="w-full max-w-sm mx-auto bg-[#5c8e43] text-white border-0 py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:bg-[#4b7a34] active:scale-95 transition-all mb-8 relative z-10 cursor-pointer"
-    >
-      <Unlock class="w-4 h-4 animate-bounce" /> Slide / Tap to unlock
-    </button>
+    <!-- Slider/Login Button -->
+    {#if isPro}
+      <button
+        onclick={ctx.handleUnlock}
+        class="w-full max-w-sm mx-auto bg-[#5c8e43] text-white border-0 py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:bg-[#4b7a34] active:scale-95 transition-all mb-8 relative z-10 cursor-pointer"
+      >
+        <Unlock class="w-4 h-4 animate-bounce" /> Slide / Tap to unlock
+      </button>
+    {:else}
+      <button
+        onclick={handlePatreonLogin}
+        class="w-full max-w-sm mx-auto bg-[#FF424D] text-white border-0 py-3.5 rounded-full font-black text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-[#e63c45] active:scale-95 transition-all mb-8 relative z-10 cursor-pointer"
+      >
+        <LogIn class="w-4 h-4" /> Connect with Patreon
+      </button>
+    {/if}
   </div>
 {/if}

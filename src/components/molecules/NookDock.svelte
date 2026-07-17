@@ -1,7 +1,7 @@
 <script lang="ts">
   import nookState from '@/lib/nookState.svelte';
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
-  import nookIncLogo from '../../../assets/img/Nook_Inc.svg';
+  import nookIncLogo from '@/assets/img/Nook_Inc.svg';
   import NookAppIcon from '../atoms/NookAppIcon.svelte';
 
   const ctx = getPhoneContext();
@@ -14,7 +14,10 @@
       <NookAppIcon 
         app={ctx.dockApps[0]} 
         size="sm" 
+        showText={false}
         onClick={() => ctx.handleAppLaunch(ctx.dockApps[0].id || ctx.dockApps[0].name)}
+        onMouseEnter={() => ctx.hoveredAppName = ctx.dockApps[0].name}
+        onMouseLeave={() => ctx.hoveredAppName = "NookPhone"}
       />
     {/if}
 
@@ -23,7 +26,10 @@
       <NookAppIcon 
         app={ctx.dockApps[1]} 
         size="sm" 
+        showText={false}
         onClick={() => ctx.handleAppLaunch(ctx.dockApps[1].id || ctx.dockApps[1].name)}
+        onMouseEnter={() => ctx.hoveredAppName = ctx.dockApps[1].name}
+        onMouseLeave={() => ctx.hoveredAppName = "NookPhone"}
       />
     {/if}
 
@@ -42,7 +48,10 @@
       <NookAppIcon 
         app={ctx.dockApps[2]} 
         size="sm" 
+        showText={false}
         onClick={() => ctx.handleAppLaunch(ctx.dockApps[2].id || ctx.dockApps[2].name)}
+        onMouseEnter={() => ctx.hoveredAppName = ctx.dockApps[2].name}
+        onMouseLeave={() => ctx.hoveredAppName = "NookPhone"}
       />
     {/if}
 
@@ -51,7 +60,10 @@
       <NookAppIcon 
         app={ctx.dockApps[3]} 
         size="sm" 
+        showText={false}
         onClick={() => ctx.handleAppLaunch(ctx.dockApps[3].id || ctx.dockApps[3].name)}
+        onMouseEnter={() => ctx.hoveredAppName = ctx.dockApps[3].name}
+        onMouseLeave={() => ctx.hoveredAppName = "NookPhone"}
       />
     {/if}
   </div>

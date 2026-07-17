@@ -17,6 +17,7 @@
   import MessagesApp from '../pages/MessagesApp.svelte';
   import RescueApp from '../pages/RescueApp.svelte';
   import ShoppingApp from '../pages/ShoppingApp.svelte';
+  import ContactsApp from '../pages/ContactsApp.svelte';
   import DesignerApp from '../pages/DesignerApp.svelte';
   import SettingsApp from '../pages/SettingsApp.svelte';
 
@@ -114,7 +115,7 @@
   <PremiumUpsellModal />
   
   <!-- Main OS Frame -->
-  <div class="w-full h-full relative overflow-hidden flex flex-col bg-[#e0dcc5] select-none">
+  <div class="w-full h-full relative overflow-hidden flex flex-col bg-[#fdfcf2] select-none">
     {#if !nookState.hasCompletedOnboarding}
       <Onboarding />
     {:else}
@@ -126,7 +127,7 @@
 
       <!-- Dynamic Display Screens -->
       <div 
-        class={`flex-1 relative overflow-hidden flex flex-col h-full bg-[#e0dcc5] ${(!ctx.customWallpaper && ctx.currentWallpaper?.isDefault) ? ctx.currentWallpaper.bg : ''}`}
+        class={`flex-1 relative overflow-hidden flex flex-col h-full bg-[#fdfcf2] ${(!ctx.customWallpaper && ctx.currentWallpaper?.isDefault) ? ctx.currentWallpaper.bg : ''}`}
         style={ctx.wallpaperStyle}
       >
         <!-- Wallpaper Star/Leaf Pattern Overlay -->
@@ -151,6 +152,7 @@
             {#if nookState.currentApp === "messages"} <MessagesApp /> {/if}
             {#if nookState.currentApp === "rescue"} <RescueApp /> {/if}
             {#if nookState.currentApp === "shopping"} <ShoppingApp /> {/if}
+            {#if nookState.currentApp === "contacts"} <ContactsApp /> {/if}
             {#if nookState.currentApp === "designer"} <DesignerApp /> {/if}
             {#if nookState.currentApp === "settings"} <SettingsApp /> {/if}
 

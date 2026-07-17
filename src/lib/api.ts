@@ -234,3 +234,64 @@ export const saveRemoteState = async (state: any) => {
     return false;
   }
 };
+
+export const fetchDIYRecipes = async () => {
+  try {
+    const root = window.wpApiSettings?.root || '/wp-json/';
+    const res = await fetch(`${root}xophz/v1/nookipedia/recipes`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to fetch DIY recipes', e);
+    return [];
+  }
+};
+
+export const fetchDIYMaterials = async () => {
+  try {
+    const root = window.wpApiSettings?.root || '/wp-json/';
+    const res = await fetch(`${root}xophz/v1/nookipedia/materials`);
+    if (!res.ok) return {};
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to fetch DIY materials', e);
+    return {};
+  }
+};
+
+export const fetchNookipediaItems = async () => {
+  try {
+    const root = window.wpApiSettings?.root || '/wp-json/';
+    const res = await fetch(`${root}xophz/v1/nookipedia/items`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to fetch Nookipedia items', e);
+    return [];
+  }
+};
+
+export const fetchPatreonAuthUrl = async () => {
+  try {
+    const root = window.wpApiSettings?.root || '/wp-json/';
+    const res = await fetch(`${root}xophz/v1/auth/patreon/url`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.url || null;
+  } catch (e) {
+    console.error('Failed to fetch Patreon Auth URL', e);
+    return null;
+  }
+};
+
+export const fetchNookipediaVillagers = async () => {
+  try {
+    const root = window.wpApiSettings?.root || '/wp-json/';
+    const res = await fetch(`${root}xophz/v1/nookipedia/villagers`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to fetch Nookipedia villagers', e);
+    return [];
+  }
+};

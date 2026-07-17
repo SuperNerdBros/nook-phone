@@ -1,6 +1,7 @@
 <script lang="ts">
   import nookState from '@/lib/nookState.svelte';
   import { ShieldAlert } from '@lucide/svelte';
+  import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
 
   let stage = $state<"start" | "rant" | "countdown" | "success">("start");
   let countdown = $state(3);
@@ -33,12 +34,16 @@
 
 <div id="rescue-app" class="flex flex-col h-full ac-app-screen relative">
   <!-- Header -->
-  <div class="bg-[#ef4444] text-white p-4 pt-6 ac-wavy-header flex justify-between items-center z-10 shrink-0">
-    <div>
-      <h1 class="text-xl font-bold flex items-center gap-1.5">🚨 Rescue Service</h1>
-      <p class="text-xs opacity-90">Instant island transport utilities</p>
-    </div>
-  </div>
+  <NookAppHeader 
+    title="Rescue Service"
+    subtitle="Instant island transport utilities"
+    bgClass="bg-[#ef4444]"
+    textClass="text-white"
+  >
+    {#snippet iconSnippet()}
+      <span class="mr-1 flex items-center justify-center w-6 h-6 text-2xl leading-none">🚨</span>
+    {/snippet}
+  </NookAppHeader>
 
   <div class="flex-1 overflow-y-auto p-4 ac-scrollbar flex flex-col justify-center items-center text-center gap-4 relative">
     {#if stage === "start"}

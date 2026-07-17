@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import nookState from '@/lib/nookState.svelte';
   import { Camera, Image as ImageIcon } from '@lucide/svelte';
+  import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
 
   const FILTERS = [
     { id: "normal", name: "Normal", class: "" },
@@ -109,19 +110,25 @@
 
 <div id="camera-app" class="flex flex-col h-full ac-app-screen relative">
   <!-- Header -->
-  <div class="bg-[#bda1d4] text-[#3e1b54] p-4 pt-6 ac-wavy-header flex justify-between items-center z-10">
-    <div>
-      <h1 class="text-xl font-bold flex items-center gap-1.5">📷 Nook Camera Pro</h1>
-      <p class="text-xs opacity-90">First-person viewpoints, filters, and borders</p>
-    </div>
-    <button
-      onclick={() => activeView = activeView === "camera" ? "roll" : "camera"}
-      class="bg-white/80 text-[#3e1b54] p-2 rounded-full hover:bg-white transition-all shadow-sm"
-      title={activeView === "camera" ? "View Camera Roll" : "Back to Camera"}
-    >
-      <ImageIcon class="w-5 h-5" />
-    </button>
-  </div>
+  <NookAppHeader 
+    title="Nook Camera Pro"
+    subtitle="First-person viewpoints, filters, and borders"
+    bgClass="bg-[#bda1d4]"
+    textClass="text-[#3e1b54]"
+  >
+    {#snippet iconSnippet()}
+      <span class="mr-1 flex items-center justify-center w-6 h-6 text-2xl">📷</span>
+    {/snippet}
+    {#snippet actions()}
+      <button
+        onclick={() => activeView = activeView === "camera" ? "roll" : "camera"}
+        class="bg-white/80 text-[#3e1b54] p-2 rounded-full hover:bg-white transition-all shadow-sm"
+        title={activeView === "camera" ? "View Camera Roll" : "Back to Camera"}
+      >
+        <ImageIcon class="w-5 h-5" />
+      </button>
+    {/snippet}
+  </NookAppHeader>
 
   {#if activeView === "camera"}
     <div class="flex-1 flex flex-col justify-between p-4 relative">

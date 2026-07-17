@@ -1,15 +1,20 @@
 <script lang="ts">
+  import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   // Old native NookMilesApp retired and replaced with acmiles.com iframe
 </script>
 
 <div id="miles-app" class="flex flex-col h-full ac-app-screen relative">
   <!-- Header -->
-  <div class="bg-[#fcf8e3] text-[#5c5446] p-4 pt-6 ac-wavy-header flex justify-between items-center z-10 shrink-0 border-b border-[#e9dc9d]">
-    <div>
-      <h1 class="text-xl font-bold flex items-center gap-1.5 text-emerald-700">🎈 Nook Miles+</h1>
-      <p class="text-xs opacity-90 text-[#85806b]">Powered by acmiles.com</p>
-    </div>
-  </div>
+  <NookAppHeader 
+    title="Nook Miles+"
+    subtitle="Powered by acmiles.com"
+    bgClass="bg-[#fcf8e3]"
+    textClass="text-emerald-700"
+  >
+    {#snippet iconSnippet()}
+      <span class="mr-1 flex items-center justify-center w-6 h-6 text-2xl leading-none">🎈</span>
+    {/snippet}
+  </NookAppHeader>
 
   <!-- Outer splits -->
   <div class="flex-1 flex overflow-hidden bg-white">

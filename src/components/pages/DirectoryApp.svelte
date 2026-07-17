@@ -6,6 +6,7 @@
   import Rating from '../atoms/Rating.svelte';
   import { fetchApps, installAppTracker, rateApp, isProUser } from '@/lib/api';
   import { onMount } from 'svelte';
+  import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
 
   const getBgUrl = (bgName: string): string => {
     let base = "/assets/bgs/";
@@ -125,20 +126,22 @@
 
 <div id="directory-app" class="flex flex-col h-full ac-app-screen ac-bg-dots">
   <!-- Wavy Header -->
-  <div class="bg-[#f0b157] text-[#5c3a21] p-5 pt-7 ac-wavy-header flex flex-col gap-3 relative z-10 shadow-sm border-b-4 border-[#d99c45]">
-    <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-black flex items-center gap-2 tracking-tight">
-        <Store class="w-7 h-7 text-white drop-shadow-sm" /> Nook Play
-      </h1>
+  <NookAppHeader 
+    title="Nook Play" 
+    subtitle="Welcome to Nook Play! Discover community creations for your NookPhone! Yes, yes!" 
+    bgClass="bg-[#f0b157] border-b-4 border-[#d99c45]" 
+    textClass="text-[#5c3a21]"
+  >
+    {#snippet iconSnippet()}
+      <Store class="w-6 h-6 text-white drop-shadow-sm" />
+    {/snippet}
+    {#snippet actions()}
       <div class="bg-[#5c3a21] text-[#f0b157] px-3 py-1.5 rounded-full font-black text-xs flex items-center gap-1.5 shadow-inner">
         <Smartphone class="w-3.5 h-3.5" />
         {filteredProjects.length} Apps
       </div>
-    </div>
-    <p class="text-[11px] font-bold opacity-90 leading-tight">
-      Welcome to Nook Play! Discover community creations for your NookPhone! Yes, yes!
-    </p>
-  </div>
+    {/snippet}
+  </NookAppHeader>
 
   <!-- Search and Filters -->
   <div class="px-4 py-4 flex flex-col gap-3 relative z-0">
