@@ -4,6 +4,7 @@
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NookAppHeader from '../organisms/NookAppHeader.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
 
   const ctx = getPhoneContext();
 
@@ -26,32 +27,30 @@
     {/snippet}
     {#snippet actions()}
       {#if siteUrl}
-        <a 
+        <NookToolbarButton 
           href={siteUrl} 
-          class="nook-header-btn nook-header-btn-ghost"
+          variant="ghost"
           title="Open Website"
         >
           <Link class="w-3.5 h-3.5 stroke-[2.5px]" />
-        </a>
+        </NookToolbarButton>
       {/if}
       {#if gitUrl}
-        <a 
+        <NookToolbarButton 
           href={gitUrl} 
-          target="_blank" 
-          rel="noreferrer" 
-          class="nook-header-btn nook-header-btn-ghost"
+          variant="ghost"
           title="Source Code"
         >
           <Code class="w-3.5 h-3.5 stroke-[2.5px]" />
-        </a>
+        </NookToolbarButton>
       {/if}
-      <button
+      <NookToolbarButton
         onclick={ctx.handleHomeButton}
-        class="nook-header-btn !bg-[#cca054] !text-[#543b09] !border-2 !border-[#855913] hover:!bg-[#d8ac61]"
+        class="!bg-[#cca054] !text-[#543b09] !border-2 !border-[#855913] hover:!bg-[#d8ac61]"
         title="Close App"
       >
         <X class="w-3.5 h-3.5 stroke-[3px]" />
-      </button>
+      </NookToolbarButton>
     {/snippet}
   </NookAppHeader>
 

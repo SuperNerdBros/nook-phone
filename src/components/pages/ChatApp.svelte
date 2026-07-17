@@ -11,6 +11,7 @@
   import NewThreadForm from './NewThreadForm.svelte';
   import CreateSublogForm from './CreateSublogForm.svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
 
   interface Thread {
     id: number;
@@ -325,32 +326,32 @@
     {/snippet}
     
     {#snippet actions()}
-      {#if view === "list"}
+      {#if view === "list" && selectedTab === islandSublog}
         <div class="flex items-center gap-1">
-          <button
+          <NookToolbarButton
             onclick={() => view = "create_sublog"}
-            class="text-[#344d18] bg-white/40 px-2 py-1 rounded-full hover:bg-white/60 transition cursor-pointer flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider"
+            class="!w-auto !px-2 text-[9px] font-black uppercase tracking-wider text-[#344d18]"
             title="Create Sublog"
           >
-            <Plus class="w-3.5 h-3.5 stroke-[2.5px]" /> Sublog
-          </button>
-          <button
+            <Plus class="w-3.5 h-3.5 stroke-[2.5px] mr-0.5" /> Sublog
+          </NookToolbarButton>
+          <NookToolbarButton
             onclick={() => { view = "new"; newSubnook = islandSublog; }}
-            class="text-[#344d18] bg-white/40 p-2 rounded-full hover:bg-white/60 transition cursor-pointer flex items-center justify-center"
             title="New thread"
           >
-            <Plus class="w-4 h-4 stroke-[2.5px]" />
-          </button>
-          <button
+            <Plus class="w-3.5 h-3.5 stroke-[2.5px]" />
+          </NookToolbarButton>
+          <NookToolbarButton
             onclick={handleClearLog}
-            class="text-[#344d18] p-2 rounded-full hover:bg-black/5 cursor-pointer flex items-center justify-center"
             title="Reset mockup logs"
           >
-            <Trash2 class="w-4 h-4" />
-          </button>
+            <Trash2 class="w-3.5 h-3.5 stroke-[2.5px]" />
+          </NookToolbarButton>
         </div>
       {/if}
-      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
+      <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
+        <X class="w-3.5 h-3.5 stroke-[3px]" />
+      </NookToolbarButton>
     {/snippet}
   </NookAppHeader>
  

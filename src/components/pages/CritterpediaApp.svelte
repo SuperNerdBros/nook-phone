@@ -2,6 +2,7 @@
   import { X, Link } from '@lucide/svelte';
   import NookAppHeader from "../organisms/NookAppHeader.svelte";
   import NookIcon from "../atoms/NookIcon.svelte";
+  import NookToolbarButton from "../molecules/NookToolbarButton.svelte";
   import { getPhoneContext } from "../organisms/phoneContext.svelte";
 
   const ctx = getPhoneContext();
@@ -23,22 +24,20 @@
     {/snippet}
   
     {#snippet actions()}
-      <a 
+      <NookToolbarButton 
         href="https://acnhcritterpedia.com/" 
-        target="_blank" 
-        rel="noreferrer" 
-        class="nook-header-btn nook-header-btn-ghost mr-1"
+        variant="ghost"
+        class="mr-1"
         title="Open Website"
       >
         <Link class="w-3.5 h-3.5 stroke-[2.5px] text-[#715c34]" />
-      </a>
-      <button
+      </NookToolbarButton>
+      <NookToolbarButton
         onclick={ctx.handleHomeButton}
-        class="nook-header-btn"
         title="Close App"
       >
         <X class="w-3.5 h-3.5 stroke-[3px]" />
-      </button>
+      </NookToolbarButton>
     {/snippet}
   </NookAppHeader>
   

@@ -4,6 +4,7 @@
   import NookAppHeader from './NookAppHeader.svelte';
   import NookSearchBar from '../molecules/NookSearchBar.svelte';
   import NookCategoryBar from '../molecules/NookCategoryBar.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
   import { X as XIcon } from '@lucide/svelte';
 
   const ctx = getPhoneContext();
@@ -109,9 +110,9 @@
       {#if headerActions}
         {@render headerActions()}
       {:else}
-        <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
+        <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
           <XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#2d5c56]" />
-        </button>
+        </NookToolbarButton>
       {/if}
     {/snippet}
   </NookAppHeader>

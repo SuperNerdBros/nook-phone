@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
 
   const ctx = getPhoneContext();
   const TITLE_PREFIXES = ["Horizon", "Wild", "Friendly", "Active", "Casual", "Island", "Cozy", "Legendary", "Sassy", "Happy"];
@@ -112,7 +113,7 @@
     {#snippet actions()}
       <button
         onclick={isEditing ? handleSave : () => isEditing = true}
-        class="bg-white text-[#1c3d24] px-3 py-1.5 rounded-full text-xs font-bold hover:bg-opacity-90 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+        class="bg-white text-[#1c3d24] px-3 py-1.5 rounded-full text-xs font-bold hover:bg-opacity-90 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer mr-1"
       >
         {#if isEditing}
           <Save class="w-3.5 h-3.5" /> Save
@@ -120,7 +121,9 @@
           <Edit2 class="w-3.5 h-3.5" /> Edit
         {/if}
       </button>
-      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#1c3d24]" /></button>
+      <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
+        <XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#1c3d24]" />
+      </NookToolbarButton>
     {/snippet}
   </NookAppHeader>
 

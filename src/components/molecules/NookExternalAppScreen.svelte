@@ -5,6 +5,7 @@
   import { projectsData } from '@/lib/nookData';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NookAppHeader from '../organisms/NookAppHeader.svelte';
+  import NookToolbarButton from './NookToolbarButton.svelte';
 
   const ctx = getPhoneContext();
 
@@ -32,23 +33,21 @@
       {/snippet}
       {#snippet actions()}
         {#if currentProject?.git}
-          <a 
+          <NookToolbarButton 
             href={currentProject.git} 
-            target="_blank" 
-            rel="noreferrer" 
-            class="nook-header-btn nook-header-btn-ghost"
+            variant="ghost"
             title="Source Code"
           >
             <Code class="w-3.5 h-3.5 stroke-[2.5px]" />
-          </a>
+          </NookToolbarButton>
         {/if}
-        <button
+        <NookToolbarButton
           onclick={ctx.handleHomeButton}
-          class="nook-header-btn !bg-[#5c8e43] !text-[#ffffff] !border-2 !border-[#2f5525] hover:!bg-[#6a9e50]"
+          class="!bg-[#5c8e43] !text-[#ffffff] !border-2 !border-[#2f5525] hover:!bg-[#6a9e50]"
           title="Close App"
         >
           <X class="w-3.5 h-3.5 stroke-[3px]" />
-        </button>
+        </NookToolbarButton>
       {/snippet}
     </NookAppHeader>
     

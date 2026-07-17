@@ -5,6 +5,7 @@
   import { Camera, Image as ImageIcon , X } from '@lucide/svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
 
   const ctx = getPhoneContext();
   const FILTERS = [
@@ -130,14 +131,16 @@
       </div>
     {/snippet}
     {#snippet actions()}
-      <button
+      <NookToolbarButton
         onclick={() => activeView = activeView === "camera" ? "roll" : "camera"}
-        class="bg-white/80 text-[#3e1b54] p-2 rounded-full hover:bg-white transition-all shadow-sm"
         title={activeView === "camera" ? "View Camera Roll" : "Back to Camera"}
+        class="mr-1"
       >
-        <ImageIcon class="w-5 h-5" />
-      </button>
-      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
+        <ImageIcon class="w-3.5 h-3.5 stroke-[2.5px]" />
+      </NookToolbarButton>
+      <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
+        <X class="w-3.5 h-3.5 stroke-[3px]" />
+      </NookToolbarButton>
     {/snippet}
   </NookAppHeader>
 

@@ -6,6 +6,7 @@
   import { resolveAssetUrl } from "@/lib/utils";
   import NookIcon from "../atoms/NookIcon.svelte";
   import NookAppHeader from "../organisms/NookAppHeader.svelte";
+  import NookToolbarButton from "../molecules/NookToolbarButton.svelte";
 
   const ctx = getPhoneContext();
   const phone = getPhoneContext();
@@ -69,7 +70,9 @@
           class="w-full bg-white/40 border-2 border-[#d99c45] rounded-full py-1.5 pl-8 pr-3 text-[11px] font-bold text-[#5c3a21] placeholder:text-[#5c3a21]/50 focus:outline-none focus:bg-white focus:border-[#5c3a21]"
         />
       </div>
-      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
+      <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
+        <X class="w-3.5 h-3.5 stroke-[3px]" />
+      </NookToolbarButton>
     {/snippet}
   </NookAppHeader>
 

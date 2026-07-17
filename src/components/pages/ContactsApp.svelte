@@ -6,6 +6,7 @@
   import { Search, Star, MessageCircle, Home, Info, ChevronLeft, Phone, Video, Users, Plus, Image as ImageIcon, Camera, Gift, Trash2, Check, UserPlus, Leaf, X as XIcon } from '@lucide/svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
   import AcnhBubble from '@/components/molecules/AcnhBubble.svelte';
   
   const ctx = getPhoneContext();
@@ -432,16 +433,18 @@
       {/snippet}
       {#snippet actions()}
         {#if isAddMode}
-          <button onclick={() => { isAddMode = false; searchQuery = ''; selectedSpecies = ''; viewAll = false; }} class="text-white font-bold text-sm bg-black/10 px-3 py-1.5 rounded-full hover:bg-black/20 transition-colors cursor-pointer">
+          <button onclick={() => { isAddMode = false; searchQuery = ''; selectedSpecies = ''; viewAll = false; }} class="text-white font-bold text-sm bg-black/10 px-3 py-1.5 rounded-full hover:bg-black/20 transition-colors cursor-pointer mr-1">
             Done
           </button>
         {:else}
-          <button onclick={() => { isAddMode = true; searchQuery = ''; selectedSpecies = ''; viewAll = false; }} class="w-8 h-8 rounded-full bg-white text-[#8cc3b0] flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer">
-            <Plus class="w-5 h-5" />
-          </button>
+          <NookToolbarButton onclick={() => { isAddMode = true; searchQuery = ''; selectedSpecies = ''; viewAll = false; }} class="mr-1" title="Add Contact">
+            <Plus class="w-3.5 h-3.5 stroke-[3px]" />
+          </NookToolbarButton>
         {/if}
-        <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#649e8a]" /></button>
-    {/snippet}
+        <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
+          <XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#649e8a]" />
+        </NookToolbarButton>
+      {/snippet}
       
       <div class="relative w-full">
         <Search class="w-4 h-4 text-[#649e8a] absolute left-3 top-3" />

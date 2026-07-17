@@ -7,6 +7,7 @@
   import { fetchNookUsers, fetchPassports, isProUser, sendDirectMessage } from '@/lib/api';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
 
   interface Friend {
     id: number;
@@ -153,13 +154,12 @@
       </div>
     {/snippet}
     {#snippet actions()}
-      <button 
-        onclick={loadFriends}
-        class="bg-white/30 hover:bg-white/50 text-white border-0 p-1.5 rounded-full cursor-pointer transition active:scale-95 flex items-center justify-center"
-      >
+      <NookToolbarButton onclick={loadFriends} class="mr-1" title="Refresh">
         <RefreshCw class="w-4 h-4" />
-      </button>
-      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
+      </NookToolbarButton>
+      <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
+        <X class="w-3.5 h-3.5 stroke-[3px]" />
+      </NookToolbarButton>
     {/snippet}
   </NookAppHeader>
 

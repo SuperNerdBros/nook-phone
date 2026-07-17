@@ -3,6 +3,7 @@
   import { fetchNookipediaItems, searchNookipediaItems, fetchNookipediaVillagers } from '@/lib/api';
   import NookAppTemplate from '@/components/organisms/NookAppTemplate.svelte';
   import NookIcon from '@/components/atoms/NookIcon.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
   import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   const ctx = getPhoneContext();
   import nookState from '@/lib/nookState.svelte';
@@ -338,12 +339,12 @@
   {/snippet}
 
   {#snippet headerActions()}
-    <button onclick={navigateHome} class="nook-header-btn" title="Home">
+    <NookToolbarButton onclick={navigateHome} class="mr-1" title="Home">
       <Store class="w-3.5 h-3.5 stroke-[3px] text-[#4c4637]" />
-    </button>
-    <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
+    </NookToolbarButton>
+    <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
       <X class="w-3.5 h-3.5 stroke-[3px] text-[#4c4637]" />
-    </button>
+    </NookToolbarButton>
   {/snippet}
 
   {#snippet bottomNav()}

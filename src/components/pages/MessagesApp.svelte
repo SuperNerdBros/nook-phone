@@ -7,6 +7,7 @@
   import { fetchConversations, fetchDirectMessages, sendDirectMessage, fetchNookUsers, isProUser } from '@/lib/api';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
 
   interface Conversation {
     partner_id: number;
@@ -134,12 +135,12 @@
   >
     {#snippet iconSnippet()}
       {#if view !== "inbox"}
-        <button 
+        <NookToolbarButton 
           onclick={() => view = "inbox"}
-          class="bg-white/30 hover:bg-white/50 text-white border-0 p-1.5 rounded-full cursor-pointer transition active:scale-95 mr-2"
+          class="mr-2"
         >
           <ArrowLeft class="w-4 h-4" />
-        </button>
+        </NookToolbarButton>
       {:else}
         <div class="w-12 h-12 mr-1">
           <NookIcon name="messages" class="w-full h-full object-contain drop-shadow-sm" />
@@ -148,14 +149,13 @@
     {/snippet}
     {#snippet actions()}
       {#if view === "inbox"}
-        <button 
+        <NookToolbarButton 
           onclick={loadNewChat}
-          class="bg-white/30 hover:bg-white/50 text-white border-0 p-1.5 rounded-full cursor-pointer transition active:scale-95"
         >
           <MessageSquare class="w-4 h-4" />
-        </button>
+        </NookToolbarButton>
       {/if}
-      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></button>
+      <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></NookToolbarButton>
     {/snippet}
   </NookAppHeader>
 

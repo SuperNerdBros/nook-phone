@@ -3,6 +3,7 @@
   import { ShieldAlert, Send, LifeBuoy, X } from '@lucide/svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
   import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
 
   const ctx = getPhoneContext();
@@ -40,13 +41,12 @@
       </div>
     {/snippet}
     {#snippet actions()}
-      <button
+      <NookToolbarButton
         onclick={ctx.handleHomeButton}
-        class="nook-header-btn"
         title="Close App"
       >
         <X class="w-3.5 h-3.5 stroke-[3px] text-red-500" />
-      </button>
+      </NookToolbarButton>
     {/snippet}
   </NookAppHeader>
 

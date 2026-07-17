@@ -5,6 +5,7 @@
   import { onMount } from 'svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
   import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   const ctx = getPhoneContext();
 
@@ -57,9 +58,9 @@
       </div>
     {/snippet}
     {#snippet actions()}
-      <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
+      <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
         <X class="w-3.5 h-3.5 stroke-[3px]" />
-      </button>
+      </NookToolbarButton>
     {/snippet}
   </NookAppHeader>
 

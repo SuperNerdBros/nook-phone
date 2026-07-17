@@ -4,6 +4,7 @@
   import { fetchDIYRecipes, fetchDIYMaterials } from '@/lib/api';
   import NookAppTemplate from '@/components/organisms/NookAppTemplate.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
   import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   const ctx = getPhoneContext();
   import { 
@@ -178,9 +179,9 @@
   {/snippet}
 
   {#snippet headerActions()}
-    <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
+    <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
       <XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#7a5927]" />
-    </button>
+    </NookToolbarButton>
   {/snippet}
 
   <!-- Main Views -->

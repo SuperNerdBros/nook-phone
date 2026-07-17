@@ -9,6 +9,7 @@
   import { fetchApps, installAppTracker, rateApp, isProUser } from '@/lib/api';
   import { onMount } from 'svelte';
   import NookAppTemplate from '@/components/organisms/NookAppTemplate.svelte';
+  import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
 
   const ctx = getPhoneContext();
   
@@ -150,12 +151,12 @@
   {/snippet}
 
   {#snippet headerActions()}
-    <button onclick={() => showFilters = !showFilters} class="nook-header-btn mr-1" title="Filters">
+    <NookToolbarButton onclick={() => showFilters = !showFilters} class="mr-1" title="Filters">
       <Settings2 class="w-3.5 h-3.5 stroke-[3px] text-[#2d5c56]" />
-    </button>
-    <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
+    </NookToolbarButton>
+    <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
       <XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#2d5c56]" />
-    </button>
+    </NookToolbarButton>
   {/snippet}
 
   {#snippet filterPanel()}
