@@ -1,5 +1,6 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
+  import { cubicIn } from 'svelte/easing';
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
 
@@ -18,6 +19,34 @@
     }
   });
 
+  function irisOut(node: HTMLElement, { duration = 400 }) {
+    const svgUrl = `url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 50 0 Q 58 15 70 10 Q 70 25 85 30 Q 75 42 90 50 Q 75 58 85 70 Q 70 75 70 90 Q 58 85 50 100 Q 42 85 30 90 Q 30 75 15 70 Q 25 58 10 50 Q 25 42 15 30 Q 30 25 30 10 Q 42 15 50 0 Z'/%3E%3C/svg%3E")`;
+    
+    // Set up the static properties once
+    node.style.webkitMaskImage = `${svgUrl}, linear-gradient(black, black)`;
+    node.style.maskImage = `${svgUrl}, linear-gradient(black, black)`;
+    
+    node.style.webkitMaskPosition = `center, center`;
+    node.style.maskPosition = `center, center`;
+    
+    node.style.webkitMaskRepeat = `no-repeat, no-repeat`;
+    node.style.maskRepeat = `no-repeat, no-repeat`;
+    
+    // Punch out the SVG from the solid background
+    node.style.webkitMaskComposite = `destination-out`;
+    node.style.maskComposite = `exclude`;
+
+    return {
+      duration,
+      easing: cubicIn,
+      tick: (t: number) => {
+        const size = (1 - t) * 2000; // Go up to 2000px to ensure it completely clears the screen
+        node.style.webkitMaskSize = `${size}px ${size}px, 100% 100%`;
+        node.style.maskSize = `${size}px ${size}px, 100% 100%`;
+      }
+    };
+  }
+
   function resolveAssetUrl(assetPath: string) {
     if (!assetPath) return assetPath;
     if (assetPath.startsWith('http') || assetPath.startsWith('data:')) return assetPath;
@@ -33,18 +62,27 @@
 
 {#if ctx.launchingApp}
   <div
-    transition:fade={{ duration: 150 }}
+    in:fade={{ duration: 150 }}
+    out:irisOut={{ duration: 400 }}
     class="absolute inset-0 bg-[#e0dcc5]/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-6 overflow-hidden"
   >
     <!-- RIPPLE BACKGROUND -->
     <div 
-      class={`absolute z-0 rounded-full transition-transform duration-[450ms] ease-in-out ${ctx.launchingApp.bg || 'bg-[#f5fbf7]'}`}
+      class={`absolute z-0 transition-transform duration-[450ms] ease-in-out ${ctx.launchingApp.bg || 'bg-[#f5fbf7]'}`}
       style={`
-        width: 150vh; 
-        height: 150vh; 
+        width: 250vh; 
+        height: 250vh; 
         left: 50%; 
         top: 50%; 
-        transform: translate(-50%, -50%) scale(${showRipple ? 1 : 0});
+        transform: translate(-50%, -50%) scale(${showRipple ? 1 : 0}) rotate(${showRipple ? '45deg' : '0deg'});
+        mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 50 0 Q 58 15 70 10 Q 70 25 85 30 Q 75 42 90 50 Q 75 58 85 70 Q 70 75 70 90 Q 58 85 50 100 Q 42 85 30 90 Q 30 75 15 70 Q 25 58 10 50 Q 25 42 15 30 Q 30 25 30 10 Q 42 15 50 0 Z'/%3E%3C/svg%3E");
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 50 0 Q 58 15 70 10 Q 70 25 85 30 Q 75 42 90 50 Q 75 58 85 70 Q 70 75 70 90 Q 58 85 50 100 Q 42 85 30 90 Q 30 75 15 70 Q 25 58 10 50 Q 25 42 15 30 Q 30 25 30 10 Q 42 15 50 0 Z'/%3E%3C/svg%3E");
+        -webkit-mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        -webkit-mask-position: center;
       `}
     ></div>
 

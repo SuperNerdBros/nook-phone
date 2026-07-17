@@ -155,7 +155,7 @@
     {/snippet}
     {#snippet actions()}
       <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
-        <XIcon class="w-3.5 h-3.5 stroke-[3px]" />
+        <XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#7a5927]" />
       </button>
     {/snippet}
   </NookAppHeader>
