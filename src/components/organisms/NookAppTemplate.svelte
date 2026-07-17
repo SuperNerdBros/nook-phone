@@ -49,6 +49,8 @@
 
     // Bottom Navigation Bar snippet
     bottomNav,
+    bottomNavBgClass = "bg-[#fffdf5]",
+    bottomNavBorderClass = "border-t-4 border-[#bedad4]",
 
     // Default Content slot
     children
@@ -82,6 +84,8 @@
     categoryLabelBgClass?: string;
     categoryLabelTextClass?: string;
     bottomNav?: Snippet;
+    bottomNavBgClass?: string;
+    bottomNavBorderClass?: string;
     children?: Snippet;
   } = $props();
 </script>
@@ -159,7 +163,7 @@
 
   <!-- Bottom App Bar / Navigation -->
   {#if bottomNav}
-    <div class="shrink-0 bg-[#fffdf5] border-t-4 border-[#bedad4] px-4 pt-3 pb-6 flex items-center justify-around z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] rounded-t-3xl mt-[-10px] relative">
+    <div class={`shrink-0 ${bottomNavBgClass} ${bottomNavBorderClass} px-4 pt-3 pb-6 flex items-center justify-around z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] rounded-t-3xl mt-[-10px] relative`}>
       {@render bottomNav()}
     </div>
   {/if}

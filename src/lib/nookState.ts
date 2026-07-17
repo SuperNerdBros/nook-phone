@@ -5,12 +5,12 @@ import {
   catalogData,
   mapData,
   milesData,
-  ProjectItem,
-  Critter,
-  DIYRecipe,
-  CatalogItem,
-  MapBuilding,
-  MilesChallenge
+  type ProjectItem,
+  type Critter,
+  type DIYRecipe,
+  type CatalogItem,
+  type MapBuilding,
+  type MilesChallenge
 } from "./nookData";
 
 export interface PassportInfo {

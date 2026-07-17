@@ -69,6 +69,9 @@ export interface NookOSState {
   };
   catalog: {
     purchasedIds: string[];
+    wishlistIds: string[];
+    storageIds: string[];
+    forTradeIds: string[];
   };
   map: {
     buildings: MapBuilding[];
@@ -157,7 +160,10 @@ const INITIAL_STATE: NookOSState = {
     filterCategory: "all"
   },
   catalog: {
-    purchasedIds: []
+    purchasedIds: [],
+    wishlistIds: [],
+    storageIds: [],
+    forTradeIds: []
   },
   map: {
     buildings: [...mapData]
@@ -314,6 +320,11 @@ class NookStateManager {
           const parsed = JSON.parse(saved);
           if (parsed.dockApps && parsed.dockApps.length === 3 && parsed.dockApps[0] === "directory" && parsed.dockApps[1] === "messages" && parsed.dockApps[2] === "contacts") {
             parsed.dockApps = ["directory", "contacts", "settings"];
+          }
+          if (parsed.catalog) {
+            if (!parsed.catalog.wishlistIds) parsed.catalog.wishlistIds = [];
+            if (!parsed.catalog.storageIds) parsed.catalog.storageIds = [];
+            if (!parsed.catalog.forTradeIds) parsed.catalog.forTradeIds = [];
           }
           this.state = { ...this.state, ...parsed };
         }
@@ -481,6 +492,51 @@ class NookStateManager {
       }
     }
     return false;
+  }
+
+  toggleWishlistItem(itemId: string) {
+    if (!this.state.catalog.wishlistIds) this.state.catalog.wishlistIds = [];
+    if (this.state.catalog.wishlistIds.includes(itemId)) {
+      this.state.catalog.wishlistIds = this.state.catalog.wishlistIds.filter(id => id !== itemId);
+    } else {
+      this.state.catalog.wishlistIds.push(itemId);
+    }
+    this.save();
+  }
+
+  isWishlistItem(itemId: string): boolean {
+    if (!this.state.catalog.wishlistIds) return false;
+    return this.state.catalog.wishlistIds.includes(itemId);
+  }
+
+  toggleStorageItem(itemId: string) {
+    if (!this.state.catalog.storageIds) this.state.catalog.storageIds = [];
+    if (this.state.catalog.storageIds.includes(itemId)) {
+      this.state.catalog.storageIds = this.state.catalog.storageIds.filter(id => id !== itemId);
+    } else {
+      this.state.catalog.storageIds.push(itemId);
+    }
+    this.save();
+  }
+
+  isStorageItem(itemId: string): boolean {
+    if (!this.state.catalog.storageIds) return false;
+    return this.state.catalog.storageIds.includes(itemId);
+  }
+
+  toggleForTradeItem(itemId: string) {
+    if (!this.state.catalog.forTradeIds) this.state.catalog.forTradeIds = [];
+    if (this.state.catalog.forTradeIds.includes(itemId)) {
+      this.state.catalog.forTradeIds = this.state.catalog.forTradeIds.filter(id => id !== itemId);
+    } else {
+      this.state.catalog.forTradeIds.push(itemId);
+    }
+    this.save();
+  }
+
+  isForTradeItem(itemId: string): boolean {
+    if (!this.state.catalog.forTradeIds) return false;
+    return this.state.catalog.forTradeIds.includes(itemId);
   }
 
   addBells(amount: number) {
