@@ -116,7 +116,7 @@
       const data = await fetchThreads();
       threads = data.map((t: any) => ({
         ...t,
-        subnook: t.subnook || islandSubnook,
+        subnook: t.subnook || islandSublog,
         likes: t.likes || Math.floor(Math.random() * 12),
         hasLiked: false
       }));
