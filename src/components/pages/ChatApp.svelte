@@ -20,15 +20,16 @@
     hasLiked?: boolean;
   }
 
-  // Helper to normalize island name for n/ prefix
+  // Helper to normalize island name for n/ prefix (removes " Island" suffix)
   const getIslandSubnook = () => {
-    const raw = nookState.passport.islandName || "Nook Island";
-    return "n/" + raw.replace(/\s+/g, "");
+    const raw = nookState.passport.islandName || "Nook";
+    const clean = raw.replace(/\s*Island\s*$/gi, "");
+    return "n/" + clean.replace(/\s+/g, "");
   };
 
   let islandSubnook = $derived(getIslandSubnook());
 
-  // Default villager subnooks
+  // Default villager sublogs
   const DEFAULT_SUBNOOKS = [
     "n/Isabelle",
     "n/TomNook",
@@ -37,15 +38,15 @@
     "n/KKSlider"
   ];
 
-  let customSubnooks = $state<string[]>([]);
-  let allSubnooks = $derived([
+  let customSublogs = $state<string[]>([]);
+  let allSublogs = $derived([
     "n/All",
     islandSubnook,
     ...DEFAULT_SUBNOOKS,
-    ...customSubnooks
+    ...customSublogs
   ]);
 
-  let selectedSubnookFilter = $state("n/All");
+  let selectedSublogFilter = $state("n/All");
 
   const MOCK_THREADS = (): Thread[] => [
     {
@@ -86,17 +87,17 @@
   let threads = $state<Thread[]>([]);
   let activeThread = $state<Thread | null>(null);
   let threadComments = $state<any[]>([]);
-  let view = $state<"list" | "detail" | "new" | "create_subnook">("list");
+  let view = $state<"list" | "detail" | "new" | "create_sublog">("list");
   
   // Form fields
   let newTitle = $state("");
   let newContent = $state("");
-  let newSubnook = $state("");
-  let newSubnookName = $state("");
+  let newSubnook = $state(""); // keep database structure t.subnook
+  let newSublogName = $state("");
   let replyText = $state("");
   let loading = $state(false);
 
-  // Filter threads by active subnook selection
+  // Filter threads by active sublog selection
   let filteredThreads = $derived(threads.filter(t => {
     if (selectedSubnookFilter === "n/All") return true;
     return t.subnook.toLowerCase() === selectedSubnookFilter.toLowerCase();
@@ -105,10 +106,10 @@
   async function loadThreads() {
     loading = true;
     
-    // Load custom subnooks
-    const storedSubs = localStorage.getItem("nook_custom_subnooks");
+    // Load custom sublogs
+    const storedSubs = localStorage.getItem("nook_custom_sublogs");
     if (storedSubs) {
-      customSubnooks = JSON.parse(storedSubs);
+      customSublogs = JSON.parse(storedSubs);
     }
 
     if (isProUser()) {
@@ -230,14 +231,14 @@
     }
   }
 
-  function handleCreateSubnook() {
-    if (!newSubnookName.trim()) return;
-    const formatted = "n/" + newSubnookName.trim().replace(/\s+/g, "");
-    if (!customSubnooks.includes(formatted)) {
-      customSubnooks = [...customSubnooks, formatted];
-      localStorage.setItem("nook_custom_subnooks", JSON.stringify(customSubnooks));
+  function handleCreateSublog() {
+    if (!newSublogName.trim()) return;
+    const formatted = "n/" + newSublogName.trim().replace(/\s+/g, "");
+    if (!customSublogs.includes(formatted)) {
+      customSublogs = [...customSublogs, formatted];
+      localStorage.setItem("nook_custom_sublogs", JSON.stringify(customSublogs));
     }
-    newSubnookName = "";
+    newSublogName = "";
     view = "list";
   }
 
@@ -264,8 +265,8 @@
   function handleClearLog() {
     if (confirm("Clear local chat/thread history?")) {
       localStorage.removeItem("nook_mock_threads");
-      localStorage.removeItem("nook_custom_subnooks");
-      customSubnooks = [];
+      localStorage.removeItem("nook_custom_sublogs");
+      customSublogs = [];
       loadThreads();
     }
   }

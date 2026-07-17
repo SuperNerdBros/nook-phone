@@ -44,7 +44,13 @@
   let showNotificationCenter = $state(false);
   let launchingApp = $state<any>(null);
 
+  let isBooting = $state(true);
+
   onMount(() => {
+    setTimeout(() => {
+      isBooting = false;
+    }, 2800);
+
     const updateTime = () => {
       const now = new Date();
       timeStr = now.toLocaleTimeString([], { 
@@ -143,7 +149,7 @@
   const customWallpaper = $derived(nookState.customDesigns.find(d => d.id === nookState.activeWallpaperId));
 
   const CORE_APPS: Array<{id: string, name: string, icon: string, bg: string, appIcon?: string}> = [
-    { id: "directory", name: "App Store", icon: "directory", bg: "bg-[#e5a044]" },
+    { id: "directory", name: "Nook Play", icon: "directory", bg: "bg-[#e5a044]" },
     { id: "passport", name: "Passport", icon: "passport", bg: "bg-[#89b88b]" },
     { id: "camera", name: "Camera", icon: "camera", bg: "bg-[#f0614e]" },
     { id: "miles", name: "Nook Miles", icon: "miles", bg: "bg-[#91bd5e]" },
@@ -178,6 +184,60 @@
 </script>
 
 <div id="nook-phone-canvas" class="w-full h-full relative z-10">
+  
+  {#if isBooting}
+    <div 
+      transition:fade={{ duration: 400 }}
+      class="absolute inset-0 bg-[#3b592d] z-[200] flex flex-col justify-between p-8 text-white select-none"
+    >
+      <!-- Floating Background Leaves -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-[0.15]">
+        <span class="absolute text-2xl animate-drift-leaf-1" style="left: 10%; top: -10%;">🍃</span>
+        <span class="absolute text-3xl animate-drift-leaf-2" style="left: 65%; top: -10%;">🍃</span>
+        <span class="absolute text-xl animate-drift-leaf-3" style="left: 35%; top: -10%;">🍃</span>
+        <span class="absolute text-2xl animate-drift-leaf-4" style="left: 80%; top: -10%;">🍃</span>
+      </div>
+
+      <!-- Top Spacer -->
+      <div class="z-10"></div>
+
+      <!-- Center Content: Logo & Glow -->
+      <div class="flex flex-col items-center gap-6 z-10">
+        <div class="relative flex items-center justify-center">
+          <!-- Glow Effect behind leaf -->
+          <div class="absolute w-24 h-24 bg-[#afd485]/40 rounded-full blur-2xl animate-pulse"></div>
+          
+          <!-- Nook Inc Logo -->
+          <img 
+            src={nookIncLogo} 
+            alt="Nook Inc Logo" 
+            class="w-20 h-20 drop-shadow-[0_4px_12px_rgba(175,212,133,0.4)] animate-boot-bounce" 
+          />
+        </div>
+        
+        <div class="flex flex-col items-center gap-2">
+          <h1 class="text-xl font-bold tracking-widest text-[#fdfcf0] m-0 font-sans uppercase animate-boot-text">
+            NookPhone
+          </h1>
+          <p class="text-[9px] text-[#afd485] font-black tracking-widest uppercase m-0 opacity-80 animate-pulse">
+            Powered by YouMeOS
+          </p>
+        </div>
+      </div>
+
+      <!-- Bottom Loading Status & Bar -->
+      <div class="flex flex-col items-center gap-4 w-full max-w-[200px] mx-auto mb-10 z-10">
+        <div class="w-full bg-[#273a1e] h-1.5 rounded-full overflow-hidden relative shadow-inner">
+          <div class="bg-gradient-to-r from-[#afd485] to-[#8cc3b0] h-full rounded-full animate-boot-progress relative">
+            <span class="absolute -right-2 -top-1 text-[10px] animate-spin-slow">🍃</span>
+          </div>
+        </div>
+        <span class="text-[8px] font-black uppercase tracking-widest text-[#afd485] animate-pulse">
+          System Initialization...
+        </span>
+      </div>
+    </div>
+  {/if}
   
   <!-- Main OS Frame -->
   <div class="w-full h-full relative overflow-hidden flex flex-col bg-[#e0dcc5] select-none">
@@ -766,5 +826,68 @@
   }
   :global(.animate-bounce-slow) {
     animation: bounce 3s infinite;
+  }
+
+  @keyframes boot-bounce-anim {
+    0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+    50% { transform: scale(1.1) rotate(10deg); opacity: 1; }
+    70% { transform: scale(0.92) rotate(-5deg); }
+    85% { transform: scale(1.03) rotate(2deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+  @keyframes boot-progress-anim {
+    0% { width: 0%; }
+    100% { width: 100%; }
+  }
+  @keyframes boot-text-anim {
+    0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+    50% { opacity: 0; }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes drift-leaf-1-anim {
+    0% { transform: translateY(-20px) rotate(0deg) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(600px) rotate(360deg) translateX(40px); opacity: 0; }
+  }
+  @keyframes drift-leaf-2-anim {
+    0% { transform: translateY(-20px) rotate(0deg) translateX(0); opacity: 0; }
+    15% { opacity: 0.8; }
+    85% { opacity: 0.8; }
+    100% { transform: translateY(600px) rotate(-450deg) translateX(-60px); opacity: 0; }
+  }
+  @keyframes drift-leaf-3-anim {
+    0% { transform: translateY(-20px) rotate(0deg) translateX(0); opacity: 0; }
+    20% { opacity: 0.9; }
+    80% { opacity: 0.9; }
+    100% { transform: translateY(600px) rotate(270deg) translateX(25px); opacity: 0; }
+  }
+  @keyframes drift-leaf-4-anim {
+    0% { transform: translateY(-20px) rotate(0deg) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(600px) rotate(-360deg) translateX(-45px); opacity: 0; }
+  }
+
+  .animate-boot-bounce {
+    animation: boot-bounce-anim 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  .animate-boot-progress {
+    animation: boot-progress-anim 2.8s forwards linear;
+  }
+  .animate-boot-text {
+    animation: boot-text-anim 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .animate-drift-leaf-1 {
+    animation: drift-leaf-1-anim 3.5s linear infinite;
+  }
+  .animate-drift-leaf-2 {
+    animation: drift-leaf-2-anim 4.2s linear infinite 0.5s;
+  }
+  .animate-drift-leaf-3 {
+    animation: drift-leaf-3-anim 3.8s linear infinite 1.2s;
+  }
+  .animate-drift-leaf-4 {
+    animation: drift-leaf-4-anim 4.5s linear infinite 0.2s;
   }
 </style>

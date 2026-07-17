@@ -124,7 +124,7 @@
   <div class="bg-[#f0b157] text-[#5c3a21] p-5 pt-7 ac-wavy-header flex flex-col gap-3 relative z-10 shadow-sm border-b-4 border-[#d99c45]">
     <div class="flex justify-between items-center">
       <h1 class="text-2xl font-black flex items-center gap-2 tracking-tight">
-        <Store class="w-7 h-7 text-white drop-shadow-sm" /> App Store
+        <Store class="w-7 h-7 text-white drop-shadow-sm" /> Nook Play
       </h1>
       <div class="bg-[#5c3a21] text-[#f0b157] px-3 py-1.5 rounded-full font-black text-xs flex items-center gap-1.5 shadow-inner">
         <Smartphone class="w-3.5 h-3.5" />
@@ -132,7 +132,7 @@
       </div>
     </div>
     <p class="text-[11px] font-bold opacity-90 leading-tight">
-      Welcome to the Nook App Store! Discover community creations for your NookPhone! Yes, yes!
+      Welcome to Nook Play! Discover community creations for your NookPhone! Yes, yes!
     </p>
   </div>
 
