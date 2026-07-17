@@ -2,7 +2,8 @@
   import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   import nookState from '@/lib/nookState.svelte';
   import { projectsData } from '@/lib/nookData';
-  import { Search, Download, CheckCircle, Smartphone, Code, Globe, XIcon, Trash2, Play, Users, CloudDownload, Box, Grid3x3, BookOpen, CheckSquare, Palette, Moon, Music, TrendingUp, Image as ImageIcon, Star, Monitor, CloudSun, Store, LifeBuoy, Settings2 } from '@lucide/svelte';
+  import { Search, Download, CheckCircle, Smartphone, Code, Globe, XIcon, Trash2, Play, Users, CloudDownload, Box, Grid3x3, BookOpen, CheckSquare, Palette, Moon, Music, TrendingUp, Image as ImageIcon, Star, Monitor, CloudSun, Store, LifeBuoy, Settings2, ListChecks, Coins, Sparkles, Wrench, Library } from '@lucide/svelte';
+  import Leaf from '@lucide/svelte/icons/leaf';
   import NookIcon from '../atoms/NookIcon.svelte';
   import Rating from '../atoms/Rating.svelte';
   import { fetchApps, installAppTracker, rateApp, isProUser } from '@/lib/api';
@@ -17,6 +18,7 @@
   let searchTerm = $state("");
   let selectedCategory = $state("all");
   let selectedLanguage = $state("en");
+  let selectedPlatform = $state("installable");
   let showFilters = $state(false);
   let selectedApp = $state<any>(null);
   let currentView = $state<"grid" | "detail">("grid");
@@ -49,12 +51,12 @@
   const getCategoryIcon = (cat: string) => {
     switch (cat.toLowerCase()) {
       case "all": return Grid3x3;
-      case "tracking": return CheckSquare;
-      case "economy": return TrendingUp;
+      case "tracking": return ListChecks;
+      case "economy": return Coins;
       case "multiplayer": return Users;
-      case "creative": return Palette;
-      case "utilities": return Monitor;
-      case "reference": return BookOpen;
+      case "creative": return Sparkles;
+      case "utilities": return Wrench;
+      case "reference": return Library;
       default: return Box;
     }
   };
@@ -64,7 +66,13 @@
                           p.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || p.tools.includes(selectedCategory);
     const matchesLang = selectedLanguage === "all" || (p.languages && p.languages.includes(selectedLanguage));
-    return matchesSearch && matchesCategory && matchesLang;
+    
+    let matchesPlatform = true;
+    if (selectedPlatform === "installable") matchesPlatform = !!p.site;
+    else if (selectedPlatform === "ios") matchesPlatform = !!p.ios;
+    else if (selectedPlatform === "android") matchesPlatform = !!p.android;
+
+    return matchesSearch && matchesCategory && matchesLang && matchesPlatform;
   }));
 
   async function handleInstall(projectName: string) {
@@ -75,6 +83,19 @@
     const apps = await fetchApps();
     const map: Record<string, any> = {};
     apps.forEach((a: any) => { map[a.slug] = a; });
+    cloudApps = map;
+  }
+
+  async function handleExternalLink(url: string, projectName: string) {
+    const slug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    await installAppTracker(slug);
+    window.open(url, '_blank');
+    // Refresh stats
+    const apps = await fetchApps();
+    const map: Record<string, any> = {};
+    apps.forEach((a: any) => {
+      map[a.slug] = a;
+    });
     cloudApps = map;
   }
 
@@ -107,12 +128,10 @@
     {#snippet iconSnippet()}
       <Box class="w-5 h-5 drop-shadow-sm mr-1 text-[#fffdf5]" strokeWidth={3} />
     {/snippet}
-    {#snippet leftActions()}
+    {#snippet actions()}
       <button onclick={() => showFilters = !showFilters} class="nook-header-btn mr-1" title="Filters">
         <Settings2 class="w-3.5 h-3.5 stroke-[3px] text-[#2d5c56]" />
       </button>
-    {/snippet}
-    {#snippet actions()}
       <button onclick={ctx.handleHomeButton} class="nook-header-btn" title="Close App">
         <XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#2d5c56]" />
       </button>
@@ -187,7 +206,7 @@
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto ac-scrollbar px-4 pb-10">
+      <div class="flex-1 overflow-y-auto ac-scrollbar px-4 pb-4">
         <div class="grid grid-cols-2 gap-3 content-start">
           {#each filteredProjects as p (p.name)}
             {@const isInstalled = nookState.isAppInstalled(p.name)}
@@ -240,6 +259,27 @@
             </div>
           {/if}
         </div>
+      </div>
+
+      <!-- Bottom Nav -->
+      <div class="shrink-0 bg-[#fffdf5] border-t-4 border-[#bedad4] px-4 pt-3 pb-6 flex items-center justify-around z-20 shadow-[0_-4px_10px_rgba(45,92,86,0.05)] rounded-t-3xl mt-[-10px] relative">
+        {#each [
+          { id: 'installable', label: 'Nook OS', icon: Leaf },
+          { id: 'ios', label: 'iOS', icon: Smartphone },
+          { id: 'android', label: 'Android', icon: Smartphone }
+        ] as plat}
+          <button
+            onclick={() => selectedPlatform = plat.id}
+            class={`flex flex-col items-center justify-center w-16 h-12 rounded-2xl transition-all ${
+              selectedPlatform === plat.id 
+                ? 'bg-[#45a38f] text-[#fffdf5] shadow-inner scale-105' 
+                : 'text-[#45a38f] hover:bg-[#e5f1f0]'
+            }`}
+          >
+            <plat.icon class="w-5 h-5 mb-1" strokeWidth={selectedPlatform === plat.id ? 3 : 2} />
+            <span class="text-[9px] font-black uppercase tracking-wider">{plat.label}</span>
+          </button>
+        {/each}
       </div>
     </div>
 
@@ -304,7 +344,7 @@
               {/if}
 
               <!-- Rating Section -->
-              {#if isInstalled && proUser && stats}
+              {#if (isInstalled || selectedPlatform !== 'installable') && proUser && stats}
                 <div class="mt-2 bg-[#d4e8e6] p-3 rounded-2xl border-2 border-[#bedad4]">
                   <span class="text-[10px] font-black text-[#2d5c56] uppercase tracking-wider block mb-2">Your Review</span>
                   <div class="flex justify-between items-center">
@@ -323,25 +363,41 @@
 
           <!-- Action Buttons -->
           <div class="absolute bottom-6 left-6 right-6 flex flex-col gap-2 z-30">
-            {#if isInstalled}
+            {#if selectedPlatform === 'installable' && selectedApp.site}
+              {#if isInstalled}
+                <button
+                  onclick={() => { currentView = 'grid'; nookState.navigate(selectedApp.id || selectedApp.name); }}
+                  class="w-full bg-[#1bc6b6] text-white py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#15a497] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
+                >
+                  <Play class="w-4 h-4 mr-1.5 fill-current" /> Open Tool
+                </button>
+                <button
+                  onclick={() => { handleUninstall(selectedApp.name); currentView = "grid"; }}
+                  class="w-full bg-[#fdafb2] text-[#8c2a2e] py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#f09a9d] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
+                >
+                  <Trash2 class="w-4 h-4 mr-1.5" /> Uninstall
+                </button>
+              {:else}
+                <button
+                  onclick={() => { handleInstall(selectedApp.name); }}
+                  class="w-full bg-[#45a38f] text-white py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#368875] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
+                >
+                  <CloudDownload class="w-5 h-5 mr-1.5" /> Download
+                </button>
+              {/if}
+            {:else if selectedPlatform === 'ios' && selectedApp.ios}
               <button
-                onclick={() => { currentView = 'grid'; nookState.navigate(selectedApp.id || selectedApp.name); }}
+                onclick={() => { handleExternalLink(selectedApp.ios, selectedApp.name); }}
                 class="w-full bg-[#1bc6b6] text-white py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#15a497] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
               >
-                <Play class="w-4 h-4 mr-1.5 fill-current" /> Open Tool
+                <Smartphone class="w-5 h-5 mr-1.5" /> Get on iOS
               </button>
+            {:else if selectedPlatform === 'android' && selectedApp.android}
               <button
-                onclick={() => { handleUninstall(selectedApp.name); currentView = "grid"; }}
-                class="w-full bg-[#fdafb2] text-[#8c2a2e] py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#f09a9d] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
+                onclick={() => { handleExternalLink(selectedApp.android, selectedApp.name); }}
+                class="w-full bg-[#f59e33] text-white py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#e08922] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
               >
-                <Trash2 class="w-4 h-4 mr-1.5" /> Uninstall
-              </button>
-            {:else}
-              <button
-                onclick={() => { handleInstall(selectedApp.name); }}
-                class="w-full bg-[#45a38f] text-white py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#368875] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
-              >
-                <CloudDownload class="w-5 h-5 mr-1.5" /> Download
+                <Smartphone class="w-5 h-5 mr-1.5" /> Get on Android
               </button>
             {/if}
           </div>

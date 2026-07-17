@@ -113,7 +113,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: 'https://github.com/MariuszDabrowski/ac-miles',
 		information: ['gameplay'],
-		tools: []
+		tools: ['tracking']
 	},
 	{
 		name: 'AC Wildlife',
@@ -149,7 +149,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: 'https://github.com/chibisnorlax/acnhbeginners',
 		information: ['art', 'critters', 'flowers', 'fossils', 'gameplay', 'villagers'],
-		tools: []
+		tools: ['reference']
 	},
 	{
 		name: 'ACNH Data Spreadsheet',
@@ -168,7 +168,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: '',
 		information: ['art', 'critters', 'fossils', 'items', 'villagers'],
-		tools: []
+		tools: ['reference']
 	},
 	{
 		name: 'ACNH FAQ',
@@ -186,7 +186,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: 'https://github.com/chibisnorlax/acnhfaq',
 		information: ['art', 'critters', 'flowers', 'fossils', 'gameplay', 'villagers'],
-		tools: []
+		tools: ['reference']
 	},
 	{
 		name: 'ACNH.Guide',
@@ -260,7 +260,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'b19f00t',
 		git: 'https://github.com/BigfootMG/ACNH-Plant-Guide',
 		information: ['gameplay'],
-		tools: []
+		tools: ['reference']
 	},
 // 	{
 // 		name: 'ACNH Translation Spreadsheet',
@@ -278,7 +278,7 @@ export const projectsData: ProjectItem[] = [
 // 		twitter: '',
 // 		git: 'https://github.com/alexislours/translation-sheet-data',
 // 		information: ['art', 'critters', 'fossils', 'items', 'villagers'],
-// 		tools: []
+// 		tools: ['reference']
 // 	},
 	{
 		name: 'ACNH Travel Guide',
@@ -351,7 +351,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'ACWorldBlog',
 		git: '',
 		information: ['gameplay'],
-		tools: []
+		tools: ['reference']
 	},
 	{
 		name: 'Animal Guide for ACNH',
@@ -396,7 +396,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: '',
 		information: ['critters', 'flowers', 'gameplay'],
-		tools: []
+		tools: ['reference']
 	},
 	{
 		name: 'CatalogScanner',
@@ -747,7 +747,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: '',
 		git: '',
 		information: ['art', 'critters', 'fossils', 'items', 'villages'],
-		tools: []
+		tools: ['reference']
 	},
 	{
 		name: 'The ULTIMATE Catalogue',
@@ -836,7 +836,7 @@ export const projectsData: ProjectItem[] = [
 		twitter: 'yuecrossing',
 		git: '',
 		information: ['flowers', 'gameplay'],
-		tools: []
+		tools: ['reference']
 	}
 ];
 
