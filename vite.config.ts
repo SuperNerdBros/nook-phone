@@ -10,4 +10,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    port: 5175,
+    host: true,
+    strictPort: true,
+    cors: true,
+    allowedHosts: true,
+    hmr: {
+      clientPort: 5175
+    }
+  },
+  build: {
+    outDir: '../../wp-content/plugins/xophz-nook-phone/public/dist',
+    emptyOutDir: true,
+  }
 })
