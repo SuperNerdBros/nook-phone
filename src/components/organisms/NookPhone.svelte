@@ -112,12 +112,12 @@
   });
 </script>
 
-<div id="nook-phone-canvas" class="w-full h-full relative z-10">
+<div id="nook-phone-canvas" class="w-full h-full max-h-full overflow-hidden relative z-10">
   <NookBootScreen />
   <PremiumUpsellModal />
   
   <!-- Main OS Frame -->
-  <div class="w-full h-full relative overflow-hidden flex flex-col bg-[#fdfcf2] select-none">
+  <div class="w-full h-full max-h-full relative overflow-hidden flex flex-col bg-[#fdfcf2] select-none">
     {#if nookState.currentApp === "passport" && !nookState.hasCompletedOnboarding}
       <Onboarding />
     {:else}

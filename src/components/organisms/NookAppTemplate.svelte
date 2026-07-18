@@ -93,7 +93,7 @@
   } = $props();
 </script>
 
-<div class={`flex flex-col h-full ${bgClass} ${textClass} font-['Varela_Round',sans-serif] relative overflow-hidden select-none`}>
+<div class={`flex flex-col h-full max-h-full ${bgClass} ${textClass} font-['Varela_Round',sans-serif] relative overflow-hidden select-none`}>
   <!-- Header -->
   <NookAppHeader 
     title={title} 
