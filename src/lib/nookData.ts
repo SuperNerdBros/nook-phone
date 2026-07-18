@@ -25,7 +25,7 @@ export interface ProjectItem {
 
 export const projectsData: ProjectItem[] = [
 	{
-		name: 'AC Tune Maker',
+		name: 'Tune Maker',
 		id: 'tune_maker',
 		appIcon: 'town_tunes',
 		description: 'Create and share your own town tunes!',
@@ -35,7 +35,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['creative']
 	},
 // 	{
-// 		name: 'AC Community (JP)',
+// 		name: 'Community (JP)',
 // 		appIcon: 'directory',
 // 		description: 'あつまれ どうぶつの森 コミュニティ',
 // 		languages: ['jp'],
@@ -53,7 +53,7 @@ export const projectsData: ProjectItem[] = [
 // 		tools: ['economy']
 // 	},
 // 	{
-// 		name: 'AC Community (KO)',
+// 		name: 'Community (KO)',
 // 		appIcon: 'critter',
 // 		description: '모여봐요 동물의 숲 커뮤니티',
 // 		languages: ['ko'],
@@ -71,7 +71,7 @@ export const projectsData: ProjectItem[] = [
 // 		tools: ['economy']
 // 	},
 	{
-		name: 'ACNH Critterpedia',
+		name: 'Critterpedia',
 		appIcon: 'critter',
 		description: 'A clean and simple tracking and logging tool for all bugs, fish, and sea creatures in Animal Crossing: New Horizons.',
 		languages: ['en'],
@@ -90,7 +90,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['utilities']
 	},
 	{
-		name: 'AC Helper',
+		name: 'Helper',
 		appIcon: 'shopping',
 		description:
 			'Companion app for catching critters, logging critters and items, and turnip predictions',
@@ -109,7 +109,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['creative', 'economy']
 	},
 	{
-		name: 'AC Miles',
+		name: 'Miles',
 		appIcon: 'diy',
 		description: 'Achievement visualizer for Animal Crossing: New Horizons',
 		languages: ['en'],
@@ -127,7 +127,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['tracking']
 	},
 	{
-		name: 'AC Wildlife',
+		name: 'Wildlife',
 		appIcon: 'designs',
 		description:
 			'Tracking tool for Critters, Art, Achievements and more! Add your friends to share progress!',
@@ -163,7 +163,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['reference']
 	},
 	{
-		name: 'ACNH Data Spreadsheet',
+		name: 'Data Spreadsheet',
 		appIcon: 'map',
 		description:
 			'A comprehensive Google spreadsheet documenting items, villagers, achievements, and much more',
@@ -182,7 +182,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['reference']
 	},
 	{
-		name: 'ACNH FAQ',
+		name: 'FAQ',
 		appIcon: 'chat',
 		description: 'Fan-made FAQ for AC:NH',
 		languages: ['en'],
@@ -200,7 +200,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['reference']
 	},
 	{
-		name: 'ACNH.Guide',
+		name: 'Guide',
 		appIcon: 'passport',
 		description:
 			'A free multi-purpose guide and cataloging app with Catalog Scanner integration for New Horizons.',
@@ -219,7 +219,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['tracking', 'multiplayer', 'economy']
 	},
 	{
-		name: 'ACNH Life',
+		name: 'Life',
 		appIcon: 'miles',
 		description: 'Mobile app with critter info, item checklists, turnip calculator, and more',
 		languages: ['en'],
@@ -238,7 +238,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['tracking', 'economy']
 	},
 // 	{
-// 		name: 'ACNH Music',
+// 		name: 'Music',
 // 		appIcon: 'best_friend',
 // 		description: 'Web app that plays the current hourly music from Animal Crossing: New Horizons',
 // 		languages: ['en'],
@@ -256,7 +256,7 @@ export const projectsData: ProjectItem[] = [
 // 		tools: ['creative']
 // 	},
 	{
-		name: 'ACNH Plant Guide',
+		name: 'Plant Guide',
 		appIcon: 'books',
 		description: 'A guide to every plant in the game (except for flowers)',
 		languages: ['en'],
@@ -274,7 +274,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['reference']
 	},
 // 	{
-// 		name: 'ACNH Translation Spreadsheet',
+// 		name: 'Translation Spreadsheet',
 // 		appIcon: 'calculator',
 // 		description: "A Google spreadsheet listing translation for most of the game's data",
 // 		languages: ['en', 'es', 'fr', 'de', 'it', 'nl', 'ru', 'zh', 'jp', 'ko'],
@@ -292,7 +292,7 @@ export const projectsData: ProjectItem[] = [
 // 		tools: ['reference']
 // 	},
 	{
-		name: 'ACNH Travel Guide',
+		name: 'Travel Guide',
 		appIcon: 'calendar',
 		description:
 			'Companion app for iOS with all information and tools you need, and a great design',
@@ -311,7 +311,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['tracking', 'economy', 'multiplayer']
 	},
 	{
-		name: 'Animal Crossing Pattern Tool',
+		name: 'Pattern Tool',
 		appIcon: 'camera_alt',
 		description: 'Pattern designer compatible with NL, HHD, and NH',
 		languages: ['en'],
@@ -329,7 +329,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['creative']
 	},
 	{
-		name: 'Animal Crossing Wiki',
+		name: 'Wiki',
 		appIcon: 'clock',
 		description: 'Animal-Crossing-Wiki von AC-Booster.net',
 		languages: ['de'],
@@ -347,7 +347,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['reference']
 	},
 	{
-		name: 'Animal Crossing World',
+		name: 'World',
 		appIcon: 'contacts',
 		description: 'Blogs and guides about the Animal Crossing series',
 		languages: ['en'],
@@ -365,7 +365,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['reference']
 	},
 	{
-		name: 'Animal Guide for ACNH',
+		name: 'Animal Guide',
 		appIcon: 'dating',
 		description:
 			'Fan-made guidebook for ACNH with comprehensive info on collectibles, villagers, and more',
@@ -467,7 +467,7 @@ export const projectsData: ProjectItem[] = [
 // 		tools: ['creative', 'multiplayer', 'economy']
 // 	},
 // 	{
-// 		name: 'FANDOM Animal Crossing Wiki',
+// 		name: 'FANDOM Wiki',
 // 		appIcon: 'messages',
 // 		description: 'FANDOM Animal Crossing wiki that anyone can contribute to',
 // 		languages: ['en'],

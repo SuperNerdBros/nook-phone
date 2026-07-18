@@ -25,6 +25,7 @@
   import ChangelogApp from '../pages/ChangelogApp.svelte';
   import PrivacyApp from '../pages/PrivacyApp.svelte';
   import TermsApp from '../pages/TermsApp.svelte';
+  import AdbApp from '../pages/AdbApp.svelte';
 
   import NookBootScreen from '../molecules/NookBootScreen.svelte';
   import NookStatusBar from '../molecules/NookStatusBar.svelte';
@@ -165,6 +166,7 @@
             {#if nookState.currentApp === "dodo_air"} <DodoAirApp /> {/if}
             {#if nookState.currentApp === "privacy"} <PrivacyApp /> {/if}
             {#if nookState.currentApp === "terms"} <TermsApp /> {/if}
+            {#if nookState.currentApp === "adb"} <AdbApp /> {/if}
 
             <!-- Launching embedded directory pinned frames -->
             <NookExternalAppScreen />

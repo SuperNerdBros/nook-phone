@@ -107,6 +107,13 @@ export const CORE_APPS: CoreApp[] = [
     bg: "bg-[#ffd375]",
     image: messagesIcon,
     proOnly: true
+  },
+  {
+    id: "adb",
+    name: "ABD",
+    icon: "wallet",
+    bg: "bg-[#d9f6af]",
+    proOnly: true
   }
 ];
 

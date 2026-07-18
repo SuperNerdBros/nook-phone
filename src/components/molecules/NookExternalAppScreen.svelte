@@ -21,10 +21,10 @@
 </script>
 
 {#if nookState.currentApp && !CORE_APPS.some(a => a.id === nookState.currentApp) && nookState.currentApp !== 'privacy' && nookState.currentApp !== 'terms'}
-  {@const currentProject = projectsData.find(p => p.name === nookState.currentApp)}
+  {@const currentProject = projectsData.find(p => p.id === nookState.currentApp || p.name === nookState.currentApp)}
   <div class="flex flex-col h-full ac-app-screen bg-[#faf9f4]">
     <NookAppHeader 
-      title={nookState.currentApp}
+      title={currentProject?.name || nookState.currentApp}
       subtitle={currentProject?.description || ""}
       description=""
       bgClass="bg-transparent"
@@ -77,7 +77,7 @@
             <NookIcon name={currentProject?.logo || currentProject?.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-2 z-10 relative" />
           </div>
           <div>
-            <h2 class="font-extrabold text-sm text-[#4c4637]">{nookState.currentApp}</h2>
+            <h2 class="font-extrabold text-sm text-[#4c4637]">{currentProject?.name || nookState.currentApp}</h2>
             <p class="text-xs text-gray-400 mt-1 max-w-[220px] mx-auto leading-relaxed">
               This app doesn't have a web version. It's likely a mobile-only app or discord server.
             </p>

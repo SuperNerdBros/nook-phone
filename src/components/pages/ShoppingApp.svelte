@@ -522,33 +522,30 @@
           {#if activeItem}
             <!-- Top Ribbons -->
             <div class="absolute top-4 left-0 w-full flex justify-between items-start pointer-events-none z-20 px-0">
-              <!-- Title Ribbon (Left) -->
-              <div class="bg-[#fcfaf4]/90 backdrop-blur-md px-4 py-1.5 rounded-r-2xl border-y-2 border-r-2 border-[#e1d9be] shadow-sm pointer-events-auto max-w-[50%] flex flex-col">
-                <span class="text-[#5a4a18] text-[18px] font-black leading-tight drop-shadow-sm truncate capitalize">{activeItem.name}</span>
-                <span class="text-[#a89f91] text-[9px] font-bold uppercase tracking-wider mt-0.5">{activeItem.category}</span>
-              </div>
-
-              <!-- Price/Gift Ribbon (Right) -->
-              <div class="flex flex-col gap-1 items-end pointer-events-auto">
-                <div class="bg-[#fcfaf4]/90 backdrop-blur-md pl-3 pr-4 py-1.5 rounded-l-2xl border-y-2 border-l-2 border-[#e1d9be] shadow-sm flex items-center gap-1.5">
-                  <svg class="w-3.5 h-3.5 text-[#cfb036] opacity-90 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C10.5 2 9.5 3 9.5 4C9.5 4.5 10 5 10 5H14C14 5 14.5 4.5 14.5 4C14.5 3 13.5 2 12 2Z" fill="#ffb75e"/>
-                    <path d="M6.5 7C6.5 7 4.5 13 4.5 17C4.5 21 7.5 23 12 23C16.5 23 19.5 21 19.5 17C19.5 13 17.5 7 17.5 7H6.5Z" fill="#ffd470"/>
+              <!-- Price/Gift Ribbon (Left) -->
+              <div class="flex flex-col gap-1.5 items-start pointer-events-auto">
+                <div class="bg-[#ac9774]/90 backdrop-blur-md pl-2 pr-4 py-1 rounded-r-full shadow-sm flex items-center gap-1.5">
+                  <svg class="w-4 h-4 text-white opacity-90 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C10.5 2 9.5 3 9.5 4C9.5 4.5 10 5 10 5H14C14 5 14.5 4.5 14.5 4C14.5 3 13.5 2 12 2Z" fill="#ffffff"/>
+                    <path d="M6.5 7C6.5 7 4.5 13 4.5 17C4.5 21 7.5 23 12 23C16.5 23 19.5 21 19.5 17C19.5 13 17.5 7 17.5 7H6.5Z" fill="#ffffff"/>
                   </svg>
-                  <span class="text-[12px] font-bold text-[#5a4a18] whitespace-nowrap">
-                    {activeItem.sell_price ? `Sells for ${activeItem.sell_price.toLocaleString()}` : 'Not for sale'}
+                  <span class="text-[14px] font-bold text-white whitespace-nowrap">
+                    {activeItem.sell_price ? Number(activeItem.sell_price).toLocaleString() : 'N/A'}
                   </span>
                 </div>
                 {#if activeItem.is_orderable}
                   <button 
                     onclick={() => { selectedGiftItem = activeItem; isFriendPickerOpen = true; }}
-                    class="bg-[#darkred] text-white py-1.5 px-4 mr-2 rounded-full font-black flex items-center justify-center gap-1.5 shadow-sm text-[10px] hover:bg-[#a8cdc5] transition-colors border-2 border-white cursor-pointer"
+                    class="bg-[#8c2a2e] text-white py-1.5 px-3 ml-2 rounded-full font-black flex items-center justify-center gap-1.5 shadow-sm text-[10px] hover:bg-[#a5373c] transition-colors border-2 border-[#fdf6a8] cursor-pointer"
                   >
                     <ShoppingBag class="w-3 h-3 flex-shrink-0" strokeWidth={3} />
                     Gift
                   </button>
                 {/if}
               </div>
+
+              <!-- Right area is intentionally blank -->
+              <div></div>
             </div>
 
             <!-- Hero Image Full Width -->
@@ -621,38 +618,43 @@
           <div class="h-full overflow-y-auto px-3 ac-scrollbar pt-2 pb-6 flex flex-col gap-1">
             {#each filteredItems as item, i}
               <button 
-                class={`flex items-center p-2 rounded-xl border-2 transition-all cursor-pointer text-left w-full capitalize
+                class={`flex items-center px-2 py-1.5 transition-all cursor-pointer text-left w-full relative
                   ${selectedListIndex === i 
-                    ? 'bg-[#ebce3f] border-[#d1b52e] shadow-md -mx-1 px-3 py-2.5 z-10 scale-[1.01]' 
-                    : 'bg-[#fcfaf4] border-[#e1d9be] hover:bg-white border-dashed'
+                    ? 'nook-shop-item--active z-10 shadow-sm rounded-md' 
+                    : 'bg-transparent border-t-2 border-dashed border-[#cbbd9b] hover:bg-white/20'
                   }
                 `}
+                style={i === 0 && selectedListIndex !== 0 ? 'border-top: none;' : ''}
                 onclick={() => selectedListIndex = i}
               >
-                <!-- Cursor removed -->
-                <div class="w-2 flex-shrink-0"></div>
+                <!-- Cursor/Spacing -->
+                <div class="w-6 flex-shrink-0 flex items-center justify-center relative">
+                  {#if selectedListIndex === i}
+                    <span class="text-xl leading-none drop-shadow-md absolute -left-1">👉🏻</span>
+                  {/if}
+                </div>
                 
                 <!-- Category Icon -->
-                <div class="w-8 h-8 flex items-center justify-center mr-2 flex-shrink-0 bg-white/50 rounded-full p-1">
+                <div class="w-8 h-8 flex items-center justify-center mr-2 flex-shrink-0">
                    {#if item.imageUrl}
-                     <img src={item.imageUrl} alt={item.name} class="w-full h-full object-contain drop-shadow-sm" />
+                     <img src={item.imageUrl} alt={item.name} class="w-full h-full object-contain drop-shadow-sm scale-110" />
                    {:else}
-                     <Leaf class="w-5 h-5 text-[#c6b199]" />
+                     <Leaf class="w-6 h-6 text-[#7a9d59] drop-shadow-sm" />
                    {/if}
                 </div>
                 
                 <!-- Name -->
-                <div class="flex-1 font-bold text-[#5a4a18] text-sm leading-tight pr-2">
-                  {item.name}
+                <div class="flex-1 font-bold text-[#5a4a18] text-[15px] leading-tight pr-2 drop-shadow-sm">
+                  {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
                 </div>
                 
                 <!-- Price -->
-                <div class="flex items-center gap-1 font-black text-[#5a4a18] text-sm whitespace-nowrap bg-white/50 px-2 py-0.5 rounded-full border border-black/5 shadow-sm">
-                  <svg class="w-3 h-3 text-[#cfb036]" viewBox="0 0 24 24" fill="currentColor">
+                <div class="flex items-center gap-1.5 font-bold text-[#5a4a18] text-[15px] whitespace-nowrap drop-shadow-sm">
+                  <svg class="w-4 h-4 text-[#cfb036]" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C10.5 2 9.5 3 9.5 4C9.5 4.5 10 5 10 5H14C14 5 14.5 4.5 14.5 4C14.5 3 13.5 2 12 2Z" fill="#ffb75e"/>
                     <path d="M6.5 7C6.5 7 4.5 13 4.5 17C4.5 21 7.5 23 12 23C16.5 23 19.5 21 19.5 17C19.5 13 17.5 7 17.5 7H6.5Z" fill="#ffd470"/>
                   </svg>
-                  <span>{item.is_orderable ? item.buy_price.toLocaleString() : 'N/A'}</span>
+                  <span>{item.is_orderable ? Number(item.buy_price).toLocaleString() : 'N/A'}</span>
                 </div>
               </button>
             {/each}
@@ -740,6 +742,26 @@
   @keyframes -global-movePatternGlobal {
     from { background-position: 0 0; }
     to { background-position: -50px -50px; }
+  }
+
+  .nook-shop-item--active {
+    background-image: linear-gradient(
+      -45deg,
+      #f8e34b 25%,
+      #e8d13b 25%,
+      #e8d13b 50%,
+      #f8e34b 50%,
+      #f8e34b 75%,
+      #e8d13b 75%,
+      #e8d13b 100%
+    );
+    background-size: 34px 34px;
+    animation: moveActiveStripes 1s linear infinite;
+  }
+
+  @keyframes moveActiveStripes {
+    0% { background-position: 0 0; }
+    100% { background-position: 34px 0; }
   }
 
   /* ══════════════════════════════════════════════════════ */
