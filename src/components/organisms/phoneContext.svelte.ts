@@ -96,8 +96,8 @@ export const CORE_APPS: CoreApp[] = [
   {
     id: "messages",
     name: "Messages",
-    icon: "messages",
-    bg: "bg-[#8bd168]",
+    icon: "mail",
+    bg: "bg-[#8b3a3a]",
     image: mailIcon,
     proOnly: true
   },

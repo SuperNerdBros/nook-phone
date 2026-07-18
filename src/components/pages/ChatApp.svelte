@@ -283,13 +283,13 @@
   });
 
   const getSublogColor = (sub: string) => {
-    if (sub.startsWith("n/Isabelle")) return "bg-green-100 text-green-800 border-green-200";
-    if (sub.startsWith("n/TomNook")) return "bg-amber-100 text-amber-800 border-amber-200";
-    if (sub.startsWith("n/Lottie")) return "bg-pink-100 text-pink-800 border-pink-200";
-    if (sub.startsWith("n/KKSlider")) return "bg-blue-100 text-blue-800 border-blue-200";
-    if (sub.startsWith("n/Blathers")) return "bg-emerald-100 text-emerald-800 border-emerald-200";
+    if (sub.startsWith("n/Isabelle")) return "bg-[#e6f4d2] text-[#4d7319] border-[#c0e096]";
+    if (sub.startsWith("n/TomNook")) return "bg-[#ffecd1] text-[#995c00] border-[#ffd599]";
+    if (sub.startsWith("n/Lottie")) return "bg-[#ffe0f0] text-[#991f66] border-[#ffb3da]";
+    if (sub.startsWith("n/KKSlider")) return "bg-[#e0f0ff] text-[#005299] border-[#b3daff]";
+    if (sub.startsWith("n/Blathers")) return "bg-[#d1f4e0] text-[#197340] border-[#96e0b8]";
     // Custom island / user sublogs
-    return "bg-indigo-100 text-indigo-800 border-indigo-200";
+    return "bg-[#e6e0ff] text-[#401999] border-[#c2b3ff]";
   };
 
   const getFormatDate = (dateStr: string) => {
@@ -307,7 +307,7 @@
   <NookAppHeader 
     title="Nookit"
     subtitle="Bulleted Sublog boards & local logs"
-    bgClass="bg-[#afd485]"
+    bgClass="bg-[#135a4d]"
     textClass="text-[#344d18]"
   >
     {#snippet iconSnippet()}
@@ -357,11 +357,11 @@
  
   <!-- Sublogs Horizontal Selector Bar -->
   {#if view === "list"}
-    <div class="bg-[#f4f1e3] border-b border-[#e1d9be] py-2 px-3 flex gap-2 overflow-x-auto shrink-0 ac-scrollbar">
+    <div class="bg-[#f4f1e3] border-b-2 border-[#e1d9be] py-2.5 px-3 flex gap-2.5 overflow-x-auto shrink-0 ac-scrollbar shadow-inner">
       {#each allSublogs as sub}
         <button
           onclick={() => selectedSublogFilter = sub}
-          class={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider transition-all border shrink-0 cursor-pointer ${selectedSublogFilter === sub ? 'bg-[#afd485] border-[#8aab5d] text-white shadow-sm scale-105' : 'bg-white hover:bg-gray-50 border-[#dcd3be] text-gray-700 active:scale-95'}`}
+          class={`px-4 py-1.5 rounded-2xl text-[11px] font-black tracking-wider transition-all border-b-4 shrink-0 cursor-pointer ${selectedSublogFilter === sub ? 'bg-[#ff9c5a] border-[#e87a31] text-white -translate-y-0.5' : 'bg-white hover:bg-orange-50 border-[#dcd3be] text-[#7a6f58] active:translate-y-0.5 active:border-b-2'}`}
         >
           {sub}
         </button>
@@ -390,42 +390,45 @@
             tabindex="0"
             onclick={() => selectThread(thread)}
             onkeydown={(e) => e.key === 'Enter' && selectThread(thread)}
-            class="w-full bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-[0_4px_0_#dcd3be] hover:-translate-y-0.5 transition-all text-left flex flex-col gap-2.5 cursor-pointer relative group"
+            class="w-full bg-white rounded-[24px] p-4 border-4 border-[#e1d9be] shadow-[0_6px_0_#dcd3be] hover:-translate-y-1 hover:shadow-[0_8px_0_#dcd3be] active:translate-y-1 active:shadow-[0_2px_0_#dcd3be] transition-all text-left flex flex-col gap-3 cursor-pointer relative group overflow-hidden"
           >
+            <!-- Decorative bubbly corner -->
+            <div class="absolute -top-4 -right-4 w-12 h-12 bg-[#f4f1e3] rounded-full opacity-50 group-hover:scale-125 transition-transform duration-300"></div>
+
             <!-- Top bar -->
-            <div class="flex justify-between items-center w-full text-[10px] text-gray-400 font-bold">
-              <div class="flex items-center gap-1.5">
-                <div class="w-5 h-5 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-xs shrink-0">
+            <div class="flex justify-between items-center w-full text-[11px] text-[#9b8d71] font-bold z-10">
+              <div class="flex items-center gap-1.5 bg-[#fcfaf5] py-1 px-2.5 rounded-xl border-2 border-[#e8dfc7]">
+                <div class="w-5 h-5 rounded-full bg-[#f4ebd0] border-2 border-white flex items-center justify-center text-[10px] shrink-0 shadow-sm">
                   🐾
                 </div>
                 <span>{thread.author_name}</span>
               </div>
-              <span>{getFormatDate(thread.date)}</span>
+              <span class="opacity-80">{getFormatDate(thread.date)}</span>
             </div>
 
             <!-- Content -->
-            <div class="flex flex-col gap-1">
-              <div class="flex items-center gap-1.5">
-                <span class={`text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${getSublogColor(thread.subnook)}`}>
+            <div class="flex flex-col gap-1.5 z-10">
+              <div class="flex items-center gap-2">
+                <span class={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border-2 ${getSublogColor(thread.subnook)}`}>
                   {thread.subnook}
                 </span>
-                <h3 class="text-xs font-black text-[#5c3a21] line-clamp-1">{thread.title}</h3>
+                <h3 class="text-sm font-black text-[#5c3a21] line-clamp-1">{thread.title}</h3>
               </div>
-              <p class="text-[10.5px] text-[#8a7f66] line-clamp-2 leading-relaxed mt-0.5">{thread.content}</p>
+              <p class="text-[12px] text-[#786b51] line-clamp-2 leading-relaxed mt-1 font-medium">{thread.content}</p>
             </div>
 
             <!-- Bottom Controls -->
-            <div class="flex justify-between items-center w-full pt-1.5 border-t border-dashed border-[#e1d9be] text-[10.5px] font-bold text-gray-500">
+            <div class="flex justify-between items-center w-full pt-2 mt-1 border-t-2 border-dashed border-[#e8dfc7] text-[11px] font-bold text-[#8a7f66] z-10">
               <button 
                 onclick={(e) => handleLike(thread.id, e)}
-                class={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all cursor-pointer ${thread.hasLiked ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-gray-50 border-gray-100 hover:bg-gray-100 text-gray-500'}`}
+                class={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-b-2 transition-all cursor-pointer ${thread.hasLiked ? 'bg-[#ff9c5a] border-[#e87a31] text-white active:translate-y-0.5 active:border-b-0' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-0.5 active:border-b-0'}`}
               >
-                <ThumbsUp class="w-3 h-3 stroke-[2.5px]" />
-                <span>{thread.likes || 0}</span>
+                <ThumbsUp class="w-3.5 h-3.5 stroke-[2.5px]" />
+                <span class="font-black">{thread.likes || 0}</span>
               </button>
 
-              <div class="flex items-center gap-1 px-1">
-                <MessageCircle class="w-3.5 h-3.5" />
+              <div class="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-[#fcfaf5] border-2 border-[#e8dfc7]">
+                <MessageCircle class="w-3.5 h-3.5 stroke-[2.5px] text-[#a09477]" />
                 <span>{thread.comment_count} replies</span>
               </div>
             </div>
@@ -435,55 +438,60 @@
       
     {:else if view === "detail" && activeThread}
       <!-- THREAD DETAIL VIEW -->
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4 pb-16">
         <!-- Post Header Card -->
-        <div class="bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-sm text-left flex flex-col gap-3">
-          <div class="flex justify-between items-center w-full text-[10px] text-gray-400 font-bold pb-2 border-b border-dashed border-gray-100">
-            <div class="flex items-center gap-1.5">
-              <div class="w-6 h-6 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-xs">
+        <div class="bg-white rounded-[24px] p-5 border-4 border-[#e1d9be] shadow-[0_4px_0_#dcd3be] text-left flex flex-col gap-4 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-2 bg-[#ff9c5a] opacity-80"></div>
+          
+          <div class="flex justify-between items-center w-full text-[11px] text-[#9b8d71] font-bold pb-3 border-b-2 border-dashed border-[#e8dfc7] pt-2">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-[#f4ebd0] border-2 border-white shadow-sm flex items-center justify-center text-sm">
                 🐾
               </div>
-              <span>{activeThread.author_name}</span>
+              <span class="text-[13px] text-[#5c3a21]">{activeThread.author_name}</span>
             </div>
             <span>{getFormatDate(activeThread.date)}</span>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <div class="flex items-center gap-1.5">
-              <span class={`text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${getSublogColor(activeThread.subnook)}`}>
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 mb-1">
+              <span class={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border-2 ${getSublogColor(activeThread.subnook)}`}>
                 {activeThread.subnook}
               </span>
-              <h2 class="text-sm font-black text-[#5c3a21]">{activeThread.title}</h2>
             </div>
-            <p class="text-xs text-[#8a7f66] leading-relaxed mt-1 font-medium">{activeThread.content}</p>
+            <h2 class="text-base font-black text-[#5c3a21] leading-tight">{activeThread.title}</h2>
+            <p class="text-[13px] text-[#786b51] leading-relaxed mt-2 font-medium bg-[#fcfaf5] p-3 rounded-xl border border-[#e8dfc7]">{activeThread.content}</p>
           </div>
 
-          <div class="flex items-center justify-between pt-2 border-t border-dashed border-gray-100">
+          <div class="flex items-center justify-between pt-3 mt-1 border-t-2 border-dashed border-[#e8dfc7]">
             <button 
               onclick={(e) => handleLike(activeThread!.id, e)}
-              class={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold transition-all cursor-pointer ${activeThread.hasLiked ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-gray-50 border-gray-100 text-gray-500'}`}
+              class={`flex items-center gap-1.5 px-4 py-2 rounded-xl border-b-[3px] text-[12px] font-black transition-all cursor-pointer ${activeThread.hasLiked ? 'bg-[#ff9c5a] border-[#e87a31] text-white active:translate-y-[2px] active:border-b-[1px]' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-[2px] active:border-b-[1px]'}`}
             >
-              <ThumbsUp class="w-3.5 h-3.5 stroke-[2.5px]" />
+              <ThumbsUp class="w-4 h-4 stroke-[2.5px]" />
               <span>{activeThread.likes || 0} Upvotes</span>
             </button>
           </div>
         </div>
 
         <!-- Replies Section Title -->
-        <div class="px-1 text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1 mt-1">
-          <MessageCircle class="w-3.5 h-3.5" />
+        <div class="px-2 text-[11px] font-black text-[#8a7f66] uppercase tracking-widest flex items-center gap-2 mt-2 bg-[#e8dfc7] py-1.5 w-max rounded-xl">
+          <MessageCircle class="w-4 h-4 stroke-[2.5px]" />
           <span>Replies ({threadComments.length})</span>
         </div>
 
         <!-- Comments List -->
-        <div class="flex flex-col gap-2.5">
+        <div class="flex flex-col gap-3">
           {#each threadComments as comment (comment.id)}
-            <div class="bg-white/90 border-2 border-[#e1d9be] rounded-3xl p-3 flex flex-col gap-1.5 text-left shadow-sm">
-              <div class="flex justify-between items-center text-[9px] font-bold text-gray-400">
-                <span class="text-[#5c3a21] font-black">{comment.author_name}</span>
+            <div class="bg-white/95 border-2 border-[#e1d9be] rounded-[20px] p-3.5 flex flex-col gap-2 text-left shadow-sm hover:border-[#d0c6a8] transition-colors">
+              <div class="flex justify-between items-center text-[10px] font-bold text-[#9b8d71] mb-1">
+                <div class="flex items-center gap-1.5">
+                  <div class="w-4 h-4 rounded-full bg-[#f4ebd0] flex items-center justify-center text-[8px]">🐾</div>
+                  <span class="text-[#5c3a21] font-black text-[11px]">{comment.author_name}</span>
+                </div>
                 <span>{getFormatDate(comment.date)}</span>
               </div>
-              <div class="text-xs text-[#8a7f66] leading-relaxed font-medium">
+              <div class="text-[12px] text-[#786b51] leading-relaxed font-medium pl-5.5">
                 {#if typeof comment.content === 'object'}
                   {@html comment.content.rendered}
                 {:else}
@@ -492,8 +500,9 @@
               </div>
             </div>
           {:else}
-            <div class="text-center py-8 text-gray-400 text-xs italic bg-white/40 rounded-3xl border border-dashed border-gray-200">
-              No replies yet. Be the first to leave a comment!
+            <div class="text-center py-10 text-[#a09477] text-xs font-bold bg-[#fcfaf5] rounded-[24px] border-2 border-dashed border-[#e8dfc7] shadow-inner">
+              <span class="text-3xl block mb-2 opacity-50">🍃</span>
+              No replies yet. Be the first to chime in!
             </div>
           {/each}
         </div>
@@ -525,21 +534,21 @@
 
   <!-- Bottom Interactive Reply Input (only on detail view) -->
   {#if view === "detail" && activeThread}
-    <div class="p-3 bg-white border-t border-[#e1d9be] flex gap-2 shrink-0 items-center">
+    <div class="absolute bottom-0 left-0 right-0 p-3 bg-white/80 backdrop-blur-md border-t-2 border-[#e1d9be] flex gap-2 items-center shadow-[0_-4px_15px_rgba(0,0,0,0.05)] z-20">
       <input
         id="reply-message-input"
         type="text"
         placeholder="Type a reply to this bulletin..."
         bind:value={replyText}
         onkeydown={(e) => e.key === "Enter" && submitComment()}
-        class="flex-1 bg-[#fbf9f0] border border-[#dcd3be] p-2 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#afd485] text-[#4c4637]"
+        class="flex-1 bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-[#ff9c5a]/30 focus:border-[#ff9c5a] text-[#5c3a21] placeholder-[#a09477] transition-all"
       />
       <button
         onclick={submitComment}
         disabled={!replyText.trim()}
-        class="bg-[#afd485] text-white p-2 rounded-xl hover:bg-opacity-95 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+        class="bg-[#ff9c5a] text-white p-3 rounded-xl border-b-4 border-[#e87a31] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center disabled:active:translate-y-0 disabled:active:border-b-4 disabled:hover:brightness-100"
       >
-        <Send class="w-4 h-4" />
+        <Send class="w-5 h-5 stroke-[2.5px]" />
       </button>
     </div>
   {/if}

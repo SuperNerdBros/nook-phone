@@ -32,10 +32,11 @@
   };
 
   const premiumApps = [
-    { icon: MessageSquare, name: 'Nookit', desc: 'Public bulletin boards & island-wide announcements', color: 'bg-[#d3e551]', text: 'text-[#6b7a10]' },
-    { icon: Mail, name: 'Messages', desc: 'Direct messaging between residents', color: 'bg-[#8bd168]', text: 'text-[#3d7a24]' },
+    { icon: Coins, name: 'ABD', desc: 'Automatic Bell Dispenser. 500k bells deposited to your account', color: 'bg-[#d9f6af]', text: 'text-[#4a7a28]' },
     { icon: Users, name: 'Best Friends', desc: 'Social hub, passports & friend connections', color: 'bg-[#ffd375]', text: 'text-[#9a7520]' },
-    { icon: Coins, name: 'ABD', desc: 'Automatic Bell Dispenser — manage Bells on the go', color: 'bg-[#d9f6af]', text: 'text-[#4a7a28]' },
+    { icon: Mail, name: 'Messages', desc: 'Direct messaging between residents', color: 'bg-[#8b3a3a]', text: 'text-white' },
+
+    { icon: MessageSquare, name: 'Nookit', desc: 'Public bulletin boards & island-wide announcements', color: 'bg-[#d3e551]', text: 'text-[#6b7a10]' },
     { icon: Layers, name: 'App Directory', desc: 'Browse & install third-party island apps', color: 'bg-[#45a38f]', text: 'text-white' },
   ];
 </script>

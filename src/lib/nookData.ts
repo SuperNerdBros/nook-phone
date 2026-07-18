@@ -906,7 +906,7 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Messages',
-		appIcon: 'messages',
+		appIcon: 'mail',
 		description: 'Send and receive direct text messages with other players.',
 		languages: ['en'],
 		site: '',
