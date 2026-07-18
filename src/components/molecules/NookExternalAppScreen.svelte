@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Globe, Code, ChevronRight, X, GripHorizontal } from "@lucide/svelte";
+  import { Globe, Code, ChevronRight, X, GripHorizontal, Link } from "@lucide/svelte";
   import nookState from '@/lib/nookState.svelte';
   import { getPhoneContext, CORE_APPS } from '../organisms/phoneContext.svelte';
   import { projectsData } from '@/lib/nookData';
@@ -25,8 +25,8 @@
   <div class="flex flex-col h-full ac-app-screen bg-[#faf9f4]">
     <NookAppHeader 
       title={nookState.currentApp}
-      subtitle={currentProject?.site ? getHostname(currentProject.site) : ""}
-      description={currentProject?.description}
+      subtitle={currentProject?.description || ""}
+      description=""
       bgClass="bg-transparent"
       bgStyle={`background-image: linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 100%), url('${resolveAssetUrl(greenWavesBg)}'); background-size: cover; background-position: bottom left;`}
       textClass="text-white"
@@ -35,6 +35,15 @@
         <NookIcon name={currentProject?.logo || currentProject?.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-1.5 z-10 relative" />
       {/snippet}
       {#snippet actions()}
+        {#if currentProject?.site}
+          <NookToolbarButton 
+            href={currentProject.site} 
+            variant="ghost"
+            title="Open Website"
+          >
+            <Link class="w-3.5 h-3.5 stroke-[2.5px]" />
+          </NookToolbarButton>
+        {/if}
         {#if currentProject?.git}
           <NookToolbarButton 
             href={currentProject.git} 

@@ -9,12 +9,12 @@
 
   const ctx = getPhoneContext();
   const FILTERS = [
-    { id: "normal", name: "Normal", class: "" },
-    { id: "monochrome", name: "Monochrome", class: "filter-monochrome" },
-    { id: "sepia", name: "Sepia", class: "filter-sepia" },
-    { id: "warm", name: "Warm", class: "filter-warm" },
-    { id: "cool", name: "Cool", class: "filter-cool" },
-    { id: "dramatic", name: "Dramatic", class: "filter-dramatic" }
+    { id: "normal", name: "Normal", class: "", canvasFilter: "none" },
+    { id: "monochrome", name: "Monochrome", class: "filter-monochrome", canvasFilter: "grayscale(100%) contrast(1.2)" },
+    { id: "sepia", name: "Sepia", class: "filter-sepia", canvasFilter: "sepia(100%) hue-rotate(-15deg) contrast(0.95)" },
+    { id: "warm", name: "Warm", class: "filter-warm", canvasFilter: "sepia(20%) saturate(140%) hue-rotate(-10deg)" },
+    { id: "cool", name: "Cool", class: "filter-cool", canvasFilter: "saturate(110%) hue-rotate(15deg) brightness(1.05)" },
+    { id: "dramatic", name: "Dramatic", class: "filter-dramatic", canvasFilter: "contrast(1.6) brightness(0.9) saturate(1.2)" }
   ];
 
   const BORDERS = [
@@ -88,28 +88,99 @@
     }
   }
 
+  function drawMockScene(ctx2d: CanvasRenderingContext2D, width: number, height: number) {
+    // 1. Sky Gradient
+    const skyGrad = ctx2d.createLinearGradient(0, 0, 0, height * 0.7);
+    skyGrad.addColorStop(0, "#1e1b4b");
+    skyGrad.addColorStop(0.5, "#4c1d95");
+    skyGrad.addColorStop(1, "#db2777");
+    ctx2d.fillStyle = skyGrad;
+    ctx2d.fillRect(0, 0, width, height);
+
+    // 2. Glowing Sun
+    ctx2d.beginPath();
+    ctx2d.arc(width * 0.5, height * 0.5, 60, 0, Math.PI * 2);
+    const sunGrad = ctx2d.createRadialGradient(width * 0.5, height * 0.5, 10, width * 0.5, height * 0.5, 60);
+    sunGrad.addColorStop(0, "#fef08a");
+    sunGrad.addColorStop(1, "#f97316");
+    ctx2d.fillStyle = sunGrad;
+    ctx2d.fill();
+
+    // 3. Mountains (Back layer)
+    ctx2d.fillStyle = "rgba(76, 29, 149, 0.5)";
+    ctx2d.beginPath();
+    ctx2d.moveTo(0, height * 0.8);
+    ctx2d.lineTo(width * 0.3, height * 0.45);
+    ctx2d.lineTo(width * 0.6, height * 0.8);
+    ctx2d.fill();
+
+    ctx2d.fillStyle = "rgba(109, 40, 217, 0.6)";
+    ctx2d.beginPath();
+    ctx2d.moveTo(width * 0.4, height * 0.8);
+    ctx2d.lineTo(width * 0.75, height * 0.4);
+    ctx2d.lineTo(width, height * 0.8);
+    ctx2d.fill();
+
+    // 4. Mountains (Front layer)
+    ctx2d.fillStyle = "#1e293b";
+    ctx2d.beginPath();
+    ctx2d.moveTo(0, height * 0.8);
+    ctx2d.lineTo(width * 0.15, height * 0.55);
+    ctx2d.lineTo(width * 0.45, height * 0.8);
+    ctx2d.moveTo(width * 0.35, height * 0.8);
+    ctx2d.lineTo(width * 0.65, height * 0.5);
+    ctx2d.lineTo(width * 0.95, height * 0.8);
+    ctx2d.fill();
+
+    // 5. Water / Sea
+    const waterGrad = ctx2d.createLinearGradient(0, height * 0.8, 0, height);
+    waterGrad.addColorStop(0, "#0e7490");
+    waterGrad.addColorStop(1, "#1e1b4b");
+    ctx2d.fillStyle = waterGrad;
+    ctx2d.fillRect(0, height * 0.8, width, height * 0.2);
+
+    // 6. Draw label
+    ctx2d.fillStyle = "rgba(255, 255, 255, 0.4)";
+    ctx2d.font = "bold 14px monospace";
+    ctx2d.textAlign = "right";
+    ctx2d.fillText("COMPASS OS", width - 20, height - 20);
+  }
+
   function takeSnapshot() {
     flash = true;
     triggerBeep();
     setTimeout(() => flash = false, 200);
 
-    // Save mock image / capture canvas frame
-    let imgData = "https://picsum.photos/seed/" + Math.floor(Math.random() * 500) + "/400/300";
+    let imgData = "";
 
-    if (cameraStream && videoElement) {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = videoElement.videoWidth || 640;
-        canvas.height = videoElement.videoHeight || 480;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          // Draw video image
-          ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-          imgData = canvas.toDataURL("image/jpeg");
+    try {
+      const canvas = document.createElement("canvas");
+      const canvasWidth = videoElement?.videoWidth || 640;
+      const canvasHeight = videoElement?.videoHeight || 480;
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      const ctx2d = canvas.getContext("2d");
+      
+      if (ctx2d) {
+        if (activeFilter.canvasFilter && activeFilter.canvasFilter !== "none") {
+          ctx2d.filter = activeFilter.canvasFilter;
         }
-      } catch (e) {
-        console.error("Canvas draw error", e);
+
+        if (cameraStream && videoElement) {
+          ctx2d.drawImage(videoElement, 0, 0, canvasWidth, canvasHeight);
+        } else {
+          drawMockScene(ctx2d, canvasWidth, canvasHeight);
+        }
+
+        imgData = canvas.toDataURL("image/jpeg");
       }
+    } catch (e) {
+      console.error("Canvas draw error", e);
+      imgData = "https://picsum.photos/seed/" + Math.floor(Math.random() * 500) + "/400/300";
+    }
+
+    if (!imgData) {
+      imgData = "https://picsum.photos/seed/" + Math.floor(Math.random() * 500) + "/400/300";
     }
 
     photos = [imgData, ...photos];

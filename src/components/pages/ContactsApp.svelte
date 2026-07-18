@@ -14,7 +14,7 @@
   let isLoading = $state(true);
   let searchQuery = $state("");
   let selectedVillager = $state<any>(null);
-  let activeTab = $state<'island' | 'bestFriend' | 'all'>('island');
+  let activeTab = $state<'all' | 'island' | 'bestFriend'>('all');
   let isAddMode = $state(false);
   let selectedSpecies = $state("");
   let viewAll = $state(false);
@@ -679,6 +679,13 @@
     {#if !isAddMode}
       <div class="absolute bottom-6 inset-x-4 bg-white/95 backdrop-blur-md border-2 border-[#e1d9be] rounded-3xl p-1.5 flex justify-between z-20 shadow-lg">
         <button 
+          onclick={() => activeTab = 'all'}
+          class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'all' ? 'bg-[#8cc3b0]/20 text-[#649e8a]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#5c3a21]'}"
+        >
+          <Users class="w-5 h-5 mb-0.5 {activeTab === 'all' ? 'fill-current' : ''}" />
+          <span class="text-[10px] font-black uppercase tracking-wider">All</span>
+        </button>
+        <button 
           onclick={() => activeTab = 'island'}
           class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'island' ? 'bg-[#6cd476]/20 text-[#4ca454]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#4ca454]'}"
         >
@@ -691,13 +698,6 @@
         >
           <Star class="w-5 h-5 mb-0.5 {activeTab === 'bestFriend' ? 'fill-current' : ''}" />
           <span class="text-[10px] font-black uppercase tracking-wider">Best Friends</span>
-        </button>
-        <button 
-          onclick={() => activeTab = 'all'}
-          class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'all' ? 'bg-[#8cc3b0]/20 text-[#649e8a]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#5c3a21]'}"
-        >
-          <Users class="w-5 h-5 mb-0.5 {activeTab === 'all' ? 'fill-current' : ''}" />
-          <span class="text-[10px] font-black uppercase tracking-wider">All</span>
         </button>
       </div>
     {/if}

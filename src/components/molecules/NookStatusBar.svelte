@@ -5,12 +5,24 @@
   import cellularStatusImg from '@/assets/img/cellular_status.png';
 
   const ctx = getPhoneContext();
+
+  function resolveAssetUrl(assetPath: string) {
+    if (!assetPath) return assetPath;
+    if (assetPath.startsWith('http')) return assetPath;
+    if (import.meta.env.DEV) {
+      return `${window.location.protocol}//${window.location.hostname}:5175${assetPath}`;
+    }
+    if (assetPath.startsWith('/assets/')) {
+      return (window as any).wpApiSettings?.pluginUrl + 'public/dist' + assetPath;
+    }
+    return assetPath;
+  }
 </script>
 
 <div class="bg-transparent px-8 pt-6 pb-2 flex justify-between items-center text-[18px] font-['Varela_Round',sans-serif] text-[#d0cbb5] font-bold select-none z-[70] shrink-0">
   <!-- Left side (Signal / Notifications) -->
   <div class="w-[55px] flex items-center justify-center gap-1.5">
-    <img src={cellularStatusImg} alt="Signal" class="h-[18px] object-contain opacity-70" />
+    <img src={resolveAssetUrl(cellularStatusImg)} alt="Signal" class="h-[18px] object-contain opacity-70" />
     <button 
       onclick={() => {
         ctx.showNotificationCenter = !ctx.showNotificationCenter;

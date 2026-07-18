@@ -49,6 +49,7 @@ export default defineConfig({
     strictPort: true,
     cors: true,
     allowedHosts: true,
+    origin: 'http://compass:5175',
     hmr: {
       clientPort: 5175
     }
