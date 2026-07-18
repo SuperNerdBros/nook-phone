@@ -305,7 +305,7 @@
 <div id="chat-app" class="flex flex-col h-full ac-app-screen relative">
   <!-- Header -->
   <NookAppHeader 
-    title="Resident Log"
+    title="Nookit"
     subtitle="Bulleted Sublog boards & local logs"
     bgClass="bg-[#afd485]"
     textClass="text-[#344d18]"
@@ -326,7 +326,7 @@
     {/snippet}
     
     {#snippet actions()}
-      {#if view === "list" && selectedTab === islandSublog}
+      {#if view === "list" && selectedSublogFilter === islandSublog}
         <div class="flex items-center gap-1">
           <NookToolbarButton
             onclick={() => view = "create_sublog"}

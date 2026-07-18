@@ -21,6 +21,7 @@ import designerIcon from "@/assets/img/icons/terraform_icon.png";
 import settingsIcon from "@/assets/img/icons/settings_icon.png";
 import contactsIcon from "@/assets/img/icons/contacts_icon.png";
 import changelogIcon from "@/assets/img/changelog_icon.svg";
+import walletIcon from "@/assets/img/Wallet.png";
 
 export interface CoreApp {
   id: string;
@@ -86,7 +87,7 @@ export const CORE_APPS: CoreApp[] = [
   },
   {
     id: "chat",
-    name: "Chat Log",
+    name: "Nookit",
     icon: "chat",
     bg: "bg-[#d3e551]",
     image: chatIcon,
@@ -109,10 +110,11 @@ export const CORE_APPS: CoreApp[] = [
     proOnly: true
   },
   {
-    id: "adb",
+    id: "abd",
     name: "ABD",
     icon: "wallet",
     bg: "bg-[#d9f6af]",
+    image: walletIcon,
     proOnly: true
   }
 ];
@@ -169,8 +171,10 @@ export class PhoneContext {
     }
 
     const app = this.allApps.find((a) => (a.id || a.name) === appId);
+    const isCore = CORE_APPS.some((c) => c.id === appId);
+    const isThirdParty = !isCore;
 
-    if (app && app.proOnly && !isProUser()) {
+    if (app && (app.proOnly || isThirdParty) && !isProUser()) {
       playSound('error', !nookState.settings.soundEffects);
       this.showPremiumUpsell = true;
       return;

@@ -41,7 +41,7 @@
       </p>
       <ul class="m-0 pl-5 flex flex-col gap-1 list-disc">
         <li><strong>Free Plan:</strong> Includes local use of core applications (Camera, Map, Passport, Critterpedia, DIY Recipes, Settings, Dodo Air, Rescue Service).</li>
-        <li><strong>PRO Membership:</strong> Unlocks advanced multiplayer applications (Direct Messaging/DMs, Resident Chat log, Best Friends networks), XP progression leveling, and active Bells (GP) syncing.</li>
+        <li><strong>PRO Membership:</strong> Unlocks advanced multiplayer applications (Direct Messaging/DMs, Resident Nookit, Best Friends networks), XP progression leveling, and active Bells (GP) syncing.</li>
       </ul>
 
       <h3 class="text-base font-black text-[#5c3a21] border-b-2 border-dashed border-[#edd8aa] pb-1 m-0">2. Terms of Use</h3>

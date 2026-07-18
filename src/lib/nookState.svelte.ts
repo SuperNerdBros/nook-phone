@@ -186,7 +186,7 @@ const INITIAL_STATE: NookOSState = {
     { id: "d3", name: "Custom Tile", grid: Array(16).fill(null).map(() => Array(16).fill("#ffffff")), creator: "Villager" }
   ],
   activeWallpaperId: "default",
-  pinnedApps: ["camera", "miles", "critter", "diy", "designs", "designer", "map", "chat", "passport", "messages", "shopping", "best_friends", "tune_maker", "adb"],
+  pinnedApps: ["camera", "miles", "critter", "diy", "designs", "designer", "map", "chat", "passport", "messages", "shopping", "best_friends", "tune_maker", "abd"],
   installedApps: ["tune_maker"],
   hasCompletedOnboarding: false,
   settings: {
@@ -528,7 +528,7 @@ class NookStateManager {
 
   
   getItemQuantity(itemId: string, type?: 'wishlist' | 'storage' | 'trade'): number {
-    if (!this.state.catalog.itemQuantities) this.state.catalog.itemQuantities = {};
+    if (!this.state.catalog.itemQuantities) return 0;
     const key = type ? `${itemId}_${type}` : itemId;
     return this.state.catalog.itemQuantities[key] !== undefined ? this.state.catalog.itemQuantities[key] : 0;
   }
@@ -805,7 +805,7 @@ class NookStateManager {
       "camera", "miles", "critter", "diy", "designs", "designer", "map", "passport",
       "chat", "settings", "directory", "messages", "contacts", "dodo_air", "best_friends",
       "rescue", "changelog", "ac miles", "acnh critterpedia", "diy recipes", "nook shopping",
-      "happy island designer", "animal crossing pattern tool", "chat log", "settings",
+      "happy island designer", "animal crossing pattern tool", "nookit", "settings",
       "residential recycle box", "messages", "contacts", "best friends", "rescue service"
     ]);
     if (systemAppNames.has(appName.toLowerCase())) return true;

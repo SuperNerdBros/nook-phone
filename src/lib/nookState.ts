@@ -343,7 +343,7 @@ class NookStateManager {
     this.notify();
   }
 
-  // --- CHAT LOG SIMULATION ---
+  // --- NOOKIT SIMULATION ---
   public sendChatMessage(sender: string, content: string, isNpc: boolean = false) {
     const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     const newMessage: ChatMessage = {

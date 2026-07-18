@@ -1,11 +1,14 @@
 <script lang="ts">
   import NookIcon from './NookIcon.svelte';
-  import { Lock, X } from '@lucide/svelte';
+  import { X } from '@lucide/svelte';
   import { isProUser } from '@/lib/api';
-  import { getPhoneContext } from '../organisms/phoneContext.svelte';
+  import { getPhoneContext, CORE_APPS } from '../organisms/phoneContext.svelte';
   import nookState from '@/lib/nookState.svelte';
+  import nookIncLogo from '@/assets/img/Nook_Inc.svg';
   
   const ctx = getPhoneContext();
+
+  const isLocked = $derived(app && !isProUser() && (app.proOnly || !CORE_APPS.some(c => c.id === app.id)));
 
   let { 
     app, 
@@ -138,9 +141,9 @@
         <NookIcon name={app?.logo || app?.appIcon || app?.id || 'directory'} class={`w-full h-full object-contain drop-shadow-sm ${s.p} z-10 relative pointer-events-none`} />
       {/if}
       
-      {#if app?.proOnly && !isProUser()}
-        <div class="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px] z-20 rounded-full">
-          <Lock class="w-1/2 h-1/2 text-white drop-shadow-md" />
+      {#if isLocked}
+        <div class="absolute inset-0 bg-black/45 flex items-center justify-center backdrop-blur-[1.5px] z-20 rounded-full border-[3px] border-[#61b948]">
+          <img src={resolveAssetUrl(nookIncLogo)} alt="Locked" class="w-[60%] h-[60%] object-contain drop-shadow-sm" />
         </div>
       {/if}
     </div>
