@@ -1,8 +1,8 @@
 <script lang="ts">
   import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   import { onMount } from 'svelte';
-  import { fade, fly } from 'svelte/transition';
-  import { ArrowLeft, Send, Search, CheckCheck, MessageSquare , X } from '@lucide/svelte';
+  import { fade, fly, slide } from 'svelte/transition';
+  import { ArrowLeft, Send, Search, CheckCheck, MessageSquare, X, Plus } from '@lucide/svelte';
   import nookState from '@/lib/nookState.svelte';
   import { fetchConversations, fetchDirectMessages, sendDirectMessage, fetchNookUsers, isProUser } from '@/lib/api';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
@@ -23,7 +23,16 @@
     content: string;
     date: string;
     is_read: boolean;
+    // We will add stationery to the mock data for testing
+    stationery_id?: string;
   }
+
+  const STATIONERY_OPTIONS = [
+    { id: 'airmail', name: 'Airmail', bgClass: 'bg-[#f4f1e1]', style: 'border: 8px solid transparent; border-image: repeating-linear-gradient(45deg, #d32f2f, #d32f2f 10px, transparent 10px, transparent 20px, #1976d2 20px, #1976d2 30px, transparent 30px, transparent 40px) 8; background-clip: padding-box;' },
+    { id: 'lined', name: 'Lined', bgClass: 'bg-[#fffae8]', style: 'background-image: repeating-linear-gradient(transparent, transparent 24px, #a3c4f3 25px); background-size: 100% 25px;' },
+    { id: 'parchment', name: 'Parchment', bgClass: 'bg-[#e2d4a6]', style: 'box-shadow: inset 0 0 30px rgba(100,60,20,0.2);' },
+    { id: 'cute', name: 'Cute', bgClass: 'bg-[#ffdceb]', style: 'background-image: radial-gradient(#ffb6c1 15%, transparent 16%), radial-gradient(#ffb6c1 15%, transparent 16%); background-size: 20px 20px; background-position: 0 0, 10px 10px;' }
+  ];
 
   const ctx = getPhoneContext();
   let conversations = $state<Conversation[]>([]);
@@ -31,10 +40,15 @@
   let activeChatPartner = $state<any | null>(null);
   let messages = $state<Message[]>([]);
   let newMessage = $state('');
-  let view = $state<"inbox" | "chat" | "new">("inbox");
+  
+  let view = $state<"inbox" | "chat" | "new-recipient" | "new-stationery" | "new-draft">("inbox");
+  
   let loading = $state(true);
   let sending = $state(false);
   let searchQuery = $state('');
+  
+  let selectedRecipient = $state<any>(null);
+  let selectedStationery = $state<any>(STATIONERY_OPTIONS[0]);
   
   // Mock data for guests
   const MOCK_CONVERSATIONS: Conversation[] = [
@@ -42,7 +56,7 @@
     { partner_id: 2, partner_name: "Isabelle", last_message: "Here are the morning announcements!", date: new Date(Date.now() - 3600000).toISOString(), unread_count: 0 }
   ];
   const MOCK_MESSAGES: Message[] = [
-    { id: 1, sender_id: 1, content: "Hello! Have you checked your mail?", date: new Date(Date.now() - 7200000).toISOString(), is_read: true },
+    { id: 1, sender_id: 1, content: "Hello! Have you checked your mail?", date: new Date(Date.now() - 7200000).toISOString(), is_read: true, stationery_id: 'airmail' },
     { id: 2, sender_id: 0, content: "Yes, I got it!", date: new Date(Date.now() - 3600000).toISOString(), is_read: true },
     { id: 3, sender_id: 1, content: "Your loan is due, yes, yes!", date: new Date().toISOString(), is_read: false }
   ];
@@ -76,10 +90,15 @@
     } else {
       messages = MOCK_MESSAGES.map(m => m.sender_id === partnerId || m.sender_id === 0 ? m : null).filter(Boolean) as Message[];
     }
+    
+    // Reset typing/dialogue state
+    visibleRepliesCount = 1;
+    typingState = {};
   };
 
   const loadNewChat = async () => {
-    view = "new";
+    view = "new-recipient";
+    selectedRecipient = null;
     if (isProUser()) {
       users = await fetchNookUsers();
     } else {
@@ -87,30 +106,51 @@
     }
   };
 
+  const handleSelectRecipient = (user: any) => {
+    selectedRecipient = user;
+    view = "new-stationery";
+  };
+
+  const handleSelectStationery = (stationery: any) => {
+    selectedStationery = stationery;
+    newMessage = "";
+    view = "new-draft";
+  };
+
   const handleSend = async () => {
-    if (!newMessage.trim() || !activeChatPartner) return;
+    if (!newMessage.trim() || (!activeChatPartner && !selectedRecipient)) return;
     
     sending = true;
     if (isProUser()) {
-      const result = await sendDirectMessage(activeChatPartner.id, newMessage);
+      const result = await sendDirectMessage(activeChatPartner?.id || selectedRecipient?.ID, newMessage);
       if (result && result.success) {
-        messages = [...messages, {
-          id: result.dm_id,
-          sender_id: nookState.passport.name ? 0 : 0, // Current user id conceptually (is_read doesn't matter for sent)
-          content: newMessage,
-          date: result.date,
-          is_read: false
-        }];
-        newMessage = "";
+        if (view === "new-draft") {
+          loadChat(selectedRecipient.ID, selectedRecipient.display_name);
+        } else {
+          messages = [...messages, {
+            id: result.dm_id,
+            sender_id: nookState.passport.name ? 0 : 0, 
+            content: newMessage,
+            date: result.date,
+            is_read: false,
+            stationery_id: selectedStationery.id
+          }];
+          newMessage = "";
+        }
       }
     } else {
       // Mock send
+      if (view === "new-draft") {
+        activeChatPartner = { id: selectedRecipient.ID, name: selectedRecipient.display_name };
+        view = "chat";
+      }
       messages = [...messages, {
         id: Date.now(),
         sender_id: 0, // 0 is mock current user
         content: newMessage,
         date: new Date().toISOString(),
-        is_read: false
+        is_read: false,
+        stationery_id: selectedStationery.id
       }];
       newMessage = "";
     }
@@ -122,6 +162,53 @@
   function formatDate(iso: string) {
     const d = new Date(iso);
     return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+
+  // --- Dialogue / Thread State ---
+  let visibleRepliesCount = $state(1);
+  let typingState = $state<{ [id: number]: boolean }>({});
+
+  function typewriter(node: HTMLElement, msg: any) {
+    let i = 0;
+    node.textContent = '';
+    typingState[msg.id] = true;
+    const interval = setInterval(() => {
+      // If typing was cancelled (clicked), finish instantly
+      if (!typingState[msg.id]) {
+        node.textContent = msg.content;
+        clearInterval(interval);
+        return;
+      }
+      
+      node.textContent += msg.content[i];
+      i++;
+      if (i >= msg.content.length) {
+        typingState[msg.id] = false;
+        clearInterval(interval);
+      }
+    }, 25);
+    
+    return {
+      destroy() { clearInterval(interval); }
+    };
+  }
+
+  function handleBubbleClick(msg: any, index: number) {
+    if (typingState[msg.id]) {
+      // Finish typing instantly
+      typingState[msg.id] = false;
+    } else if (index === visibleRepliesCount - 1) {
+      // Advance to next message
+      visibleRepliesCount++;
+    }
+  }
+
+  const mainLetter = $derived(messages.length > 0 ? messages[0] : null);
+  const replies = $derived(messages.length > 1 ? messages.slice(1) : []);
+  const visibleReplies = $derived(replies.slice(0, visibleRepliesCount));
+  
+  const getStationery = (id?: string) => {
+    return STATIONERY_OPTIONS.find(s => s.id === id) || STATIONERY_OPTIONS[0];
   }
 </script>
 
@@ -217,8 +304,8 @@
 <div class="flex flex-col h-full ac-app-screen relative animated-bg">
   <!-- HEADER -->
   <NookAppHeader 
-    title={view === "inbox" ? "Messages" : view === "chat" ? activeChatPartner?.name : "New Message"}
-    subtitle={view === "inbox" ? "Direct Messages" : ""}
+    title={view === "inbox" ? "Messages" : view === "chat" ? activeChatPartner?.name : view.startsWith("new") ? "Write a Letter" : ""}
+    subtitle={view === "inbox" ? "Direct Messages" : view === "new-recipient" ? "Select Recipient" : view === "new-stationery" ? "Pick Stationery" : ""}
     bgClass="bg-[#8b3a3a]"
     textClass="text-white"
   >
@@ -226,7 +313,11 @@
       {#if view !== "inbox"}
         <NookToolbarButton 
           variant="ghost"
-          onclick={() => view = "inbox"}
+          onclick={() => {
+            if (view === "new-draft") view = "new-stationery";
+            else if (view === "new-stationery") view = "new-recipient";
+            else view = "inbox";
+          }}
           class="mr-2"
         >
           <ArrowLeft class="w-4 h-4" />
@@ -243,7 +334,7 @@
           variant="ghost"
           onclick={loadNewChat}
         >
-          <MessageSquare class="w-4 h-4" />
+          <Plus class="w-4 h-4" />
         </NookToolbarButton>
       {/if}
       <NookToolbarButton variant="ghost" onclick={ctx.handleHomeButton} title="Close App"><X class="w-3.5 h-3.5 stroke-[3px]" /></NookToolbarButton>
@@ -298,7 +389,7 @@
         {/if}
       </div>
     
-    {:else if view === "new"}
+    {:else if view === "new-recipient"}
       <div in:fly={{y: 20, duration: 200}} class="h-full flex flex-col bg-white">
         <div class="p-3 border-b border-gray-100 sticky top-0 bg-white z-10 shrink-0">
           <div class="relative">
@@ -314,10 +405,10 @@
         <div class="flex-1 overflow-y-auto p-2">
           {#each filteredUsers as user}
             <button
-              onclick={() => loadChat(user.ID, user.display_name)}
+              onclick={() => handleSelectRecipient(user)}
               class="w-full p-3 flex items-center gap-3 hover:bg-gray-50 rounded-xl cursor-pointer text-left border-0 bg-transparent transition active:bg-gray-100"
             >
-              <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
+              <div class="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center font-bold text-xs shrink-0">
                 {user.display_name.charAt(0).toUpperCase()}
               </div>
               <span class="font-bold text-sm text-[#4c4637]">{user.display_name}</span>
@@ -326,43 +417,124 @@
         </div>
       </div>
 
-    {:else if view === "chat"}
-      <div in:fly={{x: 20, duration: 200}} class="h-full flex flex-col">
-        <!-- Messages Area -->
-        <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5">
-          {#each messages as msg}
-            {@const isMe = (!isProUser() && msg.sender_id === 0) || (isProUser() && msg.sender_id !== activeChatPartner?.id)}
-            <div class={`flex flex-col max-w-[80%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`}>
-              <div class={`px-3 py-2 rounded-2xl text-xs font-bold leading-relaxed shadow-sm ${isMe ? 'bg-[#8b3a3a] text-white rounded-br-sm' : 'bg-white border border-gray-100 text-[#4c4637] rounded-bl-sm'}`}>
-                {msg.content}
-              </div>
-              <div class="flex items-center gap-1 mt-0.5 px-1">
-                <span class="text-[8px] font-bold text-white/60">{formatDate(msg.date)}</span>
-                {#if isMe}
-                  <CheckCheck class={`w-3 h-3 ${msg.is_read ? 'text-[#8b3a3a]' : 'text-white/40'}`} />
-                {/if}
-              </div>
-            </div>
+    {:else if view === "new-stationery"}
+      <div in:fly={{x: 20, duration: 200}} class="h-full flex flex-col bg-amber-50">
+        <div class="p-4 text-center font-bold text-[#8b3a3a] text-sm shrink-0">
+          Select Stationery
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-4">
+          {#each STATIONERY_OPTIONS as opt}
+            <button 
+              class={`aspect-[3/4] rounded-lg shadow-sm flex items-center justify-center cursor-pointer transition hover:scale-105 active:scale-95 border-2 ${selectedStationery?.id === opt.id ? 'border-[#8b3a3a] shadow-md' : 'border-transparent'} ${opt.bgClass}`}
+              style={opt.style}
+              onclick={() => handleSelectStationery(opt)}
+            >
+              <span class="bg-white/70 px-2 py-1 rounded text-xs font-bold text-[#4c4637] backdrop-blur-sm">{opt.name}</span>
+            </button>
           {/each}
         </div>
+      </div>
 
-        <!-- Input Area -->
-        <div class="p-4 bg-white/80 backdrop-blur-md border-t border-white/50 shrink-0 flex gap-3 items-end shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-20">
+    {:else if view === "new-draft"}
+      <div in:fly={{y: 20, duration: 200}} class="h-full flex flex-col items-center justify-center p-6" style="background: rgba(0,0,0,0.4);">
+        <div 
+          class={`w-full max-w-sm aspect-[3/4] rounded-lg shadow-2xl flex flex-col p-6 ${selectedStationery.bgClass} relative`}
+          style={selectedStationery.style}
+        >
+          <div class="font-bold text-[#4c4637] mb-2 shrink-0">To: {selectedRecipient?.display_name}</div>
           <textarea
             bind:value={newMessage}
-            placeholder="Type a message..."
-            rows="1"
-            class="flex-1 bg-white border-2 border-[#e6e2d3] rounded-3xl py-3 px-4 text-[13px] font-bold resize-none focus:outline-none focus:border-[#8b3a3a] focus:ring-4 focus:ring-[#8b3a3a]/20 transition-all ac-scrollbar max-h-24 shadow-inner"
-            onkeydown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+            placeholder="Write your letter here..."
+            class="flex-1 bg-transparent border-0 resize-none outline-none font-medium leading-relaxed text-[#4c4637] ac-scrollbar"
+            style="font-family: 'Comic Sans MS', cursive, sans-serif;"
           ></textarea>
+          
           <button 
             onclick={handleSend}
             disabled={!newMessage.trim() || sending}
-            class="bg-gradient-to-br from-[#8b3a3a] to-[#6a2c2c] text-white p-3 rounded-full cursor-pointer hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0 h-11 w-11 shadow-[0_4px_10px_rgba(139,58,58,0.3)]"
+            class="absolute -bottom-4 right-4 bg-[#8b3a3a] text-white px-6 py-2 rounded-full font-bold shadow-lg hover:bg-[#6a2c2c] disabled:opacity-50 transition cursor-pointer flex items-center gap-2"
           >
-            <Send class="w-5 h-5 -ml-0.5 stroke-[2.5px]" />
+            <Send class="w-4 h-4" /> Send
           </button>
         </div>
+      </div>
+
+    {:else if view === "chat"}
+      <div in:fly={{x: 20, duration: 200}} class="h-full flex flex-col">
+        <!-- Messages Area (Thread) -->
+        <div class="flex-1 overflow-y-auto p-4 flex flex-col items-center gap-6 pb-20">
+          {#if mainLetter}
+            {@const stationery = getStationery(mainLetter.stationery_id)}
+            <!-- Main Letter -->
+            <div 
+              class={`w-full max-w-sm aspect-[3/4] rounded-lg shadow-md flex flex-col p-6 ${stationery.bgClass} relative mt-2`}
+              style={stationery.style}
+            >
+              <div class="font-bold text-[#4c4637] mb-4 shrink-0 border-b border-[#4c4637]/10 pb-2">
+                From: {mainLetter.sender_id === 0 ? 'Me' : activeChatPartner?.name}
+              </div>
+              <div class="flex-1 font-medium leading-relaxed text-[#4c4637] overflow-y-auto ac-scrollbar whitespace-pre-wrap" style="font-family: 'Comic Sans MS', cursive, sans-serif;">
+                {mainLetter.content}
+              </div>
+              <div class="text-right text-[10px] font-bold text-[#4c4637]/50 mt-4">
+                {formatDate(mainLetter.date)}
+              </div>
+            </div>
+          {/if}
+
+          <!-- Replies (Comments) -->
+          {#if replies.length > 0}
+            <div class="w-full max-w-sm flex flex-col gap-3">
+              <div class="text-center w-full my-2">
+                <span class="bg-black/10 px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider backdrop-blur-sm">Replies</span>
+              </div>
+              {#each visibleReplies as msg, index (msg.id)}
+                {@const isMe = (!isProUser() && msg.sender_id === 0) || (isProUser() && msg.sender_id !== activeChatPartner?.id)}
+                <div class={`flex flex-col max-w-[85%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`}>
+                  <!-- Dialogue Bubble -->
+                  <button 
+                    class={`px-4 py-3 rounded-3xl text-sm font-bold leading-relaxed shadow-sm text-left cursor-pointer transition-all active:scale-95 ${isMe ? 'bg-[#8b3a3a] text-white rounded-tr-sm' : 'bg-white border-2 border-[#e6e2d3] text-[#4c4637] rounded-tl-sm'}`}
+                    onclick={() => handleBubbleClick(msg, index)}
+                  >
+                    <div use:typewriter={msg} class="min-h-[20px]"></div>
+                    {#if !typingState[msg.id] && index === visibleRepliesCount - 1 && visibleRepliesCount < replies.length}
+                      <!-- Blinking indicator to click next -->
+                      <div class="w-full flex justify-end mt-1">
+                        <div class="w-2 h-2 rounded-full bg-current animate-ping opacity-70"></div>
+                      </div>
+                    {/if}
+                  </button>
+                  <div class="flex items-center gap-1 mt-1 px-2">
+                    <span class="text-[9px] font-bold text-white/70 drop-shadow-sm">{formatDate(msg.date)}</span>
+                    {#if isMe}
+                      <CheckCheck class={`w-3.5 h-3.5 drop-shadow-sm ${msg.is_read ? 'text-[#8b3a3a]' : 'text-white/50'}`} />
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+
+        <!-- Input Area (Only show if all replies are visible) -->
+        {#if visibleRepliesCount > replies.length || replies.length === 0}
+          <div in:fly={{y: 20, duration: 300}} class="p-4 bg-white/80 backdrop-blur-md border-t border-white/50 shrink-0 flex gap-3 items-end shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-20 absolute bottom-0 left-0 right-0">
+            <textarea
+              bind:value={newMessage}
+              placeholder="Write a reply..."
+              rows="1"
+              class="flex-1 bg-white border-2 border-[#e6e2d3] rounded-3xl py-3 px-4 text-[13px] font-bold resize-none focus:outline-none focus:border-[#8b3a3a] focus:ring-4 focus:ring-[#8b3a3a]/20 transition-all ac-scrollbar max-h-24 shadow-inner"
+              onkeydown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+            ></textarea>
+            <button 
+              onclick={handleSend}
+              disabled={!newMessage.trim() || sending}
+              class="bg-gradient-to-br from-[#8b3a3a] to-[#6a2c2c] text-white p-3 rounded-full cursor-pointer hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0 h-11 w-11 shadow-[0_4px_10px_rgba(139,58,58,0.3)]"
+            >
+              <Send class="w-5 h-5 -ml-0.5 stroke-[2.5px]" />
+            </button>
+          </div>
+        {/if}
       </div>
     {/if}
   </div>

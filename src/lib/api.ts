@@ -155,42 +155,36 @@ export const createComment = async (threadId: number, content: string) => {
   }
 };
 
-export const fetchConversations = async () => {
+export const fetchPrivateLetters = async () => {
   if (!isProUser()) return [];
   try {
-    const res = await fetch(getApiUrl('dms/conversations'), { headers: getApiHeaders() });
+    const res = await fetch(getApiUrl('threads?is_private=true'), { headers: getApiHeaders() });
     if (!res.ok) return [];
     return await res.json();
   } catch (e) {
-    console.error('Failed to fetch conversations', e);
+    console.error('Failed to fetch private letters', e);
     return [];
   }
 };
 
-export const fetchDirectMessages = async (userId: number) => {
-  if (!isProUser()) return [];
-  try {
-    const res = await fetch(getApiUrl(`dms/${userId}`), { headers: getApiHeaders() });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch (e) {
-    console.error('Failed to fetch direct messages', e);
-    return [];
-  }
-};
-
-export const sendDirectMessage = async (recipientId: number, content: string) => {
+export const createPrivateLetter = async (recipientId: number, content: string, stationeryId: string = 'airmail') => {
   if (!isProUser()) return null;
   try {
-    const res = await fetch(getApiUrl('dms/send'), {
+    const res = await fetch(getApiUrl('threads'), {
       method: 'POST',
       headers: getApiHeaders(),
-      body: JSON.stringify({ recipient_id: recipientId, content })
+      body: JSON.stringify({ 
+        title: `Letter to User ${recipientId}`, 
+        content, 
+        recipient_id: recipientId, 
+        is_private: true,
+        stationery_id: stationeryId
+      })
     });
     if (!res.ok) return null;
     return await res.json();
   } catch (e) {
-    console.error('Failed to send direct message', e);
+    console.error('Failed to create private letter', e);
     return null;
   }
 };
