@@ -821,6 +821,123 @@ export const projectsData: ProjectItem[] = [
 		git: '',
 		information: ['flowers', 'gameplay'],
 		tools: ['reference']
+	},
+	{
+		name: 'Camera',
+		appIcon: 'camera',
+		description: 'Take beautiful photos around your island with custom filters and frames.',
+		languages: ['en'],
+		site: '',
+		information: ['utilities'],
+		tools: ['utilities']
+	},
+	{
+		name: 'DIY Recipes',
+		appIcon: 'diy',
+		description: 'View recipes and required materials to craft tools and furniture.',
+		languages: ['en'],
+		site: '',
+		information: ['utilities'],
+		tools: ['utilities']
+	},
+	{
+		name: 'Nook Shopping',
+		appIcon: 'shopping',
+		description: 'Order furniture, clothing, and utility items directly using your Bells.',
+		languages: ['en'],
+		site: '',
+		information: ['economy'],
+		tools: ['economy']
+	},
+	{
+		name: 'Map',
+		appIcon: 'map',
+		description: 'Interactive map showcasing your resident villagers and key buildings.',
+		languages: ['en'],
+		site: '',
+		information: ['utilities'],
+		tools: ['utilities']
+	},
+	{
+		name: 'Passport',
+		appIcon: 'passport',
+		description: 'Showcase your player info, title, island name, and status updates.',
+		languages: ['en'],
+		site: '',
+		information: ['tracking'],
+		tools: ['tracking']
+	},
+	{
+		name: 'Chat Log',
+		appIcon: 'chat',
+		description: 'Review recent dialogue and system logs from residents and notifications.',
+		languages: ['en'],
+		site: '',
+		information: ['reference'],
+		tools: ['reference']
+	},
+	{
+		name: 'Settings',
+		appIcon: 'settings',
+		description: 'Configure ringtones, sound effects, theme wallpapers, and clock display modes.',
+		languages: ['en'],
+		site: '',
+		information: ['utilities'],
+		tools: ['utilities']
+	},
+	{
+		name: 'Residential Recycle Box',
+		appIcon: 'directory',
+		description: 'Access the residential catalog to search, install, and rate community web apps.',
+		languages: ['en'],
+		site: '',
+		information: ['utilities'],
+		tools: ['utilities']
+	},
+	{
+		name: 'Messages',
+		appIcon: 'messages',
+		description: 'Send and receive direct text messages with other players.',
+		languages: ['en'],
+		site: '',
+		information: ['utilities'],
+		tools: ['utilities']
+	},
+	{
+		name: 'Contacts',
+		appIcon: 'contacts',
+		description: 'Manage your villager directory, residency status, and friendship points.',
+		languages: ['en'],
+		site: '',
+		information: ['utilities'],
+		tools: ['utilities']
+	},
+	{
+		name: 'Best Friends',
+		appIcon: 'best_friend',
+		description: 'Connect, chat, and keep track of your closest friends online.',
+		languages: ['en'],
+		site: '',
+		information: ['multiplayer'],
+		tools: ['multiplayer']
+	},
+	{
+		name: 'Rescue Service',
+		appIcon: 'rescue',
+		description: 'Help service to transport you back to safety when you get stuck.',
+		languages: ['en'],
+		site: '',
+		information: ['utilities'],
+		tools: ['utilities']
+	},
+	{
+		name: 'Changelog',
+		appIcon: 'changelog',
+		description: 'Keep track of the latest NookOS updates, features, and improvements.',
+		languages: ['en'],
+		site: '',
+		information: ['reference'],
+		tools: ['reference']
 	}
 ];
 

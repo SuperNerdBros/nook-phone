@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
+  import { getPhoneContext, CORE_APPS } from '@/components/organisms/phoneContext.svelte';
   import nookState from '@/lib/nookState.svelte';
   import { projectsData } from '@/lib/nookData';
   import { Search, Download, CheckCircle, Smartphone, Code, Globe, XIcon, Trash2, Play, Users, CloudDownload, Box, Grid3x3, BookOpen, CheckSquare, Palette, Moon, Music, TrendingUp, Image as ImageIcon, Star, Monitor, CloudSun, Store, LifeBuoy, Settings2, ListChecks, Coins, Sparkles, Wrench, Library } from '@lucide/svelte';
@@ -45,6 +45,9 @@
     const map: Record<string, any> = {};
     apps.forEach((a: any) => {
       map[a.slug] = a;
+      if (a.user_comment) {
+        ratingComments[a.slug] = a.user_comment;
+      }
     });
     cloudApps = map;
   });
@@ -112,7 +115,12 @@
     // Refresh stats
     const apps = await fetchApps();
     const map: Record<string, any> = {};
-    apps.forEach((a: any) => { map[a.slug] = a; });
+    apps.forEach((a: any) => {
+      map[a.slug] = a;
+      if (a.user_comment) {
+        ratingComments[a.slug] = a.user_comment;
+      }
+    });
     cloudApps = map;
   }
 </script>
@@ -267,6 +275,7 @@
       {@const isInstalled = nookState.isAppInstalled(selectedApp.name)}
       {@const slug = selectedApp.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}
       {@const stats = cloudApps[slug]}
+      {@const isSystem = stats?.is_system || CORE_APPS.some(a => a.name.toLowerCase() === selectedApp.name.toLowerCase() || a.id === selectedApp.appIcon)}
 
       <div class="flex flex-col h-full overflow-hidden p-4">
         
@@ -323,8 +332,8 @@
 
             <!-- Rating Section -->
             {#if (isInstalled || selectedPlatform !== 'installable') && proUser && stats}
-              <div class="mt-2 bg-[#d4e8e6] p-3 rounded-2xl border-2 border-[#bedad4]">
-                <span class="text-[10px] font-black text-[#2d5c56] uppercase tracking-wider block mb-2">Your Review</span>
+              <div class="mt-2 bg-[#d4e8e6] p-3 rounded-2xl border-2 border-[#bedad4] flex flex-col gap-2">
+                <span class="text-[10px] font-black text-[#2d5c56] uppercase tracking-wider block">Your Review</span>
                 <div class="flex justify-between items-center">
                   <Rating bind:rating={stats.user_rating} size={20} max={5} />
                   <button 
@@ -334,6 +343,31 @@
                     {stats.user_rating ? 'Update' : 'Submit'}
                   </button>
                 </div>
+                <textarea 
+                  bind:value={ratingComments[slug]} 
+                  placeholder="Write your review here (optional)..."
+                  class="w-full text-xs font-semibold p-2 bg-[#fffdf5] border-2 border-[#bedad4] focus:border-[#45a38f] rounded-xl outline-none resize-none"
+                  rows="2"
+                ></textarea>
+              </div>
+            {/if}
+
+            <!-- Community Reviews List -->
+            {#if stats?.reviews && stats.reviews.length > 0}
+              <div class="mt-4 flex flex-col gap-2">
+                <span class="text-[10px] font-black text-[#2d5c56] uppercase tracking-wider block">Reviews ({stats.reviews.length})</span>
+                <div class="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1 ac-scrollbar">
+                  {#each stats.reviews as rev}
+                    <div class="bg-white/80 p-2.5 rounded-xl border border-[#bedad4]/40 flex flex-col gap-1 shadow-sm">
+                      <div class="flex justify-between items-center">
+                        <span class="text-[11px] font-black text-[#2d5c56]">{rev.author}</span>
+                        <span class="text-[10px] text-[#45a38f] font-black">★ {rev.rating}</span>
+                      </div>
+                      <p class="text-[10px] font-semibold text-[#4c4637] leading-snug">{rev.content}</p>
+                      <span class="text-[8px] font-bold text-gray-400 text-right">{rev.date}</span>
+                    </div>
+                  {/each}
+                </div>
               </div>
             {/if}
           </div>
@@ -341,7 +375,23 @@
 
         <!-- Action Buttons -->
         <div class="absolute bottom-6 left-6 right-6 flex flex-col gap-2 z-30">
-          {#if selectedPlatform === 'installable' && selectedApp.site}
+          {#if isSystem}
+            <button
+              onclick={async () => {
+                if (nookState.settings.soundEffects) {
+                  const { playSound } = await import('@/lib/audio');
+                  playSound('success');
+                }
+                currentView = 'grid';
+                const coreApp = CORE_APPS.find(a => a.name.toLowerCase() === selectedApp.name.toLowerCase());
+                const targetId = coreApp ? coreApp.id : (selectedApp.id || selectedApp.name);
+                nookState.navigate(targetId);
+              }}
+              class="w-full bg-[#1bc6b6] text-white py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#15a497] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
+            >
+              <Play class="w-4 h-4 mr-1.5 fill-current" /> Open Tool
+            </button>
+          {:else if selectedPlatform === 'installable' && selectedApp.site}
             {#if isInstalled}
               <button
                 onclick={async () => {
