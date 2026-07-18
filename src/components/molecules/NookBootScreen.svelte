@@ -2,6 +2,7 @@
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import nookIncLogo from '@/assets/img/Nook_Inc.svg';
   import { fade } from 'svelte/transition';
+  import { resolveAssetUrl } from '@/lib/utils';
 
   const ctx = getPhoneContext();
 </script>
@@ -30,7 +31,7 @@
         
         <!-- Nook Inc Logo -->
         <img 
-          src={nookIncLogo} 
+          src={resolveAssetUrl(nookIncLogo)} 
           alt="Nook Inc Logo" 
           class="w-20 h-20 drop-shadow-[0_4px_12px_rgba(175,212,133,0.4)] animate-boot-bounce" 
         />

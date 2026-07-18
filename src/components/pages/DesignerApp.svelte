@@ -17,8 +17,7 @@
   <NookAppHeader 
     title="Island Designer"
     subtitle={description}
-    bgClass="bg-[#cca054]"
-    textClass="text-white"
+    bgClass="bg-[#70ab96]"
   >
     {#snippet iconSnippet()}
       <div class="w-12 h-12 mr-1">
@@ -32,7 +31,7 @@
           variant="ghost"
           title="Open Website"
         >
-          <Link class="w-3.5 h-3.5 stroke-[2.5px]" />
+          <Link class="w-3.5 h-3.5 stroke-[2.5px] text-white" />
         </NookToolbarButton>
       {/if}
       {#if gitUrl}
@@ -41,15 +40,14 @@
           variant="ghost"
           title="Source Code"
         >
-          <Code class="w-3.5 h-3.5 stroke-[2.5px]" />
+          <Code class="w-3.5 h-3.5 stroke-[2.5px] text-white" />
         </NookToolbarButton>
       {/if}
       <NookToolbarButton
         onclick={ctx.handleHomeButton}
-        class="!bg-[#cca054] !text-[#543b09] !border-2 !border-[#855913] hover:!bg-[#d8ac61]"
         title="Close App"
       >
-        <X class="w-3.5 h-3.5 stroke-[3px]" />
+        <X class="w-3.5 h-3.5 stroke-[3px] text-[#2d5c56]" />
       </NookToolbarButton>
     {/snippet}
   </NookAppHeader>

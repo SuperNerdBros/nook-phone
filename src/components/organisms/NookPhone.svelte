@@ -23,6 +23,8 @@
   import DodoAirApp from '../pages/DodoAirApp.svelte';
   import SettingsApp from '../pages/SettingsApp.svelte';
   import ChangelogApp from '../pages/ChangelogApp.svelte';
+  import PrivacyApp from '../pages/PrivacyApp.svelte';
+  import TermsApp from '../pages/TermsApp.svelte';
 
   import NookBootScreen from '../molecules/NookBootScreen.svelte';
   import NookStatusBar from '../molecules/NookStatusBar.svelte';
@@ -86,7 +88,8 @@
       const hash = window.location.hash;
       const match = hash.match(/^#\/app\/(.+)$/);
       const targetApp = match ? decodeURIComponent(match[1]) : null;
-      if (nookState.currentApp !== targetApp) {
+      const currentFullPath = nookState.currentApp ? (nookState.currentApp + (nookState.subRoute ? '/' + nookState.subRoute : '')) : null;
+      if (currentFullPath !== targetApp) {
         nookState.navigate(targetApp);
       }
     };
@@ -160,6 +163,8 @@
             {#if nookState.currentApp === "settings"} <SettingsApp /> {/if}
             {#if nookState.currentApp === "changelog"} <ChangelogApp /> {/if}
             {#if nookState.currentApp === "dodo_air"} <DodoAirApp /> {/if}
+            {#if nookState.currentApp === "privacy"} <PrivacyApp /> {/if}
+            {#if nookState.currentApp === "terms"} <TermsApp /> {/if}
 
             <!-- Launching embedded directory pinned frames -->
             <NookExternalAppScreen />

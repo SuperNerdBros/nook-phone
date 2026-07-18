@@ -19,7 +19,7 @@
   }
 </script>
 
-<div class="bg-transparent px-8 pt-6 pb-2 flex justify-between items-center text-[18px] font-['Varela_Round',sans-serif] text-[#d0cbb5] font-bold select-none z-[70] shrink-0">
+<div class="bg-transparent px-8 pr-4 pt-3 pb-2 flex justify-between items-center text-[18px] font-['Varela_Round',sans-serif] text-[#d0cbb5] font-bold select-none z-[70] shrink-0">
   <!-- Left side (Signal / Notifications) -->
   <div class="w-[55px] flex items-center justify-center gap-1.5">
     <img src={resolveAssetUrl(cellularStatusImg)} alt="Signal" class="h-[18px] object-contain opacity-70" />

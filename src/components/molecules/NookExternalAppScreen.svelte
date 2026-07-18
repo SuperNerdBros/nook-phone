@@ -20,7 +20,7 @@
   }
 </script>
 
-{#if nookState.currentApp && !CORE_APPS.some(a => a.id === nookState.currentApp)}
+{#if nookState.currentApp && !CORE_APPS.some(a => a.id === nookState.currentApp) && nookState.currentApp !== 'privacy' && nookState.currentApp !== 'terms'}
   {@const currentProject = projectsData.find(p => p.name === nookState.currentApp)}
   <div class="flex flex-col h-full ac-app-screen bg-[#faf9f4]">
     <NookAppHeader 

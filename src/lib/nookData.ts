@@ -24,6 +24,16 @@ export interface ProjectItem {
 }
 
 export const projectsData: ProjectItem[] = [
+	{
+		name: 'AC Tune Maker',
+		id: 'tune_maker',
+		appIcon: 'town_tunes',
+		description: 'Create and share your own town tunes!',
+		languages: ['en'],
+		site: 'https://ac-tune-maker.aikats.us/',
+		information: ['gameplay'],
+		tools: ['creative']
+	},
 // 	{
 // 		name: 'AC Community (JP)',
 // 		appIcon: 'directory',

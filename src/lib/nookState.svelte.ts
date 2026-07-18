@@ -108,6 +108,7 @@ export interface NookOSState {
   }>;
   bestFriends: (string | number)[];
   bestFriendsCommunicationsOn: boolean;
+  subRoute?: string;
   dockApps: string[];
 }
 
@@ -185,8 +186,8 @@ const INITIAL_STATE: NookOSState = {
     { id: "d3", name: "Custom Tile", grid: Array(16).fill(null).map(() => Array(16).fill("#ffffff")), creator: "Villager" }
   ],
   activeWallpaperId: "default",
-  pinnedApps: ["camera", "miles", "critter", "diy", "designs", "designer", "map", "chat", "passport", "messages", "shopping", "best_friends"],
-  installedApps: [],
+  pinnedApps: ["camera", "miles", "critter", "diy", "designs", "designer", "map", "chat", "passport", "messages", "shopping", "best_friends", "tune_maker"],
+  installedApps: ["tune_maker"],
   hasCompletedOnboarding: false,
   settings: {
     use24HourTime: false,
@@ -202,6 +203,7 @@ const INITIAL_STATE: NookOSState = {
   villagerMilestones: {},
   bestFriends: [],
   bestFriendsCommunicationsOn: true,
+  subRoute: "",
   dockApps: ["directory", "contacts", "settings"]
 };
 
@@ -272,6 +274,9 @@ class NookStateManager {
 
   get unreadDMs() { return this.state.unreadDMs || 0; }
   set unreadDMs(val) { this.state.unreadDMs = val; }
+
+  get subRoute() { return this.state.subRoute || ''; }
+  set subRoute(val) { this.state.subRoute = val; }
 
   get bestFriends() { return this.state.bestFriends || []; }
   set bestFriends(val) { this.state.bestFriends = val; }
@@ -407,12 +412,20 @@ class NookStateManager {
 
   // --- ACTIONS ---
   navigate(appId: string | null) {
+    let subRoute = '';
+    if (appId && appId.includes('/')) {
+      const parts = appId.split('/');
+      appId = parts[0];
+      subRoute = parts.slice(1).join('/');
+    }
+
     this.state.currentApp = appId;
+    this.state.subRoute = subRoute;
     this.save();
 
     // Sync browser hash for navigation history tracking
     if (typeof window !== 'undefined') {
-      const targetHash = appId ? `#/app/${encodeURIComponent(appId)}` : '#/';
+      const targetHash = appId ? `#/app/${encodeURIComponent(appId)}${subRoute ? '/' + encodeURIComponent(subRoute) : ''}` : '#/';
       if (window.location.hash !== targetHash) {
         window.location.hash = targetHash;
       }

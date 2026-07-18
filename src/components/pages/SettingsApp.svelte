@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Settings, Clock, Battery, Accessibility, Volume2, ChevronLeft, Image as ImageIcon, PaintBucket, Search, Smartphone, Info, LayoutList, ChevronDown , X } from '@lucide/svelte';
+  import { fly } from 'svelte/transition';
   import nookState from "@/lib/nookState.svelte";
   import { ALL_WALLPAPERS } from "@/lib/wallpaperData";
   import { getPhoneContext } from "../organisms/phoneContext.svelte";
@@ -7,6 +8,7 @@
   import NookIcon from "../atoms/NookIcon.svelte";
   import NookAppHeader from "../organisms/NookAppHeader.svelte";
   import NookToolbarButton from "../molecules/NookToolbarButton.svelte";
+  import settingsIcon from "@/assets/img/icons/settings_icon.png";
 
   const ctx = getPhoneContext();
   const phone = getPhoneContext();
@@ -21,14 +23,58 @@
     nookState.save();
   };
 
-  let selectedCategory = $state('personalization');
+  let currentView = $derived(nookState.subRoute || 'main');
   let searchQuery = $state('');
+  let activeWallpaperTab = $state('official');
+
+  const officialWallpaperIds = new Set([
+    'classic',
+    'default',
+    'green-waves',
+    'green-waves-2',
+    'green-waves-3',
+    'green-waves-3-dark',
+    'seashells',
+    'fossils',
+    'fossils-dark',
+    'doodles-1',
+    'balloons',
+    'balloons-dark',
+    'fruits',
+    'fruits-subtle',
+    'fruits-dark',
+
+  ]);
+
+  const fakeArtWallpaperIds = new Set([
+    'cozy-campsite',
+    'celeste-starry-sky',
+    'museum-exhibits',
+    'villagers-gathering',
+    'island-map-blueprint',
+    'island-sunset',
+    'autumn-leaves',
+    'cherry-blossom',
+    'winter-snowflake',
+    'brewster-cafe',
+    'kk-slider-records',
+  ]);
+
+  const officialWallpapers = Array.from(officialWallpaperIds)
+    .map(id => ALL_WALLPAPERS.find(wp => wp.id === id))
+    .filter((wp): wp is any => wp !== undefined);
+
+  const fakeArtWallpapers = Array.from(fakeArtWallpaperIds)
+    .map(id => ALL_WALLPAPERS.find(wp => wp.id === id))
+    .filter((wp): wp is any => wp !== undefined);
+
+  const patternWallpapers = ALL_WALLPAPERS.filter(wp => !officialWallpaperIds.has(wp.id) && !fakeArtWallpaperIds.has(wp.id));
 
   const categories = [
-    { id: 'personalization', name: 'Personalization', icon: ImageIcon },
-    { id: 'device', name: 'Device Settings', icon: Smartphone },
-    { id: 'apps', name: 'Default Apps', icon: LayoutList },
-    { id: 'about', name: 'About NookOS', icon: Info },
+    { id: 'personalization', name: 'Wallpaper & Style', description: 'Wallpapers, custom designs', icon: ImageIcon, color: 'bg-[#fdafb2]' },
+    { id: 'device', name: 'Device Preferences', description: 'Time format, battery, sounds, motion, grid size', icon: Smartphone, color: 'bg-[#7cb988]' },
+    { id: 'apps', name: 'Default Apps', description: 'Choose default apps for actions', icon: LayoutList, color: 'bg-[#ebd478]' },
+    { id: 'about', name: 'About NookOS', description: 'Version info, legal, privacy', icon: Info, color: 'bg-[#75cfbe]' },
   ];
 
   const INTENT_CATEGORIES = [
@@ -48,27 +94,31 @@
   };
 </script>
 
-<div class="h-full bg-[#fdfcf9] flex flex-col font-sans ac-bg-dots">
+<div class="h-full flex flex-col font-['Varela_Round',sans-serif] nook-settings-bg">
   <!-- Top Bar (Chrome OS style but AC themed) -->
   <NookAppHeader
     title="Settings"
-    bgClass="bg-[#f0b157] border-b-4 border-[#d99c45]"
-    textClass="text-[#5c3a21]"
+    subtitle="Customize your NookPhone experience"
+    bgClass="bg-[#5c4a3d] border-b-4 border-[#4a3b31]"
+    textClass="text-white"
   >
     {#snippet iconSnippet()}
-      <button onclick={async () => {
-        if (nookState.settings.soundEffects) {
-          const { playSound } = await import('@/lib/audio');
-          playSound('thwip');
-        }
-        nookState.navigate(null);
-      }} class="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center border-0 text-[#5c3a21] hover:bg-white/50 cursor-pointer transition-colors shadow-inner mr-1">
-        <ChevronLeft class="w-5 h-5 pr-0.5" />
-      </button>
+      <img src={resolveAssetUrl(settingsIcon)} alt="Settings" class="w-16 h-16 object-contain drop-shadow-md rounded-[1.2rem]" />
     {/snippet}
     
     {#snippet actions()}
-      <div class="relative w-40 sm:w-48 hidden sm:block">
+      {#if currentView !== 'main'}
+        <NookToolbarButton onclick={async () => {
+          if (nookState.settings.soundEffects) {
+            const { playSound } = await import('@/lib/audio');
+            playSound('thwip');
+          }
+          nookState.navigate('settings');
+        }} title="Back">
+          <ChevronLeft class="w-4 h-4 stroke-[3px] text-[#5c3a21]" />
+        </NookToolbarButton>
+      {/if}
+      <div class="relative w-40 sm:w-48 hidden sm:block mx-1">
         <Search class="w-3.5 h-3.5 absolute left-3 top-2 text-[#5c3a21]/50" />
         <input 
           type="text" 
@@ -78,40 +128,67 @@
         />
       </div>
       <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
-        <X class="w-3.5 h-3.5 stroke-[3px]" />
+        <X class="w-3.5 h-3.5 stroke-[3px] text-[#5c3a21]" />
       </NookToolbarButton>
     {/snippet}
   </NookAppHeader>
 
-  <div class="flex flex-1 overflow-hidden">
-    <!-- Sidebar -->
-    <div class="w-14 sm:w-48 border-r-4 border-[#e1d9be] bg-[#fdfcf9]/90 flex flex-col p-2 gap-2 overflow-y-auto ac-scrollbar shadow-[4px_0_10px_rgba(0,0,0,0.02)]">
-      {#each categories as cat}
-        <button 
-          onclick={() => selectedCategory = cat.id}
-          class={`flex items-center justify-center sm:justify-start gap-3 p-3 rounded-2xl cursor-pointer transition-all font-black text-xs border-b-4 active:translate-y-1 active:border-b-0 ${selectedCategory === cat.id ? 'bg-[#6cd476] text-white border-[#4ca454] shadow-sm' : 'bg-transparent text-[#7c8088] border-transparent hover:bg-white hover:border-[#e1d9be]'}`}
-          title={cat.name}
-        >
-          <cat.icon class="w-5 h-5 shrink-0" />
-          <span class="hidden sm:inline drop-shadow-sm">{cat.name}</span>
-        </button>
-      {/each}
-    </div>
-
-    <!-- Main Content Area -->
-    <div class="flex-1 overflow-y-auto ac-scrollbar p-4 sm:p-6 bg-[#fcfcf9] shadow-inner">
-      <div class="max-w-3xl mx-auto flex flex-col gap-6">
+  <div class="flex flex-1 overflow-hidden relative bg-transparent">
+    <!-- Main Settings List -->
+    {#if currentView === 'main'}
+      <div class="flex-1 overflow-y-auto ac-scrollbar flex flex-col pt-4 pb-12 px-4 gap-3 w-full h-full absolute inset-0" in:fly={{ x: -20, duration: 250 }} out:fly={{ x: -20, duration: 250 }}>
+        {#each categories as cat}
+          <button 
+            onclick={() => nookState.navigate('settings/' + cat.id)}
+            class="flex items-center gap-4 px-4 py-4 bg-white rounded-[1.5rem] border-b-4 border-[#e1d9be] cursor-pointer hover:bg-[#faf9f5] active:translate-y-1 active:border-b-0 transition-all w-full text-left shadow-[0_4px_10px_rgba(0,0,0,0.02)]"
+          >
+            <div class={`w-10 h-10 rounded-full ${cat.color} flex items-center justify-center text-[#5c3a21] shrink-0 shadow-sm`}>
+              <cat.icon class="w-5 h-5" />
+            </div>
+            <div class="flex flex-col">
+              <span class="text-sm text-gray-800 font-medium">{cat.name}</span>
+              <span class="text-[11px] text-gray-500">{cat.description}</span>
+            </div>
+          </button>
+        {/each}
+      </div>
+    {:else}
+      <!-- Subpages Area -->
+      <div class="flex-1 overflow-y-auto ac-scrollbar p-4 sm:p-6 bg-transparent shadow-inner w-full h-full absolute inset-0" in:fly={{ x: 20, duration: 250 }} out:fly={{ x: 20, duration: 250 }}>
+        <div class="max-w-3xl mx-auto flex flex-col gap-6">
         
-        {#if selectedCategory === 'personalization'}
+        {#if currentView === 'personalization'}
           <!-- Personalization -->
           <div class="flex flex-col gap-4 animate-fade-in pb-20">
             <h2 class="text-lg font-black text-[#5c5446] border-b-4 border-[#e1d9be] pb-2 m-0">Wallpaper & Style</h2>
             
-            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4 mt-2">
-              {#each ALL_WALLPAPERS as wp}
+            <!-- Category Tabs -->
+            <div class="flex gap-2 p-1 bg-[#4a2e19]/10 rounded-full border-2 border-[#e1d9be]/30 self-center my-2 shrink-0">
+              <button 
+                onclick={() => activeWallpaperTab = 'official'}
+                class={`px-4 py-1.5 rounded-full text-xs font-black transition-all border cursor-pointer ${activeWallpaperTab === 'official' ? 'bg-[#ebd478] text-[#5c3a21] border-[#cfb85c] shadow-sm' : 'bg-transparent text-[#5c5446] border-transparent hover:bg-white/30'}`}
+              >
+                Official
+              </button>
+              <button 
+                onclick={() => activeWallpaperTab = 'fake_art'}
+                class={`px-4 py-1.5 rounded-full text-xs font-black transition-all border cursor-pointer ${activeWallpaperTab === 'fake_art' ? 'bg-[#ebd478] text-[#5c3a21] border-[#cfb85c] shadow-sm' : 'bg-transparent text-[#5c5446] border-transparent hover:bg-white/30'}`}
+              >
+                Fake Art
+              </button>
+              <button 
+                onclick={() => activeWallpaperTab = 'patterns'}
+                class={`px-4 py-1.5 rounded-full text-xs font-black transition-all border cursor-pointer ${activeWallpaperTab === 'patterns' ? 'bg-[#ebd478] text-[#5c3a21] border-[#cfb85c] shadow-sm' : 'bg-transparent text-[#5c5446] border-transparent hover:bg-white/30'}`}
+              >
+                Patterns
+              </button>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4 pb-6 px-1">
+              {#each (activeWallpaperTab === 'official' ? officialWallpapers : activeWallpaperTab === 'patterns' ? patternWallpapers : fakeArtWallpapers) as wp}
                 <button 
                   onclick={() => setWallpaper(wp.id)}
-                  class={`flex flex-col items-center gap-2 bg-transparent border-0 p-0 cursor-pointer group ${nookState.activeWallpaperId === wp.id || (!nookState.activeWallpaperId && wp.id === 'default') ? 'opacity-100 scale-105' : 'opacity-70 hover:opacity-100 hover:scale-105'} transition-all`}
+                  class={`flex flex-col items-center gap-2 bg-transparent border-0 p-0 cursor-pointer group w-[30%] sm:w-32 ${nookState.activeWallpaperId === wp.id || (!nookState.activeWallpaperId && wp.id === 'default') ? 'opacity-100 scale-105' : 'opacity-70 hover:opacity-100 hover:scale-105'} transition-all`}
                 >
                   <div class={`w-full aspect-[9/16] rounded-2xl border-4 shadow-sm relative overflow-hidden transition-all ${nookState.activeWallpaperId === wp.id || (!nookState.activeWallpaperId && wp.id === 'default') ? 'border-[#6cd476] ring-4 ring-[#6cd476]/30' : 'border-[#e1d9be]'}`}>
                     {#if wp.isDefault}
@@ -127,30 +204,32 @@
                       </div>
                     {/if}
                   </div>
-                  <span class="text-[9px] sm:text-[10px] font-black text-[#5c5446] text-center leading-tight">{wp.name}</span>
+                  <span class="text-[10px] sm:text-[11px] font-black text-[#5c5446] text-center leading-tight">{wp.name}</span>
                 </button>
               {/each}
               
-              <button 
-                onclick={async () => {
-                  if (nookState.settings.soundEffects) {
-                    const { playSound } = await import('@/lib/audio');
-                    playSound('success');
-                  }
-                  nookState.navigate('designs');
-                }}
-                class="flex flex-col items-center gap-2 bg-transparent border-0 p-0 cursor-pointer group opacity-70 hover:opacity-100 hover:scale-105 transition-all"
-              >
-                <div class="w-full aspect-[9/16] rounded-2xl border-4 border-dashed border-[#e1d9be] shadow-sm flex items-center justify-center bg-[#fdfcf9] text-[#caa253]">
-                  <PaintBucket class="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
-                <span class="text-[9px] sm:text-[10px] font-black text-[#5c5446] text-center leading-tight">Custom<br/>Design</span>
-              </button>
+              {#if activeWallpaperTab === 'patterns'}
+                <button 
+                  onclick={async () => {
+                    if (nookState.settings.soundEffects) {
+                      const { playSound } = await import('@/lib/audio');
+                      playSound('success');
+                    }
+                    nookState.navigate('designs');
+                  }}
+                  class="flex flex-col items-center gap-2 bg-transparent border-0 p-0 cursor-pointer group w-[30%] sm:w-32 opacity-70 hover:opacity-100 hover:scale-105 transition-all"
+                >
+                  <div class="w-full aspect-[9/16] rounded-2xl border-4 border-dashed border-[#e1d9be] shadow-sm flex items-center justify-center bg-[#fdfcf9] text-[#caa253]">
+                    <PaintBucket class="w-6 h-6" />
+                  </div>
+                  <span class="text-[10px] sm:text-[11px] font-black text-[#5c5446] text-center leading-tight">Custom<br/>Design</span>
+                </button>
+              {/if}
             </div>
           </div>
         {/if}
 
-        {#if selectedCategory === 'device'}
+        {#if currentView === 'device'}
           <!-- Device Settings -->
           <div class="flex flex-col gap-4 animate-fade-in">
             <h2 class="text-lg font-black text-[#5c5446] border-b-4 border-[#e1d9be] pb-2 m-0">Device Preferences</h2>
@@ -158,7 +237,7 @@
             <div class="bg-white rounded-3xl p-5 border-4 border-[#e1d9be] shadow-[0_4px_0_#dcd3be] flex flex-col gap-2">
               <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-2xl bg-blue-50 border-2 border-blue-200 flex items-center justify-center text-blue-500 shadow-inner">
+                  <div class="w-10 h-10 rounded-2xl bg-[#77a1e6] border-2 border-[#5b85ca] flex items-center justify-center text-[#5c3a21] shadow-inner">
                     <Clock class="w-5 h-5" />
                   </div>
                   <div>
@@ -177,7 +256,7 @@
 
               <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-2xl bg-green-50 border-2 border-green-200 flex items-center justify-center text-green-500 shadow-inner">
+                  <div class="w-10 h-10 rounded-2xl bg-[#7cb988] border-2 border-[#609d6c] flex items-center justify-center text-[#5c3a21] shadow-inner">
                     <Battery class="w-5 h-5" />
                   </div>
                   <div>
@@ -196,7 +275,7 @@
 
               <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-2xl bg-purple-50 border-2 border-purple-200 flex items-center justify-center text-purple-500 shadow-inner">
+                  <div class="w-10 h-10 rounded-2xl bg-[#fdafb2] border-2 border-[#e19396] flex items-center justify-center text-[#5c3a21] shadow-inner">
                     <Accessibility class="w-5 h-5" />
                   </div>
                   <div>
@@ -215,7 +294,7 @@
 
               <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-2xl bg-pink-50 border-2 border-pink-200 flex items-center justify-center text-pink-500 shadow-inner">
+                  <div class="w-10 h-10 rounded-2xl bg-[#e89a78] border-2 border-[#cc7d5c] flex items-center justify-center text-[#5c3a21] shadow-inner">
                     <Volume2 class="w-5 h-5" />
                   </div>
                   <div>
@@ -234,7 +313,7 @@
 
               <div class="flex items-center justify-between py-3">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-2xl bg-orange-50 border-2 border-orange-200 flex items-center justify-center text-orange-500 shadow-inner">
+                  <div class="w-10 h-10 rounded-2xl bg-[#ebd478] border-2 border-[#cfb85c] flex items-center justify-center text-[#5c3a21] shadow-inner">
                     <Smartphone class="w-5 h-5" />
                   </div>
                   <div>
@@ -257,7 +336,7 @@
           </div>
         {/if}
 
-        {#if selectedCategory === 'apps'}
+        {#if currentView === 'apps'}
           <!-- Default Apps -->
           <div class="flex flex-col gap-4 animate-fade-in pb-20">
             <h2 class="text-lg font-black text-[#5c5446] border-b-4 border-[#e1d9be] pb-2 m-0">Default Apps</h2>
@@ -326,7 +405,7 @@
           </div>
         {/if}
 
-        {#if selectedCategory === 'about'}
+        {#if currentView === 'about'}
           <!-- About Settings -->
           <div class="flex flex-col gap-4 animate-fade-in pb-20">
             <h2 class="text-lg font-black text-[#5c5446] border-b-4 border-[#e1d9be] pb-2 m-0">About NookOS</h2>
@@ -345,6 +424,22 @@
               <div class="text-xs font-bold text-[#8a816f] max-w-xs mt-2 leading-relaxed">
                 NookOS is the premier operating system for island living. Designed by Nook Inc. for a seamless and comfortable getaway package experience.
               </div>
+
+              <div class="flex gap-4 mt-2">
+                <button
+                  onclick={() => nookState.navigate('privacy')}
+                  class="text-xs font-black text-[#45a38f] hover:text-[#368875] underline cursor-pointer bg-transparent border-0 outline-none p-0"
+                >
+                  Privacy Policy
+                </button>
+                <span class="text-[#e1d9be] font-bold">|</span>
+                <button
+                  onclick={() => nookState.navigate('terms')}
+                  class="text-xs font-black text-[#d2b373] hover:text-[#bca167] underline cursor-pointer bg-transparent border-0 outline-none p-0"
+                >
+                  Terms of Service
+                </button>
+              </div>
               
               <div class="mt-4 pt-4 border-t-2 border-dashed border-[#e1d9be] w-full text-[9px] font-bold text-[#8a816f] leading-relaxed">
                 Animal Crossing™: New Horizons, Dodo Code™, and Dodo Airlines are trademarks of Nintendo Co., Ltd.<br/><br/>
@@ -356,6 +451,30 @@
         {/if}
 
       </div>
-    </div>
+      </div>
+    {/if}
   </div>
 </div>
+
+<style>
+  .nook-settings-bg {
+    background-color: #dfd0c4;
+    position: relative;
+    overflow: hidden;
+  }
+  .nook-settings-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.06;
+    pointer-events: none;
+    background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none" stroke="%235c4a3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cg transform="translate(20, 20) scale(1.4) rotate(15)"%3E%3Cpath d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/%3E%3C/g%3E%3Cg transform="translate(110, 30) scale(1.4) rotate(-35)"%3E%3Cpath d="m15 5 4 4M21.5 12 12 21.5M14 10l-1.5-1.5M3 21h3l10-10-3-3L3 18v3zm5.5-6.5-1-1"/%3E%3C/g%3E%3Cg transform="translate(65, 100) scale(1.4) rotate(45)"%3E%3Cpath d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/%3E%3Ccircle cx="12" cy="12" r="3"/%3E%3C/g%3E%3C/svg%3E');
+    background-size: 190px 190px;
+    animation: movePatternSettings 55s linear infinite;
+    z-index: 0;
+  }
+  @keyframes movePatternSettings {
+    from { background-position: 0 0; }
+    to { background-position: -190px -190px; }
+  }
+</style>

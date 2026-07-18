@@ -60,24 +60,8 @@ export const CORE_APPS: CoreApp[] = [
   },
   { id: "map", name: "Map", icon: "map", bg: "bg-[#75cfbe]", image: mapIcon },
   { id: "passport", name: "Passport", icon: "passport", bg: "bg-[#7cb988]", image: passportIcon },
-  {
-    id: "chat",
-    name: "Chat Log",
-    icon: "chat",
-    bg: "bg-[#d3e551]",
-    image: chatIcon,
-    proOnly: true
-  },
-  { id: "settings", name: "Settings", icon: "settings", bg: "bg-[#8ba6a4]", image: settingsIcon },
+  { id: "settings", name: "Settings", icon: "settings", bg: "bg-[#5c4a3d]", image: settingsIcon },
   { id: "directory", name: "Residential Recycle Box", icon: "directory", bg: "bg-[#45a38f]" },
-  {
-    id: "messages",
-    name: "Messages",
-    icon: "messages",
-    bg: "bg-[#8bd168]",
-    image: mailIcon,
-    proOnly: true
-  },
   {
     id: "contacts",
     name: "Contacts",
@@ -91,14 +75,6 @@ export const CORE_APPS: CoreApp[] = [
     icon: "dodo_air",
     bg: "bg-[#1b9be0]"
   },
-  {
-    id: "best_friends",
-    name: "Best Friends",
-    icon: "best_friend",
-    bg: "bg-[#ffd375]",
-    image: messagesIcon,
-    proOnly: true
-  },
   { id: "rescue", name: "Rescue Service", icon: "rescue", bg: "bg-[#ec6241]" },
   {
     id: "changelog",
@@ -107,6 +83,30 @@ export const CORE_APPS: CoreApp[] = [
     bg: "bg-[#79a9dc]",
     image: changelogIcon,
     imageNeedsBg: true
+  },
+  {
+    id: "chat",
+    name: "Chat Log",
+    icon: "chat",
+    bg: "bg-[#d3e551]",
+    image: chatIcon,
+    proOnly: true
+  },
+  {
+    id: "messages",
+    name: "Messages",
+    icon: "messages",
+    bg: "bg-[#8bd168]",
+    image: mailIcon,
+    proOnly: true
+  },
+  {
+    id: "best_friends",
+    name: "Best Friends",
+    icon: "best_friend",
+    bg: "bg-[#ffd375]",
+    image: messagesIcon,
+    proOnly: true
   }
 ];
 
