@@ -71,10 +71,11 @@ export const projectsData: ProjectItem[] = [
 	},
 	{
 		name: 'Dodo Air',
-		appIcon: 'directory',
+		appIcon: 'dodo_air',
+		bg: 'bg-[#1b9be0]',
 		description: 'Dodo Airlines Flight Hub. Schedule, track, and manage flights for your island! Dodo Air is always ready for take-off!',
 		languages: ['en'],
-		site: 'https://dodoair.forthexp.com/',
+		site: '/dodo-air/',
 		information: ['gameplay'],
 		tools: ['utilities']
 	},

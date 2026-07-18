@@ -7,49 +7,99 @@
   import { X, Wrench, Sparkles, Bug } from '@lucide/svelte';
   import changelogIcon from '@/assets/img/changelog_icon.svg';
 
+  import changelogMd from '../../../docs/CHANGELOG.md?raw';
+
   const ctx = getPhoneContext();
 
-  // Mock changelog data
-  const logs = [
-    {
-      version: "v1.2.0",
-      date: "July 17, 2026",
-      title: "The Great Summer Update",
-      changes: [
-        { type: "feature", text: "Added the brand new Changelog App to keep track of updates!" },
-        { type: "fix", text: "Fixed an issue where Rescue Service chopped audio." },
-        { type: "improvement", text: "Polished Nook Phone animations for smoother opening." }
-      ]
-    },
-    {
-      version: "v1.1.5",
-      date: "June 25, 2026",
-      title: "Bug Squashing",
-      changes: [
-        { type: "fix", text: "Fixed a bug where some users couldn't catch the golden stag." },
-        { type: "fix", text: "Patched an exploit allowing duplicate bells." }
-      ]
-    },
-    {
-      version: "v1.1.0",
-      date: "May 10, 2026",
-      title: "Pro Designer Upgrade",
-      changes: [
-        { type: "feature", text: "Custom Designs now supports Pro Designer tools." },
-        { type: "feature", text: "Added Best Friends chat logs." },
-        { type: "improvement", text: "More robust network syncing with Nook Inc. servers." }
-      ]
-    },
-    {
-      version: "v1.0.0",
-      date: "March 20, 2026",
-      title: "Initial Release",
-      changes: [
-        { type: "feature", text: "Welcome to your new Nook Phone!" },
-        { type: "feature", text: "Camera, Nook Miles, and Critterpedia included by default." }
-      ]
+  interface Change {
+    type: 'feature' | 'fix' | 'improvement';
+    text: string;
+  }
+
+  interface LogEntry {
+    version: string;
+    date: string;
+    title: string;
+    changes: Change[];
+  }
+
+  const parseChangelog = (md: string): LogEntry[] => {
+    const entries: LogEntry[] = [];
+    const lines = md.split('\n');
+    let currentEntry: LogEntry | null = null;
+    let currentType: 'feature' | 'fix' | 'improvement' = 'feature';
+
+    const formatDate = (dateStr: string) => {
+      try {
+        const date = new Date(dateStr + 'T00:00:00');
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      } catch (e) {
+        return dateStr;
+      }
+    };
+
+    for (let line of lines) {
+      line = line.trimEnd();
+      const trimmed = line.trim();
+
+      if (trimmed.startsWith('## ')) {
+        const headerText = trimmed.replace('## ', '').replace('[', '').replace(']', '').trim();
+        const dateParts = headerText.split(' - ');
+        const dateVal = dateParts[dateParts.length - 1];
+        const versionVal = dateParts.length > 1 ? dateParts[0] : `v${dateVal.replace(/-/g, '.')}`;
+        
+        currentEntry = {
+          version: versionVal,
+          date: formatDate(dateVal),
+          title: "System Update",
+          changes: []
+        };
+        entries.push(currentEntry);
+        continue;
+      }
+
+      if (!currentEntry) continue;
+
+      if (trimmed.startsWith('### ')) {
+        const typeText = trimmed.replace('### ', '').toLowerCase();
+        if (typeText.includes('added')) {
+          currentType = 'feature';
+        } else if (typeText.includes('fixed')) {
+          currentType = 'fix';
+        } else if (typeText.includes('changed')) {
+          currentType = 'improvement';
+        }
+        continue;
+      }
+
+      if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+        let text = trimmed.replace(/^[-*]\s+/, '');
+        text = text.replace(/\*\*([^*]+)\*\*:/g, '$1:');
+        text = text.replace(/\*\*([^*]+)\*\*/g, '$1');
+        text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+
+        currentEntry.changes.push({
+          type: currentType,
+          text: text
+        });
+      } else if (line.startsWith('  ') && (trimmed.startsWith('- ') || trimmed.startsWith('* '))) {
+        let text = trimmed.replace(/^[-*]\s+/, '');
+        text = text.replace(/\*\*([^*]+)\*\*:/g, '$1:');
+        text = text.replace(/\*\*([^*]+)\*\*/g, '$1');
+        text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+        
+        currentEntry.changes.push({
+          type: currentType,
+          text: `  • ${text}`
+        });
+      }
     }
-  ];
+
+    return entries;
+  };
+
+  const logs = parseChangelog(changelogMd);
 
   const getIconForType = (type: string) => {
     switch (type) {

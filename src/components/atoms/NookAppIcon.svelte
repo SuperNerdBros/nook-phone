@@ -126,12 +126,12 @@
     onmouseleave={onMouseLeave}
     class={`flex flex-col items-center gap-1 bg-transparent border-0 ${size === 'lg' ? 'hover:scale-[1.15]' : 'hover:scale-105'} transition-all duration-200 cursor-pointer p-0 ${s.button} ${className}`}
   >
-    <div class={`${s.icon} flex items-center justify-center transition-all relative overflow-hidden ${app?.image && !app?.imageNeedsBg ? 'bg-transparent' : (app?.bg || 'bg-[#f5fbf7] border-4 border-white/20 shadow-md group-hover:ring-4 group-hover:ring-offset-2 group-hover:ring-[#8cc3b0] group-hover:scale-105')}`}>
+    <div class={`${s.icon} flex items-center justify-center transition-all relative overflow-hidden ${app?.image && !app?.imageNeedsBg ? 'bg-transparent' : `${app?.bg || 'bg-[#f5fbf7]'} border-4 border-white/20 shadow-md group-hover:ring-4 group-hover:ring-offset-2 group-hover:ring-[#8cc3b0] group-hover:scale-105`}`}>
       {#if app?.image}
         <img src={resolveAssetUrl(app.image)} alt={app.name} class="w-full h-full object-contain drop-shadow-sm pointer-events-none" />
       {:else}
         <div class="absolute inset-0 bg-gradient-to-tr from-black/5 to-white/20 pointer-events-none"></div>
-        <NookIcon name={app?.appIcon || app?.id || 'directory'} class={`w-full h-full object-contain drop-shadow-sm ${s.p} z-10 relative pointer-events-none`} />
+        <NookIcon name={app?.logo || app?.appIcon || app?.id || 'directory'} class={`w-full h-full object-contain drop-shadow-sm ${s.p} z-10 relative pointer-events-none`} />
       {/if}
       
       {#if app?.proOnly && !isProUser()}

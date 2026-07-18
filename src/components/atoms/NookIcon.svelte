@@ -96,6 +96,8 @@
     weather: weather_png
   };
 
+  const logos = import.meta.glob('@/assets/img/logos/*', { eager: true, import: 'default' }) as Record<string, string>;
+
   function resolveAssetUrl(assetPath: string) {
     if (!assetPath) return assetPath;
     if (assetPath.startsWith('http')) return assetPath;
@@ -113,7 +115,11 @@
     return assetPath;
   }
 
-  const src = $derived(resolveAssetUrl(icons[name] || icons['diy']));
+  const nameWithLogo = $derived(Object.keys(logos).find(k => k.endsWith(`/${name}`)));
+
+  const src = $derived(
+    nameWithLogo ? resolveAssetUrl(logos[nameWithLogo]) : resolveAssetUrl(icons[name] || icons['diy'])
+  );
 </script>
 
 <img {src} alt="{name} icon" class="w-full h-full object-contain drop-shadow-sm {className}" draggable="false" />

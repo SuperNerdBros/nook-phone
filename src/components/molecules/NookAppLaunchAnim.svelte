@@ -90,11 +90,9 @@
       <div class={`w-[110px] h-[110px] flex items-center justify-center rounded-[28px] overflow-hidden ${ctx.launchingApp.image ? 'bg-transparent' : (ctx.launchingApp.bg || 'bg-[#f5fbf7] border-4 border-white/40 shadow-xl')}`}>
         {#if ctx.launchingApp.image}
           <img src={resolveAssetUrl(ctx.launchingApp.image)} alt={ctx.launchingApp.name} class="w-full h-full object-contain drop-shadow-sm p-4 animate-scale-in" />
-        {:else if ctx.launchingApp.id}
-          <NookIcon name={ctx.launchingApp.id} class="w-full h-full object-contain drop-shadow-md p-4" />
         {:else}
           <div class="absolute inset-0 bg-gradient-to-tr from-black/5 to-white/20 pointer-events-none"></div>
-          <NookIcon name={ctx.launchingApp.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-md p-4 z-10 relative" />
+          <NookIcon name={ctx.launchingApp.logo || ctx.launchingApp.appIcon || ctx.launchingApp.id || 'directory'} class="w-full h-full object-contain drop-shadow-md p-4 z-10 relative" />
         {/if}
       </div>
       

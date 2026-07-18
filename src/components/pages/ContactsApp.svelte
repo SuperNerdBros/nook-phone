@@ -727,7 +727,7 @@
       </div>
 
       <!-- Bubble (Bottom Half) -->
-      <div class="relative z-20 w-full px-4 pb-8 shrink-0">
+      <div class="relative z-20 w-full px-4 pb-8 shrink-0 mt-auto">
          <AcnhBubble
            title={selectedVillager?.name || "Friend"}
            dialogText={giftReaction ? giftReaction.message : "Oh! Do you have a present for me? What is it, what is it?!"}
@@ -750,8 +750,8 @@
                         class="w-16 h-16 shrink-0 bg-white border-2 border-[#e1d9be] hover:border-[#8cc3b0] rounded-xl flex items-center justify-center transition-all hover:scale-105 shadow-sm active:scale-95 p-1 flex-col"
                         title={item.name}
                       >
-                        {#if item.image_url}
-                          <img src={item.image_url} alt={item.name} class="max-w-full max-h-full object-contain drop-shadow-sm p-1" loading="lazy" />
+                        {#if item.imageUrl || item.image_url}
+                          <img src={item.imageUrl || item.image_url} alt={item.name} class="max-w-full max-h-full object-contain drop-shadow-sm p-1" loading="lazy" />
                         {:else}
                           <Leaf class="w-6 h-6 text-[#8cc3b0] mb-1" />
                           <span class="text-[8px] font-bold text-[#8a7f66] leading-tight truncate w-full px-1">{item.name}</span>

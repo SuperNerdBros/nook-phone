@@ -222,7 +222,7 @@
 
             <!-- Item Icon -->
             <div class="w-12 h-12 shrink-0 bg-white/50 rounded-2xl border-2 border-white/60 flex items-center justify-center shadow-inner overflow-hidden z-10 mb-2">
-              <NookIcon name={p.appIcon || 'directory'} class="w-8 h-8 object-contain drop-shadow-sm group-hover:scale-110 transition-transform" />
+              <NookIcon name={p.logo || p.appIcon || 'directory'} class="w-8 h-8 object-contain drop-shadow-sm group-hover:scale-110 transition-transform" />
             </div>
 
             <!-- Item Name -->
@@ -290,7 +290,7 @@
           <!-- Preview Square -->
           <div class="w-full aspect-square bg-[#bedad4] rounded-3xl p-6 shadow-inner relative flex flex-col items-center justify-center">
             <div class="w-24 h-24 bg-white/70 rounded-3xl border-4 border-white flex items-center justify-center shadow-md overflow-hidden mb-4">
-              <NookIcon name={selectedApp.appIcon || 'directory'} class="w-16 h-16 object-contain drop-shadow-md animate-fade-in" />
+              <NookIcon name={selectedApp.logo || selectedApp.appIcon || 'directory'} class="w-16 h-16 object-contain drop-shadow-md animate-fade-in" />
             </div>
             <p class="text-[12px] font-bold text-[#2d5c56] leading-snug text-center px-2">
               {selectedApp.description}

@@ -32,7 +32,7 @@
       textClass="text-white"
     >
       {#snippet iconSnippet()}
-        <NookIcon name={currentProject?.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-1.5 z-10 relative" />
+        <NookIcon name={currentProject?.logo || currentProject?.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-1.5 z-10 relative" />
       {/snippet}
       {#snippet actions()}
         {#if currentProject?.git}
@@ -65,7 +65,7 @@
       {:else}
         <div class="flex-1 p-4 flex flex-col justify-center items-center text-center gap-3 h-full">
           <div class="w-16 h-16 bg-[#e8f5e9] border-2 border-[#a5d6a7] rounded-full flex items-center justify-center shadow-inner overflow-hidden relative">
-            <NookIcon name={currentProject?.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-2 z-10 relative" />
+            <NookIcon name={currentProject?.logo || currentProject?.appIcon || 'directory'} class="w-full h-full object-contain drop-shadow-sm p-2 z-10 relative" />
           </div>
           <div>
             <h2 class="font-extrabold text-sm text-[#4c4637]">{nookState.currentApp}</h2>

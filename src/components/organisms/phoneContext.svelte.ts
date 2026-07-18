@@ -81,9 +81,15 @@ export const CORE_APPS: CoreApp[] = [
   {
     id: "contacts",
     name: "Contacts",
-    icon: "best_friend",
-    bg: "bg-[#8cc3b0]",
+    icon: "contacts",
+    bg: "bg-[#e5b382]",
     image: contactsIcon
+  },
+  {
+    id: "dodo_air",
+    name: "Dodo Air",
+    icon: "dodo_air",
+    bg: "bg-[#1b9be0]"
   },
   {
     id: "best_friends",

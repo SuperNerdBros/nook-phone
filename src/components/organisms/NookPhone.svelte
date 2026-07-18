@@ -20,6 +20,7 @@
   import ShoppingApp from '../pages/ShoppingApp.svelte';
   import ContactsApp from '../pages/ContactsApp.svelte';
   import DesignerApp from '../pages/DesignerApp.svelte';
+  import DodoAirApp from '../pages/DodoAirApp.svelte';
   import SettingsApp from '../pages/SettingsApp.svelte';
   import ChangelogApp from '../pages/ChangelogApp.svelte';
 
@@ -158,6 +159,7 @@
             {#if nookState.currentApp === "designer"} <DesignerApp /> {/if}
             {#if nookState.currentApp === "settings"} <SettingsApp /> {/if}
             {#if nookState.currentApp === "changelog"} <ChangelogApp /> {/if}
+            {#if nookState.currentApp === "dodo_air"} <DodoAirApp /> {/if}
 
             <!-- Launching embedded directory pinned frames -->
             <NookExternalAppScreen />
