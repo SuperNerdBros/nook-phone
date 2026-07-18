@@ -4,7 +4,7 @@
   import { fade, fly } from 'svelte/transition';
   import { Search, Heart, Wifi, WifiOff, MessageSquare, RefreshCw, Send, Check , X } from '@lucide/svelte';
   import nookState from '@/lib/nookState.svelte';
-  import { fetchNookUsers, fetchPassports, isProUser, sendDirectMessage } from '@/lib/api';
+  import { fetchNookUsers, fetchPassports, isProUser, createPrivateLetter } from '@/lib/api';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
@@ -105,7 +105,7 @@
     try {
       for (const friend of onlineBestFriends) {
         if (isProUser()) {
-          await sendDirectMessage(friend.id, broadcastText);
+          await createPrivateLetter(friend.id, 'Broadcast Message', broadcastText, 'airmail');
         } else {
           nookState.sendChatMessage(friend.name, broadcastText, false);
         }
@@ -159,10 +159,10 @@
     {/snippet}
     {#snippet actions()}
       <NookToolbarButton onclick={loadFriends} class="mr-1" title="Refresh">
-        <RefreshCw class="w-4 h-4" />
+        <RefreshCw class="w-4 h-4 text-[#ffb380]" />
       </NookToolbarButton>
       <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
-        <X class="w-3.5 h-3.5 stroke-[3px]" />
+        <X class="w-3.5 h-3.5 stroke-[3px] text-[#ffb380]" />
       </NookToolbarButton>
     {/snippet}
   </NookAppHeader>

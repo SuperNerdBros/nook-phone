@@ -39,7 +39,7 @@
 
   <!-- Cloud-like background for icons -->
   {#if layoutStyle === 'wrap'}
-    <div class={`${bgClass} rounded-3xl w-full max-w-lg shadow-sm flex relative ${borderClass} py-3 px-2`}>
+    <div class={`${bgClass} rounded-3xl w-fit max-w-full shadow-sm flex relative ${borderClass} py-3 px-2 mx-auto`}>
       <div class="flex-1 flex flex-wrap justify-center gap-3 items-center">
         {#each categories as cat}
           {@const Icon = getCategoryIcon ? getCategoryIcon(cat) : null}
@@ -62,8 +62,8 @@
       </div>
     </div>
   {:else}
-    <div class={`${bgClass} rounded-full h-14 w-full max-w-lg shadow-sm flex items-center relative overflow-hidden ${borderClass}`}>
-      <div class="flex-1 flex justify-start gap-4 overflow-x-auto ac-scrollbar px-6 items-center h-full">
+    <div class={`${bgClass} rounded-full h-14 w-fit max-w-full mx-auto shadow-sm flex items-center relative overflow-hidden ${borderClass}`}>
+      <div class="flex flex-nowrap justify-start gap-4 overflow-x-auto ac-scrollbar px-6 items-center h-full">
         {#each categories as cat}
           {@const Icon = getCategoryIcon ? getCategoryIcon(cat) : null}
           <button 

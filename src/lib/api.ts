@@ -158,7 +158,7 @@ export const createComment = async (threadId: number, content: string) => {
 export const fetchPrivateLetters = async () => {
   if (!isProUser()) return [];
   try {
-    const res = await fetch(getApiUrl('threads?is_private=true'), { headers: getApiHeaders() });
+    const res = await fetch(getApiUrl('dms/all'), { headers: getApiHeaders() });
     if (!res.ok) return [];
     return await res.json();
   } catch (e) {
@@ -167,17 +167,15 @@ export const fetchPrivateLetters = async () => {
   }
 };
 
-export const createPrivateLetter = async (recipientId: number, content: string, stationeryId: string = 'airmail') => {
+export const createPrivateLetter = async (recipientId: number, subject: string, content: string, stationeryId: string = 'airmail') => {
   if (!isProUser()) return null;
   try {
-    const res = await fetch(getApiUrl('threads'), {
+    const res = await fetch(getApiUrl('dms/send'), {
       method: 'POST',
       headers: getApiHeaders(),
       body: JSON.stringify({ 
-        title: `Letter to User ${recipientId}`, 
         content, 
         recipient_id: recipientId, 
-        is_private: true,
         stationery_id: stationeryId
       })
     });

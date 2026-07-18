@@ -41,6 +41,7 @@
     categoryLayoutStyle = "scroll",
     getCategoryIcon,
     getCategoryLabel,
+    categoriesPosition = "bottom",
     categoryActiveBgClass = "bg-[#45a38f]",
     categoryInactiveTextClass = "text-[#45a38f]/60 hover:text-[#45a38f]",
     categoryBgClass = "bg-[#fffdf5]",
@@ -79,6 +80,7 @@
     categoryLayoutStyle?: "scroll" | "wrap";
     getCategoryIcon?: (cat: any) => any;
     getCategoryLabel?: (cat: any) => string;
+    categoriesPosition?: "top" | "bottom";
     categoryActiveBgClass?: string;
     categoryInactiveTextClass?: string;
     categoryBgClass?: string;
@@ -120,6 +122,23 @@
   <!-- Top Bar: Categories & Search Wrapper -->
   {#if showSearch || categories.length > 0}
     <div class="pt-4 pb-2 px-4 relative flex flex-col shrink-0 z-10 gap-3">
+      <!-- Category Bar (Top) -->
+      {#if categories.length > 0 && categoriesPosition === "top"}
+        <NookCategoryBar 
+          {categories} 
+          bind:activeCategory={activeCategory} 
+          layoutStyle={categoryLayoutStyle}
+          {getCategoryIcon}
+          {getCategoryLabel}
+          activeBgClass={categoryActiveBgClass}
+          inactiveTextClass={categoryInactiveTextClass}
+          bgClass={categoryBgClass}
+          borderClass={categoryBorderClass}
+          labelBgClass={categoryLabelBgClass}
+          labelTextClass={categoryLabelTextClass}
+        />
+      {/if}
+
       <!-- Search Bar -->
       {#if showSearch}
         <NookSearchBar 
@@ -138,14 +157,14 @@
         {@render filterPanel()}
       {/if}
 
-      <!-- Category Bar -->
-      {#if categories.length > 0}
+      <!-- Category Bar (Bottom) -->
+      {#if categories.length > 0 && categoriesPosition === "bottom"}
         <NookCategoryBar 
-          categories={categories}
-          bind:activeCategory={activeCategory}
+          {categories} 
+          bind:activeCategory={activeCategory} 
           layoutStyle={categoryLayoutStyle}
-          getCategoryIcon={getCategoryIcon}
-          getCategoryLabel={getCategoryLabel}
+          {getCategoryIcon}
+          {getCategoryLabel}
           activeBgClass={categoryActiveBgClass}
           inactiveTextClass={categoryInactiveTextClass}
           bgClass={categoryBgClass}
