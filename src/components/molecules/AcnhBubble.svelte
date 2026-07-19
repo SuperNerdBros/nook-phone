@@ -10,7 +10,10 @@
 		isActive = true,
 		class: className = 'mx-auto w-full max-w-none',
 		textDone = $bindable(false),
-		playSound
+		playSound,
+		compact = false,
+		badgeBg = '',
+		badgeColor = ''
 	}: {
 		title?: string;
 		children?: Snippet;
@@ -20,6 +23,9 @@
 		class?: string;
 		textDone?: boolean;
 		playSound?: () => void;
+		compact?: boolean;
+		badgeBg?: string;
+		badgeColor?: string;
 	} = $props();
 
 	const CHARACTER_COLORS: Record<string, { bg: string; text: string }> = {
@@ -76,7 +82,7 @@
 </script>
 
 {#if isActive}
-	<div class="pointer-events-auto dialogue {className}">
+	<div class="pointer-events-auto dialogue {compact ? 'dialogue-compact' : ''} {className}">
 		<div class="dialogue-blobs drop-shadow-lg relative">
 			<div class="dialogue-blob-top"></div>
 			<div class="dialogue-blob-bottom"></div>
@@ -86,7 +92,7 @@
 					<div class="flex gap-4 items-start relative z-10">
 						<!-- Animated / Typed Dialogue Text -->
 						<div class="flex-1 py-1">
-							<p class="text-xl sm:text-2xl text-[#807256] leading-snug font-medium min-h-[3.6rem]">
+							<p class={compact ? "text-base sm:text-lg text-[#807256] leading-snug font-bold italic" : "text-xl sm:text-2xl text-[#807256] leading-snug font-medium min-h-[3.6rem]"}>
 								{typedText}
 								{#if !textDone}
 									<span class="inline-block w-1.5 h-5 bg-[#807256] animate-pulse ml-0.5 align-middle"></span>
@@ -103,7 +109,7 @@
 
 		{#if title}
 			<div class="dialogue-character-wrap">
-				<div class="dialogue-character" style="background-color: {colors.bg}; color: {colors.text};">
+				<div class="dialogue-character" style="background-color: {badgeBg || colors.bg}; color: {badgeColor || colors.text};">
 					{title}
 				</div>
 			</div>
@@ -118,3 +124,12 @@
 		{/if}
 	</div>
 {/if}
+
+<style>
+	.dialogue-compact {
+		min-height: 80px !important;
+	}
+	.dialogue-compact :global(.dialogue-text) {
+		padding: 1.25rem 1.5rem 1.25rem 2rem !important;
+	}
+</style>

@@ -327,31 +327,36 @@
     <div class="absolute inset-0 z-30 bg-[#fdfcf2] flex flex-col overflow-y-auto ac-scrollbar animate-fade-in">
       <!-- Header -->
       <div class="flex items-center justify-between p-4 bg-[#9cc677] border-b border-black/10 sticky top-0 backdrop-blur-md z-40">
-        <button onclick={closeContact} class="flex items-center text-[#5c3a21] font-bold text-sm bg-white/50 px-3 py-1.5 rounded-full shadow-sm hover:bg-white active:scale-95 transition-all cursor-pointer">
+        <button onclick={closeContact} class="flex items-center text-[#5c3a21] font-bold text-sm bg-white/50 px-3 py-1.5 rounded-full shadow-sm hover:bg-white active:scale-95 transition-all cursor-pointer z-10">
           <ChevronLeft class="w-4 h-4 mr-1" /> Back
         </button>
-        <button onclick={() => toggleVip(selectedVillager.id)} class="text-[#f0b157] bg-white/50 p-2 rounded-full shadow-sm hover:bg-white active:scale-95 transition-all cursor-pointer">
+        <span class="absolute left-1/2 -translate-x-1/2 font-black text-lg text-[#5c3a21] tracking-tight pointer-events-none">{selectedVillager.name}</span>
+        <button onclick={() => toggleVip(selectedVillager.id)} class="text-[#f0b157] bg-white/50 p-2 rounded-full shadow-sm hover:bg-white active:scale-95 transition-all cursor-pointer z-10">
           <Star class="w-5 h-5 {nookState.isBestFriend(selectedVillager.id) ? 'fill-current' : ''}" />
         </button>
       </div>
 
-      <!-- Avatar & Name -->
-      <div class="flex flex-col items-center pt-8 pb-6 px-6 bg-gradient-to-b from-[#9cc677]/10 to-transparent">
-        <div class="h-32 mb-4 relative group flex items-end justify-center">
+      <!-- Avatar -->
+      <div class="flex flex-col items-center pt-8 pb-4 px-6 bg-gradient-to-b from-[#9cc677]/10 to-transparent">
+        <div class="h-32 mb-2 relative group flex items-end justify-center">
           {#if selectedVillager.image_url}
             <img src={selectedVillager.image_url} alt={selectedVillager.name} class="h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500" />
           {:else}
             <div class="w-28 h-28 rounded-full border-4 border-white bg-[#e1d9be] flex items-center justify-center text-4xl">🐾</div>
           {/if}
         </div>
-        <h1 class="text-3xl font-black text-[#5c3a21] tracking-tight">{selectedVillager.name}</h1>
-        <p class="text-[#8a7f66] font-bold mt-1 text-sm">
-          {selectedVillager.personality} {selectedVillager.species}
-          {#if selectedVillager.phrase}
-            <span class="font-normal opacity-60 mx-1.5">·</span>
-            <span class="italic font-normal">"{selectedVillager.phrase}"</span>
-          {/if}
-        </p>
+      </div>
+
+      <!-- Dialogue Bubble for Character Type & Sayings -->
+      <div class="px-5 mb-6">
+        <AcnhBubble
+          title="{selectedVillager.personality} {selectedVillager.species}"
+          dialogText="{selectedVillager.quote ? selectedVillager.quote.replace(/^["'“”]|["'“”]$/g, '').trim() : ''} {selectedVillager.phrase ? selectedVillager.phrase.replace(/^["'“”]|["'“”]$/g, '').trim() : ''}"
+          compact={true}
+          badgeBg="#9cc677"
+          badgeColor="#ffffff"
+          class="w-full"
+        />
       </div>
 
       <!-- Action Buttons -->
@@ -427,12 +432,6 @@
               <p class="text-[10px] font-bold text-[#8a7f66] uppercase">Preferred Outfit</p>
               <p class="text-sm font-bold text-[#5c3a21] capitalize">{selectedVillager.clothing || 'Unknown'}</p>
             </div>
-            {#if selectedVillager.quote}
-              <div class="col-span-2 bg-[#fdfcf5] p-3 rounded-xl border border-[#e1d9be]/60 mt-1">
-                <p class="text-[9px] font-bold text-[#8a7f66] uppercase tracking-wide mb-1">Favorite Saying</p>
-                <p class="text-xs italic font-bold text-[#5c3a21] leading-relaxed">"{selectedVillager.quote}"</p>
-              </div>
-            {/if}
             {#if selectedVillager.url}
               <div class="col-span-2 flex justify-end mt-2">
                 <button 
