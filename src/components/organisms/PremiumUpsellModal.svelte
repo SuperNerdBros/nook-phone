@@ -13,7 +13,6 @@
   const ctx = getPhoneContext();
 
   let authUrl = $state("");
-  let selectedApp = $state<any>(null);
 
   onMount(async () => {
     authUrl = (await fetchPatreonAuthUrl()) || "";
@@ -30,44 +29,6 @@
       window.open("https://www.patreon.com/xophz", "_blank");
     }
   };
-
-  const premiumApps = [
-    {
-      id: "abd",
-      logo: "wallet",
-      name: "ABD",
-      desc: "Automatic Bell Dispenser. 500k bells deposited to your account",
-      bg: "bg-[#d9f6af]"
-    },
-    {
-      id: "messages",
-      logo: "mail",
-      name: "Messages",
-      desc: "Direct messaging between residents",
-      bg: "bg-[#8b3a3a]"
-    },
-    {
-      id: "bestfriends",
-      logo: "best_friend",
-      name: "Best Friends",
-      desc: "Social hub, multiple passports & friend connections",
-      bg: "bg-[#ffd375]"
-    },
-    {
-      id: "bulletin",
-      logo: "chat",
-      name: "Bulletin Board",
-      desc: "Public bulletin boards & island-wide announcements",
-      bg: "bg-[#eb6a9d]"
-    },
-    {
-      id: "directory",
-      logo: "directory",
-      name: "App Directory",
-      desc: "Browse & install third-party island apps",
-      bg: "bg-[#45a38f]"
-    }
-  ];
 </script>
 
 {#if ctx.showPremiumUpsell}
@@ -92,10 +53,12 @@
       <div
         class="bg-gradient-to-br from-[#61b948] via-[#6ec94e] to-[#4a9e35] px-6 pt-10 pb-12 text-center relative overflow-hidden"
       >
-        <!-- Leaf pattern overlay -->
+        <!-- Cell status pattern overlay -->
         <div
-          class="absolute inset-0 opacity-[0.08] pointer-events-none"
-          style="background-image: url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M30 8c12 0 18 10 18 22s-18 22-18 22S12 42 12 30 18 8 30 8z%22 fill=%22white%22 fill-opacity=%220.5%22/%3E%3C/svg%3E'); background-size: 48px 48px;"
+          class="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style="background-image: url({resolveAssetUrl(
+            cellularStatusImg
+          )}); background-size: 32px 32px; background-repeat: repeat; filter: brightness(0) invert(1);"
         ></div>
 
         <!-- Wavy bottom edge - Layer 1 (Background) -->
@@ -153,27 +116,17 @@
         </div>
 
         <div class="relative z-10 flex flex-col items-center">
-          <!-- Logo badge -->
-          <div
-            class="w-[72px] h-[72px] bg-white/25 rounded-[22px] flex items-center justify-center mb-3 shadow-lg border-2 border-white/30 backdrop-blur-sm"
-            style="box-shadow: 0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.3);"
-          >
-            <img
-              src={resolveAssetUrl(nookIncLogo)}
-              alt="Nook Inc."
-              class="w-11 h-11 brightness-0 invert drop-shadow-md"
-            />
-          </div>
+          <!-- Logo badge (No Box) -->
+          <img
+            src={resolveAssetUrl(cellularStatusImg)}
+            alt="Signal"
+            class="h-16 object-contain mb-3 drop-shadow-md"
+            style="filter: invert(72%) sepia(80%) saturate(450%) hue-rotate(65deg) brightness(1.2) contrast(1);"
+          />
 
           <h1
             class="text-[26px] font-black m-0 text-white drop-shadow-sm tracking-wide leading-none flex items-center justify-center gap-1.5"
           >
-            <img
-              src={resolveAssetUrl(cellularStatusImg)}
-              alt="Signal"
-              class="h-5 object-contain"
-              style="filter: invert(72%) sepia(80%) saturate(450%) hue-rotate(65deg) brightness(1.2) contrast(1);"
-            />
             NookPhone<span class="text-yellow-200">+</span>
           </h1>
           <p class="text-[11px] font-bold text-white/80 mt-1.5 mb-0 tracking-wider uppercase">
@@ -183,121 +136,76 @@
       </div>
 
       <!-- Tom Nook Pitch -->
-      <div class="px-2 -mt-6 relative z-10">
+      <div class="px-2 -mt-2 relative z-10">
         <div
-          class="rounded-3xl px-3 flex flex-col items-center gap-2 text-center overflow-hidden relative"
+          class="bg-white border border-[#e8e4d8] rounded-2xl p-4 shadow-sm relative transition-all duration-300"
         >
-          <div class="flex flex-row justify-center items-center gap-2">
-            <img
-              src={resolveAssetUrl(cellularStatusImg)}
-              alt=""
-              class="w-40 h-40 object-contain shrink-0 drop-shadow-md relative z-10"
-              style="filter: invert(58%) sepia(61%) saturate(547%) hue-rotate(67deg) brightness(94%) contrast(92%);"
-            />
-            <PlusIcon class="text-green" />
-            <div class="flex-1 min-w-0 mt-2 relative z-10">
-              <span class="block text-[18px] font-black text-[#1b5e20] leading-none mb-1.5">
-                Starting @ $5
-              </span>
-              <span class="block text-[12px] text-[#388e3c] font-semibold leading-relaxed"
-                >Full connectivity. Communicate with residents worldwide. + 500,000 Bells.</span
-              >
-            </div>
-          </div>
-          <!-- <div class="absolute inset-0 opacity-[0.05]" style="background-image: radial-gradient(#1b5e20 2px, transparent 2px); background-size: 16px 16px;"></div> -->
-        </div>
-        <div class="bg-white border border-[#e8e4d8] rounded-2xl p-4 shadow-sm relative transition-all duration-300">
           <!-- Speech tail -->
           <div
             class="absolute -top-2 left-6 w-4 h-4 bg-white border-l border-t border-[#e8e4d8] rotate-45"
           ></div>
-          {#if selectedApp}
-            <p class="text-[12.5px] text-[#5c5446] leading-relaxed m-0 relative z-10 animate-fade-in">
-              <strong class="text-[14px] text-[#3a7a25] block mb-1">{selectedApp.name}</strong>
-              {selectedApp.desc}
-            </p>
-          {:else}
-            <p class="text-[12.5px] text-[#5c5446] leading-relaxed m-0 relative z-10 animate-fade-in">
-              <strong class="text-[#3a7a25]">Ah yes, yes!</strong> Thank you for your interest in the
-              <strong>NookPhone+ service plan</strong>, yes yes! For a small monthly fee, we'll
-              activate your cell service and unlock the full NookPhone experience. Plus, you'll be
-              <strong>supporting the developer</strong> who keeps the servers running!
-            </p>
-          {/if}
+          <p class="text-[12.5px] text-[#5c5446] leading-relaxed m-0 relative z-10 animate-fade-in">
+            <strong class="text-[#3a7a25]">Ah yes, yes!</strong> Thank you for your interest in the
+            <strong>NookPhone+ service plan</strong>, yes yes! For a small monthly fee, we'll
+            activate your cell service and unlock the full NookPhone+ experience. Plus, you'll be
+            <strong>supporting the developer</strong> who keeps the servers running!
+          </p>
         </div>
       </div>
 
-      <!-- Cloud Sync Feature -->
+      <!-- Plus Exclusive Features -->
       <div class="px-5 mt-4">
+        <div class="rounded-3xl px-3 text-center overflow-hidden relative mb-4">
+          <span class="block text-[18px] font-black text-[#1b5e20] leading-none mb-2">
+            NookPhone+ Upgraded Plan
+          </span>
+          <span class="block text-[12px] text-[#388e3c] font-semibold leading-relaxed"
+            >Enjoy seamless connectivity, cloud save backups, and exclusive member bonuses.</span
+          >
+        </div>
+
         <span
           class="text-[10px] font-black uppercase tracking-widest text-[#9a9585] block mb-2.5 px-1"
         >
           Plus Exclusive Features
         </span>
-
-        <div
-          class="bg-gradient-to-br from-[#e8f4fd] to-[#dbeafe] border border-[#b3d4f0] rounded-xl p-3.5 flex items-center gap-3 shadow-sm mt-2"
-        >
-          <div
-            class="w-9 h-9 rounded-xl bg-[#3b82f6] text-white flex items-center justify-center shrink-0 shadow-sm"
-          >
-            <Cloud class="w-[18px] h-[18px]" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <span class="block text-[13px] font-black text-[#1e40af] leading-none"
-              >Cloud Save Sync</span
-            >
-            <span class="block text-[10.5px] text-[#4b7ab5] font-semibold mt-0.5 leading-snug"
-              >Your layout, settings & wallpaper sync across all devices</span
-            >
-          </div>
-        </div>
-      </div>
-
-      <!-- Unlocked Apps -->
-      <div class="px-5 mt-4">
-        <span
-          class="text-[10px] font-black uppercase tracking-widest text-[#9a9585] block mb-2.5 px-1"
-        >
-          Apps Included With Your Plan
-        </span>
-        <div class="w-full max-w-full grid gap-y-[24px] gap-x-[10px] px-2 pt-2 justify-items-center content-start grid-cols-3">
-          {#each premiumApps as app}
-            <div class={`transition-all duration-200 ${selectedApp?.id === app.id ? 'scale-110' : 'hover:scale-105'}`}>
-              <NookAppIcon 
-                app={app} 
-                size="lg" 
-                showText={false}
-                forceUnlock={true}
-                onClick={() => selectedApp = app}
-              />
-            </div>
-          {/each}
-        </div>
-      </div>
-
-      <!-- Welcome Bonus & Fees -->
-      <div class="px-5 mt-4">
-        <div
-          class="bg-gradient-to-br from-[#fff8e1] to-[#fff3cd] border-2 border-[#f0d060] rounded-2xl p-4 relative overflow-hidden"
-        >
-          <div class="absolute top-2 right-2 opacity-20">
-            <Sparkles class="w-12 h-12 text-[#d4a017]" />
-          </div>
-          <span class="text-[10px] font-black uppercase tracking-widest text-[#b8860b] block mb-2">
-            ★ Account Perks & Fees ★
-          </span>
-          <div class="flex items-baseline gap-2 mb-1.5">
-            <span class="text-[22px] font-black text-[#8B6914] leading-none">+500,000</span>
-            <span class="text-[13px] font-black text-[#a07d1c]">Bells / Month Reward</span>
-          </div>
-          <div class="flex items-baseline gap-2 border-t border-[#f0d060]/50 pt-2">
-            <span class="text-[22px] font-black text-[#c0392b] leading-none">-50,000</span>
-            <span class="text-[13px] font-black text-[#b03a2e]">Bells / Month Cell Service</span>
-          </div>
-          <p class="text-[10px] text-[#8B6914]/70 font-bold mt-2.5 mb-0">
-            Monthly allowance deposited automatically. Cell service fee deducted monthly.
-          </p>
+        <div class="bg-white border border-[#e8e4d8] rounded-2xl p-4 shadow-sm">
+          <ul class="m-0 pl-1 space-y-3 text-[13px] text-[#5c5446] list-none">
+            <li class="flex gap-2.5 items-start">
+              <span class="text-[#61b948] mt-0.5 text-lg leading-none shrink-0">•</span>
+              <div>
+                <strong class="text-[#3a7a25] block text-[13.5px]">Premium Apps Unlocked</strong>
+                ABD, Messages, Best Friends, Bulletin Board, and App Directory
+              </div>
+            </li>
+            <li class="flex gap-2.5 items-start">
+              <span class="text-[#61b948] mt-0.5 text-lg leading-none shrink-0">•</span>
+              <div>
+                <strong class="text-[#3a7a25] block text-[13.5px]">Cloud Save & Sync</strong>
+                Keep your settings, custom layouts, and wallpapers synced across all of your devices
+                automatically
+              </div>
+            </li>
+            <li class="flex gap-2.5 items-start">
+              <span class="text-[#61b948] mt-0.5 text-lg leading-none shrink-0">•</span>
+              <div>
+                <strong class="text-[#3a7a25] block text-[13.5px]">Safe & Verified Community</strong
+                >
+                Limits DMs, friend connections, and public bulletins to verified accounts to keep interactions
+                safe and spam-free
+              </div>
+            </li>
+            <li class="flex gap-2.5 items-start">
+              <span class="text-[#61b948] mt-0.5 text-lg leading-none shrink-0">•</span>
+              <div>
+                <strong class="text-[#3a7a25] block text-[13.5px]"
+                  >500k Monthly Bell Allowance</strong
+                >
+                Receive +500,000 Bells deposited directly to your ABD monthly (minus the 50,000 Bell
+                cell fee. yes, yes.)
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
 

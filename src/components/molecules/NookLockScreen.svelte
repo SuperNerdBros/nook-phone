@@ -80,29 +80,26 @@
               <span class="text-3xl drop-shadow-sm">🔒</span>
             </div>
             <h2 class="text-[#5c3a21] font-black text-lg m-0 leading-tight">NookPhone+</h2>
-            <p class="text-[11px] text-[#5c3a21]/80 font-bold mt-1 leading-snug">
+            <p class="text-[11px] text-[#5c3a21]/80 font-bold mt-1 mb-4 leading-snug">
               Unlock the full potential of your NookPhone with a Pro account!
             </p>
+            <button
+              onclick={handlePatreonLogin}
+              class="w-full bg-[#FF424D] text-white border-0 py-2.5 px-4 rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-md hover:bg-[#e63c45] active:scale-95 transition-all cursor-pointer"
+            >
+              <LogIn class="w-3.5 h-3.5" /> Connect with Patreon
+            </button>
           </div>
         </div>
       {/if}
     </div>
 
-    <!-- Slider/Login Button -->
-    {#if isPro}
-      <button
-        onclick={ctx.handleUnlock}
-        class="w-full max-w-sm mx-auto bg-[#5c8e43] text-white border-0 py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:bg-[#4b7a34] active:scale-95 transition-all mb-8 relative z-10 cursor-pointer"
-      >
-        <Unlock class="w-4 h-4 animate-bounce" /> Slide / Tap to unlock
-      </button>
-    {:else}
-      <button
-        onclick={handlePatreonLogin}
-        class="w-full max-w-sm mx-auto bg-[#FF424D] text-white border-0 py-3.5 rounded-full font-black text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-[#e63c45] active:scale-95 transition-all mb-8 relative z-10 cursor-pointer"
-      >
-        <LogIn class="w-4 h-4" /> Connect with Patreon
-      </button>
-    {/if}
+    <!-- Slider/Unlock Button -->
+    <button
+      onclick={ctx.handleUnlock}
+      class="w-full max-w-sm mx-auto bg-[#5c8e43] text-white border-0 py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:bg-[#4b7a34] active:scale-95 transition-all mb-8 relative z-10 cursor-pointer"
+    >
+      <Unlock class="w-4 h-4 animate-bounce" /> Slide / Tap to unlock
+    </button>
   </div>
 {/if}
