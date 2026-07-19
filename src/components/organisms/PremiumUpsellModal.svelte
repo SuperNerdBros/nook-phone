@@ -7,7 +7,7 @@
   import nookIncLogo from "@/assets/img/Nook_Inc.svg";
   import cellularStatusImg from "@/assets/img/cellular_status.png";
   import { resolveAssetUrl } from "@/lib/utils";
-  import { fetchPatreonAuthUrl } from "@/lib/api";
+  import { fetchPatreonAuthUrl, isProUser } from "@/lib/api";
   import { onMount } from "svelte";
 
   const ctx = getPhoneContext();
@@ -17,9 +17,7 @@
 
   onMount(async () => {
     isPro = isProUser();
-    if (!isPro) {
-      authUrl = (await fetchPatreonAuthUrl(window.location.href)) || "";
-    }
+    authUrl = (await fetchPatreonAuthUrl(window.location.href)) || "";
   });
 
   const handleClose = () => {

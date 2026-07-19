@@ -8,13 +8,41 @@
   import { isProUser } from '@/lib/api';
   import walletIcon from "@/assets/img/Wallet.png";
   import LoanPaymentDialog from '../organisms/LoanPaymentDialog.svelte';
+  import { Tween } from 'svelte/motion';
+  import { cubicOut } from 'svelte/easing';
   
   const ctx = getPhoneContext();
   let showLoanDialog = $state(false);
   
+  let animatedBells = new Tween(nookState.bells, { duration: 2500, easing: cubicOut });
+  let animatedLoan = new Tween(nookState.loanBalance, { duration: 2500, easing: cubicOut });
+
+  $effect(() => {
+    const bellsChanged = animatedBells.target !== nookState.bells;
+    const loanChanged = animatedLoan.target !== nookState.loanBalance;
+    
+    if (bellsChanged || loanChanged) {
+      animatedBells.target = nookState.bells;
+      animatedLoan.target = nookState.loanBalance;
+      
+      const interval = setInterval(() => {
+        const isBellsDone = Math.abs(animatedBells.current - nookState.bells) < 1;
+        const isLoanDone = Math.abs(animatedLoan.current - nookState.loanBalance) < 1;
+        
+        if (isBellsDone && isLoanDone) {
+          clearInterval(interval);
+        } else {
+          import('@/lib/audio').then(m => m.playSound('tally'));
+        }
+      }, 70);
+      
+      return () => clearInterval(interval);
+    }
+  });
+
   // Format numbers with commas
   const formatBells = (num: number) => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
   const handleDepositClick = () => {
@@ -106,10 +134,10 @@
       
       <!-- Loan Balance -->
       <div class="flex justify-between items-end border-b-2 border-[#e6f9cd] pb-2 mb-3">
-        <span class="{nookState.loanBalance > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-[15px]">Loan Balance</span>
+        <span class="{animatedLoan.current > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-[15px]">Loan Balance</span>
         <div class="flex items-end">
-          <span class="{nookState.loanBalance > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-2xl leading-none">{formatBells(nookState.loanBalance)}</span>
-          <span class="{nookState.loanBalance > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-xs ml-1 mb-[2px]">Bells</span>
+          <span class="{animatedLoan.current > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-2xl leading-none">{formatBells(animatedLoan.current)}</span>
+          <span class="{animatedLoan.current > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-xs ml-1 mb-[2px]">Bells</span>
         </div>
       </div>
       
@@ -117,7 +145,7 @@
       <div class="flex justify-between items-end pt-1">
         <span class="text-[#499a22] font-bold text-[15px]">Savings Balance</span>
         <div class="flex items-end">
-          <span class="text-[#499a22] font-bold text-2xl leading-none">{formatBells(nookState.bells)}</span>
+          <span class="text-[#499a22] font-bold text-2xl leading-none">{formatBells(animatedBells.current)}</span>
           <span class="text-[#499a22] font-bold text-xs ml-1 mb-[2px]">Bells</span>
         </div>
       </div>

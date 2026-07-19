@@ -4,6 +4,7 @@
   import nookState from '@/lib/nookState.svelte';
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import AcnhBubble from '../molecules/AcnhBubble.svelte';
+  import { resolveAssetUrl } from '@/lib/utils';
   
   const { onClose } = $props<{ onClose: () => void; }>();
   const ctx = getPhoneContext();
@@ -71,11 +72,10 @@
         </div>
       {/if}
       <img 
-        src="https://dodo.ac/np/images/2/23/Tom_Nook_NH.png" 
+        src={resolveAssetUrl('/nook-face.svg')} 
         alt="Tom Nook" 
         class="h-full object-contain drop-shadow-2xl transition-transform duration-300"
         class:animate-bounce={isNookDancing}
-        onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="brown"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>' }}
       />
     </div>
   </div>

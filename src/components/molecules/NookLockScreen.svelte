@@ -13,9 +13,7 @@
 
   onMount(async () => {
     isPro = isProUser();
-    if (!isProUser()) {
-      authUrl = await fetchPatreonAuthUrl(window.location.href) || '';
-    }
+    authUrl = await fetchPatreonAuthUrl(window.location.href) || '';
   });
 
   function handlePatreonLogin() {

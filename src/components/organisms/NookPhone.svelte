@@ -38,13 +38,34 @@
   import NookAppLaunchAnim from '../molecules/NookAppLaunchAnim.svelte';
   import NookAppInstallAnim from '../molecules/NookAppInstallAnim.svelte';
   import NookExternalAppScreen from '../molecules/NookExternalAppScreen.svelte';
+  import RewardDialog from './RewardDialog.svelte';
 
   const ctx = setPhoneContext();
 
+  let rewardDialogRef: ReturnType<typeof RewardDialog> | undefined = $state();
+
+  $effect(() => {
+    if (!ctx.isBooting && nookState.showRewardFlow && rewardDialogRef) {
+      nookState.showRewardFlow = false; // consume it
+      rewardDialogRef.triggerRewardFlow();
+    }
+  });
+
   onMount(() => {
-    setTimeout(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const successParam = urlParams.get('success');
+    
+    if (successParam === 'patreon') {
       ctx.isBooting = false;
-    }, 2800);
+      urlParams.delete('success');
+      const newSearch = urlParams.toString();
+      const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
+    } else {
+      setTimeout(() => {
+        ctx.isBooting = false;
+      }, 2800);
+    }
 
     const updateTime = () => {
       const now = new Date();
@@ -115,6 +136,19 @@
     // Sync initial route from hash if present
     const hash = window.location.hash;
     const match = hash.match(/^#\/app\/(.+)$/);
+
+    // Check for errors in the URL
+    const errorParam = urlParams.get('error');
+    if (errorParam) {
+      setTimeout(() => {
+        alert("Patreon Connection Error: " + errorParam.replace(/_/g, ' '));
+        // Clean up URL
+        urlParams.delete('error');
+        const newSearch = urlParams.toString();
+        const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
+        window.history.replaceState({}, '', newUrl);
+      }, 500);
+    }
     const initialApp = match ? decodeURIComponent(match[1]) : null;
     if (initialApp) {
       nookState.navigate(initialApp);
@@ -206,7 +240,8 @@
 
     <NookAppLaunchAnim />
     <NookAppInstallAnim />
-
+    
+    <RewardDialog bind:this={rewardDialogRef} />
   </div>
 </div>
 

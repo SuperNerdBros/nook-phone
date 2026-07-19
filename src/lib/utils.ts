@@ -25,7 +25,7 @@ export function resolveAssetUrl(assetPath: string) {
   
   if (assetPath.startsWith('http')) return assetPath;
   
-  if (assetPath.startsWith('/assets/')) {
+  if (assetPath.startsWith('/')) {
     return (window as any).wpApiSettings?.pluginUrl + 'public/dist' + assetPath;
   }
   return assetPath;

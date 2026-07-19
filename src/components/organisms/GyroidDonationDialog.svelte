@@ -13,6 +13,7 @@
   let currentDonation = $derived(nookState.appDonations[appId] || 0);
   let remaining = $derived(Math.max(0, GOAL - currentDonation));
   let bellsAvailable = $derived(nookState.bells);
+  let wasAppPermanent = $state(nookState.isAppPermanent(appId));
   
   type DialogState = 'intro' | 'checking_status' | 'donation_input' | 'donated_success' | 'fully_funded';
   let currentState = $state<DialogState>('intro');
@@ -20,18 +21,28 @@
   let dialogText = $state('');
   let isLloidDancing = $state(false);
   
-  // Set default donation amount to maximum possible
+  // Set default donation amount to remaining or 1000 if already funded
   $effect(() => {
-    donationAmount = Math.min(bellsAvailable, remaining);
+    if (currentState === 'intro') {
+      donationAmount = wasAppPermanent ? Math.min(bellsAvailable, 10000) : Math.min(bellsAvailable, remaining);
+    }
   });
   
   // Update Lloid's dialogue based on state
   $effect(() => {
     if (currentState === 'intro') {
-      dialogText = `Hullo, hullo! We're raising funds to make the ${appName} app a permanent resident! What do you say?`;
+      if (wasAppPermanent) {
+        dialogText = `Hullo, hullo! The ${appName} app is fully funded, but we're always accepting donations to support the developer!`;
+      } else {
+        dialogText = `Hullo, hullo! We're raising funds to make the ${appName} app a permanent resident! What do you say?`;
+      }
       isLloidDancing = false;
     } else if (currentState === 'checking_status') {
-      dialogText = `Let's see here... We've gathered ${currentDonation.toLocaleString()} Bells so far! We still need ${remaining.toLocaleString()} Bells!`;
+      if (wasAppPermanent) {
+        dialogText = `Let's see here... We've gathered an astounding ${currentDonation.toLocaleString()} Bells so far! Your generosity knows no bounds!`;
+      } else {
+        dialogText = `Let's see here... We've gathered ${currentDonation.toLocaleString()} Bells so far! We still need ${remaining.toLocaleString()} Bells!`;
+      }
       isLloidDancing = false;
     } else if (currentState === 'donation_input') {
       if (bellsAvailable <= 0) {
@@ -50,18 +61,14 @@
   });
 
   function handleDonate() {
-    if (donationAmount > 0 && donationAmount <= bellsAvailable && donationAmount <= remaining) {
+    if (donationAmount > 0 && donationAmount <= bellsAvailable) {
       const donated = donationAmount;
       nookState.donateToApp(appId, donated);
       
       // Play sound
       import('@/lib/audio').then(m => m.playSound('success'));
       
-      if (nookState.isAppPermanent(appId)) {
-        currentState = 'fully_funded';
-      } else {
-        currentState = 'donated_success';
-      }
+      currentState = 'donated_success';
     }
   }
   
@@ -136,11 +143,11 @@
                   type="number" 
                   bind:value={donationAmount}
                   min="0"
-                  max={Math.min(bellsAvailable, remaining)}
+                  max={wasAppPermanent ? bellsAvailable : Math.min(bellsAvailable, remaining)}
                   class="w-full bg-white pl-9 pr-16 py-2.5 rounded-xl text-lg font-black border-2 border-[#e1d9be] focus:outline-none focus:border-[#1ca349] text-[#5c3a21] placeholder:text-[#8a7f66]/60"
                 />
                 <button 
-                  onclick={() => donationAmount = Math.min(bellsAvailable, remaining)}
+                  onclick={() => donationAmount = wasAppPermanent ? bellsAvailable : Math.min(bellsAvailable, remaining)}
                   class="absolute right-2 top-1/2 -translate-y-1/2 bg-[#ffdf28]/20 text-[#c2a613] border-2 border-[#ffdf28]/40 px-2 py-0.5 rounded-lg font-bold text-[10px] hover:bg-[#ffdf28]/30 active:scale-95 transition-transform cursor-pointer"
                 >
                   MAX
@@ -159,12 +166,18 @@
           {/if}
         {:else if currentState === 'donated_success'}
           <div class="flex gap-2">
-            <button onclick={() => currentState = 'donation_input'} class="flex-[2] bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform text-center cursor-pointer">
-              Donate again
-            </button>
-            <button onclick={onClose} class="flex-1 bg-white border-2 border-[#e1d9be] text-[#8a7f66] px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-gray-50 active:scale-95 transition-transform text-center cursor-pointer">
-              Close
-            </button>
+            {#if nookState.isAppPermanent(appId)}
+              <button onclick={() => currentState = 'fully_funded'} class="bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform w-full flex items-center justify-center gap-1 cursor-pointer">
+                Next <ChevronRight class="w-4 h-4" />
+              </button>
+            {:else}
+              <button onclick={() => currentState = 'donation_input'} class="flex-[2] bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform text-center cursor-pointer">
+                Donate again
+              </button>
+              <button onclick={onClose} class="flex-1 bg-white border-2 border-[#e1d9be] text-[#8a7f66] px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-gray-50 active:scale-95 transition-transform text-center cursor-pointer">
+                Close
+              </button>
+            {/if}
           </div>
         {:else if currentState === 'fully_funded'}
           <button onclick={onClose} class="bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform w-full text-center cursor-pointer">

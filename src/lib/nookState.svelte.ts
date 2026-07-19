@@ -427,6 +427,18 @@ class NookStateManager {
       this.initializeAsync();
     }
   }
+  showRewardFlow = $state(false);
+
+  get hasPendingAllowance() {
+    return this.state.patreonTierCents && this.state.patreonTierCents > 0 && !this.state.hasReceivedAllowance;
+  }
+
+  depositAllowance() {
+    this.state.bells += 500000;
+    this.state.loanBalance = 50000;
+    this.state.hasReceivedAllowance = true;
+    this.save();
+  }
 
   async initializeAsync() {
     if (isProUser()) {
@@ -442,17 +454,8 @@ class NookStateManager {
     }
     
     // Check if they linked Patreon and need their 500k allowance deposited
-    if (this.state.patreonTierCents && this.state.patreonTierCents > 0 && !this.state.hasReceivedAllowance) {
-      this.state.bells += 500000;
-      this.state.loanBalance = 50000;
-      this.state.hasReceivedAllowance = true;
-      this.save();
-      
-      this.addNotification(
-        "Premium Allowance Deposited!",
-        "Yes, yes! We've deposited your monthly 500,000 Bells allowance into your ABD. Note that your cell service fee loan of 50,000 Bells is now due!",
-        "Tom Nook"
-      );
+    if (this.hasPendingAllowance) {
+      this.showRewardFlow = true;
     }
   }
 

@@ -312,7 +312,7 @@ export const searchNookipediaItems = async (query: string, category?: string) =>
 export const fetchPatreonAuthUrl = async (returnUrl?: string) => {
   try {
     const root = window.wpApiSettings?.root || '/wp-json/';
-    let url = `${root}xophz/v1/auth/patreon/url`;
+    let url = `${root}xophz/v1/auth/patreon/nook-phone/url`;
     if (returnUrl) {
       url += `?return_url=${encodeURIComponent(returnUrl)}`;
     }
