@@ -188,14 +188,16 @@
       draggedEl.style.boxShadow = '';
 
       if (hoveredId && hoveredId !== appId) {
-        // Swap them in nookState.pinnedApps!
-        const pinned = [...nookState.pinnedApps];
-        const idx1 = pinned.indexOf(appId);
-        const idx2 = pinned.indexOf(hoveredId);
+        // Swap them in nookState.installedApps if both are installed apps
+        const installed = nookState.installedApps || [];
+        const idx1 = installed.indexOf(appId);
+        const idx2 = installed.indexOf(hoveredId);
+        
         if (idx1 !== -1 && idx2 !== -1) {
-          pinned[idx1] = hoveredId;
-          pinned[idx2] = appId;
-          nookState.pinnedApps = pinned;
+          const newArr = [...installed];
+          newArr[idx1] = hoveredId;
+          newArr[idx2] = appId;
+          nookState.installedApps = newArr;
           nookState.save();
           if (nookState.settings.soundEffects) {
             import('@/lib/audio').then(({ playSound }) => playSound('stamp'));

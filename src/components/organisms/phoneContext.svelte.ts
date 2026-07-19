@@ -131,7 +131,14 @@ export class PhoneContext {
     ...CORE_APPS,
     ...((nookState.installedApps || [])
       .map((name) => projectsData.find((p) => p.name === name))
-      .filter(Boolean) as any[])
+      .filter((p) => {
+        if (!p) return false;
+        const lowerName = p.name.toLowerCase();
+        // Prevent duplication if the app is already a core app
+        if (lowerName === "miles") return false;
+        if (CORE_APPS.some((c) => c.name.toLowerCase() === lowerName)) return false;
+        return true;
+      }) as any[])
   ]);
 
   homeScreenApps = $derived(this.allApps.filter((a) => nookState.isAppPinned(a.id || a.name)));
