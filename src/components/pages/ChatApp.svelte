@@ -443,22 +443,15 @@
               <p class="text-[12px] text-[#786b51] line-clamp-2 leading-relaxed font-medium">{thread.content}</p>
             </div>
 
-            <!-- Bottom Controls (Stats) -->
-            <div class="flex items-center justify-end gap-2 w-full pt-3 mt-1 border-t-2 border-dashed border-[#e8dfc7] z-10">
-              <button 
+            <!-- Bottom Controls -->
+            <div class="flex justify-between items-center w-full pt-2 mt-1 border-t-2 border-dashed border-[#e8dfc7] text-[11px] font-bold text-[#8a7f66] z-10">
+              <button
                 onclick={(e) => { e.stopPropagation(); handleLike(thread.id, e); }}
-                class={`flex items-center gap-1.5 px-3 py-1 rounded-full border-2 transition-all cursor-pointer ${thread.hasLiked ? 'bg-[#facc15] border-[#ca8a04] text-white shadow-sm' : 'bg-[#fefce8] border-[#fde047] hover:bg-[#fef08a] text-[#a16207]'}`}
+                class={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-b-2 transition-all cursor-pointer ${thread.hasLiked ? 'bg-[#eb6a9d] border-[#c94d7d] text-white active:translate-y-0.5 active:border-b-0' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-0.5 active:border-b-0'}`}
               >
-                <Coins class="w-4 h-4 stroke-[2.5px]" />
-                <span class="text-[11px] font-black tracking-wide">
-                  {thread.likes ? `${thread.likes}00 Bells` : 'Donate'}
-                </span>
+                <ThumbsUp class="w-3.5 h-3.5 stroke-[2.5px]" />
+                <span class="font-black">{thread.likes || 0} Upvotes</span>
               </button>
-
-              <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fcfaf5] border-2 border-[#e1d9be] text-[#7a6f58]">
-                <MessageCircle class="w-3.5 h-3.5 stroke-[3px]" />
-                <span class="text-[11px] font-black">{thread.comment_count || 0}</span>
-              </div>
             </div>
           </div>
         {/each}
@@ -484,6 +477,17 @@
             <div class="flex flex-col gap-3 z-10 text-center pt-2 pb-2 px-1">
               <h3 class="text-[15px] font-black text-[#5c3a21] leading-snug">{activeThread.title}</h3>
               <p class="text-[13px] text-[#786b51] leading-relaxed font-medium whitespace-pre-wrap">{activeThread.content}</p>
+            </div>
+
+            <!-- Bottom Controls -->
+            <div class="flex items-center justify-between pt-3 mt-1 border-t-2 border-dashed border-[#e8dfc7]">
+              <button
+                onclick={(e) => handleLike(activeThread!.id, e)}
+                class={`flex items-center gap-1.5 px-4 py-2 rounded-xl border-b-[3px] text-[12px] font-black transition-all cursor-pointer ${activeThread.hasLiked ? 'bg-[#eb6a9d] border-[#c94d7d] text-white active:translate-y-[2px] active:border-b-[1px]' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-[2px] active:border-b-[1px]'}`}
+              >
+                <ThumbsUp class="w-4 h-4 stroke-[2.5px]" />
+                <span>{activeThread.likes || 0} Upvotes</span>
+              </button>
             </div>
          </div>
 
