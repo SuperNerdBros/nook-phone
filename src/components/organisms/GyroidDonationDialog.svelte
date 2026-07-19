@@ -1,37 +1,66 @@
 <script lang="ts">
   import { fly, fade } from 'svelte/transition';
-  import { Coins, X, ChevronRight, HandCoins } from '@lucide/svelte';
+  import { Coins, ChevronRight, Sparkles } from '@lucide/svelte';
   import nookState from '@/lib/nookState.svelte';
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
-  import gyroidImg from '@/assets/img/GyroidWiki.png';
   import { resolveAssetUrl } from '@/lib/utils';
+  import AcnhBubble from '../molecules/AcnhBubble.svelte';
   
   const { appId, appName, onClose } = $props<{ appId: string; appName: string; onClose: () => void; }>();
   const ctx = getPhoneContext();
   
-  const GOAL = 280000;
+  const GOAL = 98000;
   let currentDonation = $derived(nookState.appDonations[appId] || 0);
   let remaining = $derived(Math.max(0, GOAL - currentDonation));
   let bellsAvailable = $derived(nookState.bells);
   
+  type DialogState = 'intro' | 'checking_status' | 'donation_input' | 'donated_success' | 'fully_funded';
+  let currentState = $state<DialogState>('intro');
   let donationAmount = $state(0);
+  let dialogText = $state('');
+  let isLloidDancing = $state(false);
   
-  // Set default to whatever they can afford up to the remaining amount
+  // Set default donation amount to maximum possible
   $effect(() => {
     donationAmount = Math.min(bellsAvailable, remaining);
   });
   
+  // Update Lloid's dialogue based on state
+  $effect(() => {
+    if (currentState === 'intro') {
+      dialogText = `Hullo, hullo! We're raising funds to make the ${appName} app a permanent resident! What do you say?`;
+      isLloidDancing = false;
+    } else if (currentState === 'checking_status') {
+      dialogText = `Let's see here... We've gathered ${currentDonation.toLocaleString()} Bells so far! We still need ${remaining.toLocaleString()} Bells!`;
+      isLloidDancing = false;
+    } else if (currentState === 'donation_input') {
+      if (bellsAvailable <= 0) {
+        dialogText = `Oh, dear... It looks like you don't have any Bells on you right now.`;
+      } else {
+        dialogText = `Splendid! How many Bells would you like to donate today?`;
+      }
+      isLloidDancing = false;
+    } else if (currentState === 'donated_success') {
+      dialogText = `Clank-clank! Splendid! We just received your donation of Bells! We'll put them to good use!`;
+      isLloidDancing = true;
+    } else if (currentState === 'fully_funded') {
+      dialogText = `Huzzah! We've reached our funding goal! The ${appName} app is now a permanent fixture on your NookPhone! Thank you!`;
+      isLloidDancing = true;
+    }
+  });
+
   function handleDonate() {
     if (donationAmount > 0 && donationAmount <= bellsAvailable && donationAmount <= remaining) {
-      nookState.donateToApp(appId, donationAmount);
+      const donated = donationAmount;
+      nookState.donateToApp(appId, donated);
+      
       // Play sound
       import('@/lib/audio').then(m => m.playSound('success'));
       
       if (nookState.isAppPermanent(appId)) {
-        onClose();
+        currentState = 'fully_funded';
       } else {
-        // Update input field for next possible donation
-        donationAmount = Math.min(nookState.bells, Math.max(0, GOAL - nookState.appDonations[appId]));
+        currentState = 'donated_success';
       }
     }
   }
@@ -41,97 +70,108 @@
   }
 </script>
 
-<div class="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" in:fade={{duration: 200}} out:fade={{duration: 200}}>
-  <div class="bg-[#f0e8d1] border-4 border-[#c7b79a] w-full max-w-sm rounded-[2rem] shadow-2xl flex flex-col overflow-hidden" in:fly={{y: 20, duration: 300}}>
-    <div class="bg-[#7db46c] text-[#fffdf5] py-3 px-4 flex justify-between items-center relative overflow-hidden shadow-inner">
-      <div class="absolute inset-0 opacity-[0.1]" style="background-image: radial-gradient(#ffffff 2px, transparent 2px); background-size: 16px 16px;"></div>
-      <h3 class="font-black text-[15px] relative z-10 flex items-center gap-2">
-        <HandCoins class="w-5 h-5" /> 
-        Project Funding
-      </h3>
-      <button onclick={onClose} class="w-8 h-8 bg-black/10 hover:bg-black/20 rounded-full flex items-center justify-center relative z-10 transition">
-        <X class="w-4 h-4" />
-      </button>
+<div class="absolute inset-0 z-[100] bg-black/20 backdrop-blur-sm flex flex-col overflow-hidden animate-fade-in" in:fade={{duration: 250}} out:fade={{duration: 200}}>
+
+  <!-- Character (Centered) -->
+  <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-32">
+    <div class="h-64 flex flex-col items-center justify-center relative animate-ac-float">
+      {#if currentState === 'fully_funded'}
+        <div class="absolute inset-0 pointer-events-none flex items-center justify-center -z-10">
+          <div class="animate-ping absolute w-48 h-48 bg-yellow-300/30 rounded-full"></div>
+          <Sparkles class="w-24 h-24 text-yellow-400 animate-spin" />
+        </div>
+      {/if}
+      <img 
+        src="https://dodo.ac/np/images/a/a6/Lloid_NH.png" 
+        alt="Lloid" 
+        class="h-full object-contain drop-shadow-2xl transition-transform duration-300"
+        class:animate-bounce={isLloidDancing}
+      />
     </div>
-    
-    <div class="p-5 flex flex-col items-center gap-4">
-      <!-- Gyroid & Speech Bubble -->
-      <div class="flex gap-3 w-full">
-        <img src={resolveAssetUrl(gyroidImg)} alt="Lloid" class="w-16 h-16 object-contain drop-shadow-md animate-bounce" style="animation-duration: 2s;" />
-        <div class="flex-1 bg-white border-2 border-[#e0d6c0] rounded-2xl rounded-tl-none p-3 relative shadow-sm">
-          <div class="absolute -left-[9px] top-0 w-4 h-4 bg-white border-l-2 border-t-2 border-[#e0d6c0] transform -skew-x-[30deg]"></div>
-          <p class="text-[12px] font-bold text-[#5c5446] leading-snug m-0 relative z-10">
-            Hullo! We're collecting donations to make <strong class="text-[#7db46c]">{appName}</strong> a permanent fixture on your NookPhone!
-          </p>
-        </div>
-      </div>
-      
-      <!-- Progress Bar -->
-      <div class="w-full bg-white border-2 border-[#e0d6c0] rounded-2xl p-3 shadow-inner mt-2">
-        <div class="flex justify-between items-end mb-2">
-          <span class="text-[10px] font-black uppercase text-[#a0947a]">Funding Goal</span>
-          <span class="text-[14px] font-black text-[#5c5446]">{currentDonation.toLocaleString()} / {GOAL.toLocaleString()} <span class="text-[10px] text-[#a0947a]">Bells</span></span>
-        </div>
-        <div class="w-full h-4 bg-[#e0d6c0] rounded-full overflow-hidden shadow-inner">
-          <div class="h-full bg-gradient-to-r from-[#ffd375] to-[#f59e33] transition-all duration-500 ease-out relative" style={`width: ${Math.min(100, (currentDonation / GOAL) * 100)}%`}>
-            <div class="absolute inset-0 bg-white/20" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.3) 10px, rgba(255,255,255,0.3) 20px);"></div>
-          </div>
-        </div>
-        <div class="text-right text-[10px] font-bold text-[#a0947a] mt-1">
-          {remaining.toLocaleString()} more needed!
-        </div>
-      </div>
-      
-      <!-- Donation Controls -->
-      <div class="w-full mt-1">
-        <div class="flex justify-between items-center mb-1 px-1">
-          <span class="text-[11px] font-bold text-[#8c826b]">Your Bells:</span>
-          <span class="text-[13px] font-black text-[#d4a017] flex items-center gap-1"><Coins class="w-3.5 h-3.5" /> {bellsAvailable.toLocaleString()}</span>
-        </div>
-        
-        <div class="flex gap-2 mb-3">
-          <input 
-            type="number" 
-            bind:value={donationAmount}
-            min="0"
-            max={Math.min(bellsAvailable, remaining)}
-            class="flex-1 bg-white border-2 border-[#d4c3a3] rounded-xl px-3 py-2 text-center font-black text-[#5c5446] focus:border-[#7db46c] focus:outline-none"
-          />
-          <button 
-            onclick={() => donationAmount = Math.min(bellsAvailable, remaining)}
-            class="bg-[#d4c3a3] text-[#5c5446] px-3 py-2 rounded-xl font-bold text-[11px] hover:bg-[#c7b79a] active:scale-95 transition"
-          >
-            Max
+  </div>
+
+  <!-- Bubble (Bottom Half) -->
+  <div class="relative z-20 w-full px-4 pb-8 shrink-0 mt-auto">
+    <AcnhBubble
+      title="Lloid"
+      badgeBg="#d98947"
+      badgeColor="#ffffff"
+      dialogText={dialogText}
+      isActive={true}
+      class="w-full max-w-lg mx-auto"
+    >
+      <div class="mt-4 border-t border-[#e1d9be]/60 pt-4 flex flex-col gap-3 animate-fade-in" style="animation-delay: 500ms;">
+        {#if currentState === 'intro'}
+          <button onclick={() => currentState = 'donation_input'} class="bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform w-full text-center cursor-pointer">
+            I want to donate!
           </button>
-        </div>
-        
-        {#if bellsAvailable === 0 && remaining > 0}
-          <div class="bg-[#ffd375]/30 border border-[#f59e33] rounded-xl p-2.5 mb-3 text-center">
-            <p class="text-[11px] font-bold text-[#9a7520] m-0 mb-2">You're out of Bells!</p>
-            <button 
-              onclick={handleGetMoreBells}
-              class="w-full bg-gradient-to-r from-[#61b948] to-[#4a9e35] text-white py-2 rounded-lg font-black text-[12px] shadow-sm hover:opacity-90 transition active:scale-95 flex items-center justify-center gap-1"
-            >
-              Get NookPhone+ <ChevronRight class="w-3 h-3" />
+          <div class="flex gap-2">
+            <button onclick={() => currentState = 'checking_status'} class="flex-1 bg-[#ffdf28]/20 text-[#c2a613] border-2 border-[#ffdf28]/40 px-4 py-2 rounded-xl font-bold text-sm shadow-sm hover:bg-[#ffdf28]/30 active:scale-95 transition-transform text-center cursor-pointer">
+              How much is left?
+            </button>
+            <button onclick={onClose} class="flex-1 bg-white border-2 border-[#e1d9be] text-[#8a7f66] px-4 py-2 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 active:scale-95 transition-transform text-center cursor-pointer">
+              Not right now
             </button>
           </div>
-        {:else}
-          <button 
-            onclick={handleDonate}
-            disabled={donationAmount <= 0}
-            class="w-full bg-[#7db46c] hover:bg-[#689859] disabled:bg-[#a0947a] disabled:opacity-50 text-white font-black text-[16px] py-3.5 rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-2"
-          >
-            <Coins class="w-5 h-5" /> Donate Bells
+        {:else if currentState === 'checking_status'}
+          <button onclick={() => currentState = 'donation_input'} class="bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform w-full text-center cursor-pointer">
+            Let's donate!
+          </button>
+          <button onclick={() => currentState = 'intro'} class="w-full text-center font-bold text-sm text-[#8a7f66] hover:underline cursor-pointer">
+            Go back
+          </button>
+        {:else if currentState === 'donation_input'}
+          {#if bellsAvailable <= 0}
+            <button onclick={handleGetMoreBells} class="bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform w-full flex items-center justify-center gap-1 cursor-pointer">
+              Get NookPhone+ <ChevronRight class="w-4 h-4" />
+            </button>
+            <button onclick={() => currentState = 'intro'} class="w-full text-center font-bold text-sm text-[#8a7f66] hover:underline cursor-pointer">
+              Never mind
+            </button>
+          {:else}
+            <div class="flex gap-2">
+              <div class="flex-1 relative flex items-center">
+                <Coins class="w-4 h-4 absolute left-3 text-[#d4a017]" />
+                <input 
+                  type="number" 
+                  bind:value={donationAmount}
+                  min="0"
+                  max={Math.min(bellsAvailable, remaining)}
+                  class="w-full bg-white pl-9 pr-16 py-2.5 rounded-xl text-lg font-black border-2 border-[#e1d9be] focus:outline-none focus:border-[#1ca349] text-[#5c3a21] placeholder:text-[#8a7f66]/60"
+                />
+                <button 
+                  onclick={() => donationAmount = Math.min(bellsAvailable, remaining)}
+                  class="absolute right-2 top-1/2 -translate-y-1/2 bg-[#ffdf28]/20 text-[#c2a613] border-2 border-[#ffdf28]/40 px-2 py-0.5 rounded-lg font-bold text-[10px] hover:bg-[#ffdf28]/30 active:scale-95 transition-transform cursor-pointer"
+                >
+                  MAX
+                </button>
+              </div>
+            </div>
+            
+            <div class="flex gap-2">
+              <button onclick={handleDonate} disabled={donationAmount <= 0} class="flex-[2] bg-[#1ca349] disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform text-center cursor-pointer">
+                Donate
+              </button>
+              <button onclick={() => currentState = 'intro'} class="flex-1 bg-white border-2 border-[#e1d9be] text-[#8a7f66] px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-gray-50 active:scale-95 transition-transform text-center cursor-pointer">
+                Cancel
+              </button>
+            </div>
+          {/if}
+        {:else if currentState === 'donated_success'}
+          <div class="flex gap-2">
+            <button onclick={() => currentState = 'donation_input'} class="flex-[2] bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform text-center cursor-pointer">
+              Donate again
+            </button>
+            <button onclick={onClose} class="flex-1 bg-white border-2 border-[#e1d9be] text-[#8a7f66] px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-gray-50 active:scale-95 transition-transform text-center cursor-pointer">
+              Close
+            </button>
+          </div>
+        {:else if currentState === 'fully_funded'}
+          <button onclick={onClose} class="bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform w-full text-center cursor-pointer">
+            Let's play!
           </button>
         {/if}
-        
-        <button 
-          onclick={onClose}
-          class="w-full mt-2 py-2 text-[12px] font-bold text-[#8c826b] hover:text-[#5c5446] transition"
-        >
-          Not right now
-        </button>
       </div>
-    </div>
+    </AcnhBubble>
   </div>
 </div>

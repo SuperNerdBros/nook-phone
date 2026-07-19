@@ -9,8 +9,6 @@
   
   const ctx = getPhoneContext();
 
-  const isLocked = $derived(app && !isProUser() && (app.proOnly || !CORE_APPS.some(c => c.id === app.id)));
-
   let { 
     app, 
     onClick,
@@ -18,6 +16,7 @@
     onMouseLeave,
     size = 'md',
     showText = true,
+    forceUnlock = false,
     class: className = '',
     children
   } = $props<{
@@ -27,9 +26,12 @@
     onMouseLeave?: () => void;
     size?: 'sm' | 'md' | 'lg' | 'xl';
     showText?: boolean;
+    forceUnlock?: boolean;
     class?: string;
     children?: import('svelte').Snippet;
   }>();
+
+  const isLocked = $derived(!forceUnlock && app && !isProUser() && (app.proOnly || !CORE_APPS.some(c => c.id === app.id)));
 
   const sizeClasses = {
     sm: { button: 'w-[64px]', icon: 'w-[46px] h-[46px] rounded-full', p: 'p-1.5', text: 'text-[8.5px]' },

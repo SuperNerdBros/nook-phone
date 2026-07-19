@@ -211,12 +211,14 @@
       <div class="grid grid-cols-2 gap-3 content-start">
         {#each filteredProjects as p (p.name)}
           {@const isInstalled = nookState.isAppInstalled(p.name)}
-          <button
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <div
             onclick={() => {
               selectedApp = p;
               currentView = "detail";
             }}
-            class="min-h-[11rem] h-full rounded-xl flex flex-col items-center p-3 pb-10 transition-all relative overflow-hidden group bg-[#d4e8e6] border-2 border-[#bedad4] shadow-sm hover:scale-105"
+            class="min-h-[11rem] h-full rounded-xl flex flex-col items-center p-3 pb-10 transition-all relative overflow-hidden group bg-[#d4e8e6] border-2 border-[#bedad4] shadow-sm hover:scale-105 cursor-pointer"
           >
             <!-- Faux Pattern Background -->
             <div class="absolute inset-0 opacity-[0.05] pointer-events-none" style="background-image: radial-gradient(#2d5c56 1px, transparent 1px); background-size: 10px 10px;"></div>
@@ -244,20 +246,35 @@
             </p>
 
             <!-- Craftable Banner -->
-            <div class="absolute bottom-0 left-0 w-full bg-[#45a38f] text-[#fffdf5] text-[10px] font-black py-1.5 flex items-center justify-center gap-1 shadow-inner z-10 border-t-2 border-[#368875]">
+            <div class="absolute bottom-0 left-0 w-full bg-[#45a38f] text-[#fffdf5] text-[10px] font-black shadow-inner z-10 border-t-2 border-[#368875]">
               {#if selectedPlatform === 'installable'}
                 {#if isInstalled}
-                  Installed
+                  <div class="py-1.5 flex items-center justify-center gap-1">Installed</div>
                 {:else}
-                  <CloudDownload class="w-3.5 h-3.5" strokeWidth={3} /> Cloud
+                  <button
+                    onclick={(e) => { e.stopPropagation(); handleInstall(p.name); }}
+                    class="w-full py-1.5 flex items-center justify-center gap-1 hover:bg-[#368875] transition-colors"
+                  >
+                    <CloudDownload class="w-3.5 h-3.5" strokeWidth={3} /> Install to Nook Phone
+                  </button>
                 {/if}
               {:else if selectedPlatform === 'ios'}
-                <Smartphone class="w-3.5 h-3.5" strokeWidth={3} /> iOS
+                <button
+                  onclick={(e) => { e.stopPropagation(); handleExternalLink(p.ios, p.name); }}
+                  class="w-full py-1.5 flex items-center justify-center gap-1 hover:bg-[#368875] transition-colors"
+                >
+                  <Smartphone class="w-3.5 h-3.5" strokeWidth={3} /> Get on iOS
+                </button>
               {:else if selectedPlatform === 'android'}
-                <Smartphone class="w-3.5 h-3.5" strokeWidth={3} /> Android
+                <button
+                  onclick={(e) => { e.stopPropagation(); handleExternalLink(p.android, p.name); }}
+                  class="w-full py-1.5 flex items-center justify-center gap-1 hover:bg-[#368875] transition-colors"
+                >
+                  <Smartphone class="w-3.5 h-3.5" strokeWidth={3} /> Get on Android
+                </button>
               {/if}
             </div>
-          </button>
+          </div>
         {/each}
 
         {#if filteredProjects.length === 0}

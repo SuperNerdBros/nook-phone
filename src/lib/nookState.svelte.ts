@@ -309,7 +309,7 @@ class NookStateManager {
 
   isAppPermanent(appId: string): boolean {
     if (!this.state.appDonations) return false;
-    return (this.state.appDonations[appId] || 0) >= 280000;
+    return (this.state.appDonations[appId] || 0) >= 98000;
   }
 
   donateToApp(appId: string, amount: number): boolean {
