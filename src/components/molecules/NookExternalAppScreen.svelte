@@ -66,7 +66,7 @@
     <div class="flex-1 w-full relative bg-white">
       {#if currentProject?.site}
         <iframe 
-          src={currentProject.site} 
+          src={nookState.subRoute && (nookState.subRoute.startsWith('http://') || nookState.subRoute.startsWith('https://')) ? nookState.subRoute : currentProject.site} 
           title={currentProject.name}
           class="w-full h-full border-0 absolute inset-0 bg-white"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups"

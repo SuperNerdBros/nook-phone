@@ -326,7 +326,7 @@
     <!-- Detail View -->
     <div class="absolute inset-0 z-30 bg-[#fdfcf2] flex flex-col overflow-y-auto ac-scrollbar animate-fade-in">
       <!-- Header -->
-      <div class="flex items-center justify-between p-4 bg-[#8cc3b0]/10 border-b border-[#8cc3b0]/20 sticky top-0 backdrop-blur-md z-40">
+      <div class="flex items-center justify-between p-4 bg-[#9cc677] border-b border-black/10 sticky top-0 backdrop-blur-md z-40">
         <button onclick={closeContact} class="flex items-center text-[#5c3a21] font-bold text-sm bg-white/50 px-3 py-1.5 rounded-full shadow-sm hover:bg-white active:scale-95 transition-all cursor-pointer">
           <ChevronLeft class="w-4 h-4 mr-1" /> Back
         </button>
@@ -336,7 +336,7 @@
       </div>
 
       <!-- Avatar & Name -->
-      <div class="flex flex-col items-center pt-8 pb-6 px-6 bg-gradient-to-b from-[#8cc3b0]/10 to-transparent">
+      <div class="flex flex-col items-center pt-8 pb-6 px-6 bg-gradient-to-b from-[#9cc677]/10 to-transparent">
         <div class="h-32 mb-4 relative group flex items-end justify-center">
           {#if selectedVillager.image_url}
             <img src={selectedVillager.image_url} alt={selectedVillager.name} class="h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500" />
@@ -345,7 +345,13 @@
           {/if}
         </div>
         <h1 class="text-3xl font-black text-[#5c3a21] tracking-tight">{selectedVillager.name}</h1>
-        <p class="text-[#8a7f66] font-bold mt-1 text-sm">{selectedVillager.personality} {selectedVillager.species}</p>
+        <p class="text-[#8a7f66] font-bold mt-1 text-sm">
+          {selectedVillager.personality} {selectedVillager.species}
+          {#if selectedVillager.phrase}
+            <span class="font-normal opacity-60 mx-1.5">·</span>
+            <span class="italic font-normal">"{selectedVillager.phrase}"</span>
+          {/if}
+        </p>
       </div>
 
       <!-- Action Buttons -->
@@ -381,7 +387,7 @@
         <!-- Island Status -->
         <div class="bg-white rounded-2xl p-4 shadow-sm border-2 border-[#e1d9be] flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-[#8cc3b0]/20 text-[#649e8a] flex items-center justify-center">
+            <div class="w-10 h-10 rounded-xl bg-[#9cc677]/20 text-[#4a752c] flex items-center justify-center">
               <Home class="w-5 h-5" />
             </div>
             <div>
@@ -413,6 +419,30 @@
               <p class="text-[10px] font-bold text-[#8a7f66] uppercase">Star Sign</p>
               <p class="text-sm font-bold text-[#5c3a21]">{selectedVillager.sign || 'Unknown'}</p>
             </div>
+            <div>
+              <p class="text-[10px] font-bold text-[#8a7f66] uppercase">Gender</p>
+              <p class="text-sm font-bold text-[#5c3a21]">{selectedVillager.gender || 'Unknown'}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-[#8a7f66] uppercase">Preferred Outfit</p>
+              <p class="text-sm font-bold text-[#5c3a21] capitalize">{selectedVillager.clothing || 'Unknown'}</p>
+            </div>
+            {#if selectedVillager.quote}
+              <div class="col-span-2 bg-[#fdfcf5] p-3 rounded-xl border border-[#e1d9be]/60 mt-1">
+                <p class="text-[9px] font-bold text-[#8a7f66] uppercase tracking-wide mb-1">Favorite Saying</p>
+                <p class="text-xs italic font-bold text-[#5c3a21] leading-relaxed">"{selectedVillager.quote}"</p>
+              </div>
+            {/if}
+            {#if selectedVillager.url}
+              <div class="col-span-2 flex justify-end mt-2">
+                <button 
+                  onclick={() => nookState.navigate('Nookipedia/' + selectedVillager.url)}
+                  class="text-xs font-black text-[#4a752c] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0"
+                >
+                  View on Nookipedia ↗
+                </button>
+              </div>
+            {/if}
           </div>
         </div>
 
@@ -467,7 +497,7 @@
     <!-- List View -->
     <NookAppHeader
       title={isAddMode ? 'Add Contacts' : activeTab === 'bestFriend' ? 'Best Friend Contacts' : activeTab === 'island' ? 'Island Residents' : 'Contacts'}
-      bgClass="bg-[#8cc3b0]"
+      bgClass="bg-[#9cc677]"
       textClass="text-white"
     >
       {#snippet iconSnippet()}
@@ -482,16 +512,16 @@
           </button>
         {:else}
           <NookToolbarButton onclick={() => { isAddMode = true; searchQuery = ''; selectedSpecies = ''; viewAll = false; }} class="mr-1" title="Add Contact">
-            <Plus class="w-3.5 h-3.5 stroke-[3px] text-[#649e8a]" />
+            <Plus class="w-3.5 h-3.5 stroke-[3px] text-[#4a752c]" />
           </NookToolbarButton>
         {/if}
         <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
-          <XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#649e8a]" />
+          <XIcon class="w-3.5 h-3.5 stroke-[3px] text-[#4a752c]" />
         </NookToolbarButton>
       {/snippet}
       
       <div class="relative w-full">
-        <Search class="w-4 h-4 text-[#649e8a] absolute left-3 top-3" />
+        <Search class="w-4 h-4 text-[#4a752c] absolute left-3 top-3" />
         <input 
           type="text" 
           placeholder="Search villagers..." 
@@ -504,13 +534,13 @@
     <div class="flex-1 overflow-y-auto ac-scrollbar bg-[#fdfcf2] relative pb-28">
       {#if isLoading}
         <div class="flex flex-col items-center justify-center h-48 text-[#8a7f66]">
-          <div class="w-8 h-8 border-4 border-[#8cc3b0] border-t-transparent rounded-full animate-spin mb-3"></div>
+          <div class="w-8 h-8 border-4 border-[#9cc677] border-t-transparent rounded-full animate-spin mb-3"></div>
           <p class="font-bold text-sm">Syncing Contacts...</p>
         </div>
       {:else}
         {#if isAddMode && !searchQuery && !selectedSpecies && !viewAll}
           <div class="p-4 flex flex-col gap-5">
-             <button onclick={() => viewAll = true} class="bg-[#8cc3b0] text-white py-3 px-6 rounded-2xl font-black shadow-sm hover:scale-[1.02] active:scale-95 transition-transform cursor-pointer w-full text-center">
+             <button onclick={() => viewAll = true} class="bg-[#9cc677] text-white py-3 px-6 rounded-2xl font-black shadow-sm hover:scale-[1.02] active:scale-95 transition-transform cursor-pointer w-full text-center">
                View All Villagers
              </button>
              
@@ -668,7 +698,7 @@
             {:else}
               <UserPlus class="w-12 h-12 mb-3 text-[#e1d9be]" />
               <p class="font-bold text-sm text-[#8a7f66] mb-4">No contacts yet!</p>
-              <button onclick={() => { isAddMode = true; searchQuery = ''; selectedSpecies = ''; viewAll = false; }} class="bg-[#8cc3b0] text-white px-5 py-2.5 rounded-full font-bold shadow-md hover:bg-[#7ab19f] transition-colors cursor-pointer active:scale-95">
+              <button onclick={() => { isAddMode = true; searchQuery = ''; selectedSpecies = ''; viewAll = false; }} class="bg-[#9cc677] text-white px-5 py-2.5 rounded-full font-bold shadow-md hover:bg-[#8bb268] transition-colors cursor-pointer active:scale-95">
                 Add New Contact
               </button>
             {/if}
@@ -684,7 +714,7 @@
       <div class="absolute bottom-6 inset-x-4 bg-white/95 backdrop-blur-md border-2 border-[#e1d9be] rounded-3xl p-1.5 flex justify-between z-20 shadow-lg">
         <button 
           onclick={() => activeTab = 'all'}
-          class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'all' ? 'bg-[#8cc3b0]/20 text-[#649e8a]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#5c3a21]'}"
+          class="flex-1 flex flex-col items-center py-2 rounded-2xl transition-colors cursor-pointer {activeTab === 'all' ? 'bg-[#9cc677]/20 text-[#4a752c]' : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#5c3a21]'}"
         >
           <Users class="w-5 h-5 mb-0.5 {activeTab === 'all' ? 'fill-current' : ''}" />
           <span class="text-[10px] font-black uppercase tracking-wider">All</span>
@@ -743,7 +773,7 @@
              
              {#if isGiftLoading}
                 <div class="mt-4 flex justify-center py-2">
-                  <div class="w-6 h-6 border-4 border-[#8cc3b0] border-t-transparent rounded-full animate-spin"></div>
+                  <div class="w-6 h-6 border-4 border-[#9cc677] border-t-transparent rounded-full animate-spin"></div>
                 </div>
              {:else if giftSearchResults.length > 0}
                 <div class="mt-4 border-t border-[#e1d9be]/60 pt-4 animate-fade-in">
@@ -751,13 +781,13 @@
                     {#each giftSearchResults as item}
                       <button 
                         onclick={() => sendGift(item)}
-                        class="w-16 h-16 shrink-0 bg-white border-2 border-[#e1d9be] hover:border-[#8cc3b0] rounded-xl flex items-center justify-center transition-all hover:scale-105 shadow-sm active:scale-95 p-1 flex-col"
+                        class="w-16 h-16 shrink-0 bg-white border-2 border-[#e1d9be] hover:border-[#9cc677] rounded-xl flex items-center justify-center transition-all hover:scale-105 shadow-sm active:scale-95 p-1 flex-col"
                         title={item.name}
                       >
                         {#if item.imageUrl || item.image_url}
                           <img src={item.imageUrl || item.image_url} alt={item.name} class="max-w-full max-h-full object-contain drop-shadow-sm p-1" loading="lazy" />
                         {:else}
-                          <Leaf class="w-6 h-6 text-[#8cc3b0] mb-1" />
+                          <Leaf class="w-6 h-6 text-[#9cc677] mb-1" />
                           <span class="text-[8px] font-bold text-[#8a7f66] leading-tight truncate w-full px-1">{item.name}</span>
                         {/if}
                       </button>
@@ -775,9 +805,9 @@
                      placeholder="Search for an item..." 
                      bind:value={giftSearchQuery}
                      onkeydown={(e) => e.key === 'Enter' && handleGiftSearch()}
-                     class="flex-1 bg-white px-3 py-2 rounded-xl text-sm font-bold border-2 border-[#e1d9be] focus:outline-none focus:border-[#8cc3b0] text-[#5c3a21] placeholder:text-[#8a7f66]/60"
+                     class="flex-1 bg-white px-3 py-2 rounded-xl text-sm font-bold border-2 border-[#e1d9be] focus:outline-none focus:border-[#9cc677] text-[#5c3a21] placeholder:text-[#8a7f66]/60"
                    />
-                   <button onclick={handleGiftSearch} class="bg-[#8cc3b0] text-white px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-[#7ab19f] active:scale-95 transition-transform">
+                   <button onclick={handleGiftSearch} class="bg-[#9cc677] text-white px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-[#8bb268] active:scale-95 transition-transform">
                      Search
                    </button>
                  </div>
@@ -798,7 +828,7 @@
                     {/each}
                   </div>
                 </div>
-                <button onclick={() => isGiftPickerOpen = false} class="bg-[#8cc3b0] text-white px-6 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#7ab19f] active:scale-95 transition-transform w-full text-center cursor-pointer">
+                <button onclick={() => isGiftPickerOpen = false} class="bg-[#9cc677] text-white px-6 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#8bb268] active:scale-95 transition-transform w-full text-center cursor-pointer">
                   You're welcome!
                 </button>
               </div>

@@ -613,30 +613,30 @@
     getCategoryIcon={getCategoryIcon}
   >
     {#snippet iconSnippet()}
+      <div class="w-12 h-12 mr-1">
+        <NookIcon name="mail" class="w-full h-full object-contain drop-shadow-sm" />
+      </div>
+    {/snippet}
+    
+    {#snippet headerActions()}
       {#if view !== 'inbox'}
-        <NookToolbarButton onclick={() => {
+        <NookToolbarButton variant="ghost" onclick={() => {
           if (view === 'new-draft') view = 'new-stationery';
           else if (view === 'new-stationery') view = 'new-recipient';
           else if (view === 'new-recipient') view = 'inbox';
           else if (view === 'chat') view = 'user-letters';
           else if (view === 'user-letters') view = 'inbox';
           else view = 'inbox';
-        }} title="Back">
-          <ArrowLeft class="w-5 h-5 stroke-[2.5px] text-white" />
+        }} title="Back" class="mr-1">
+          <ArrowLeft class="w-4 h-4 text-white" />
         </NookToolbarButton>
-      {:else}
-        <div class="w-12 h-12 mr-1">
-          <NookIcon name="mail" class="w-full h-full object-contain drop-shadow-sm" />
-        </div>
       {/if}
-    {/snippet}
-    
-    {#snippet headerActions()}
       {#if view === "user-letters"}
         <NookToolbarButton 
           variant="ghost"
           onclick={handleDeleteConversation}
           title="Clean Up Conversation"
+          class="mr-1"
         >
           <Trash class="w-4 h-4 text-white" />
         </NookToolbarButton>
@@ -645,6 +645,7 @@
         <NookToolbarButton 
           variant="ghost"
           onclick={loadNewChat}
+          class="mr-1"
         >
           <Plus class="w-4 h-4 text-white" />
         </NookToolbarButton>
@@ -653,7 +654,7 @@
     {/snippet}
 
   <!-- VIEWS -->
-  <div class="flex-1 overflow-hidden relative z-10 bg-transparent app-mail-border">
+  <div class="flex-1 overflow-hidden relative z-10 bg-transparent">
     {#if view === "inbox"}
       <div in:fade={{duration: 200}} class="h-full overflow-y-auto ac-scrollbar p-3 space-y-4">
         {#if !isProUser()}
@@ -813,54 +814,64 @@
       </div>
 
     {:else if view === "new-draft"}
-      <div in:fly={{y: 20, duration: 200}} class="h-full flex flex-col items-center justify-center p-6" style="background: rgba(0,0,0,0.4);">
-        <div 
-          class={`w-full max-w-sm aspect-[3/4] rounded-lg shadow-2xl flex flex-col p-6 ${selectedStationery.bgClass} relative`}
-          style={selectedStationery.style}
-        >
-          <div class="font-bold text-[#4c4637] mb-2 shrink-0 border-b border-[#4c4637]/10 pb-2 flex justify-between items-center">
+      <div in:fly={{y: 20, duration: 200}} class="h-full flex flex-col items-center justify-center p-6 bg-black/40">
+        <!-- Envelope Top -->
+        <div class="w-full bg-white rounded-xl shadow-lg relative app-mail-border p-5 flex flex-col gap-2 z-20 mb-4">
+          <div class="font-bold text-[#4c4637] flex justify-between items-center text-sm border-b border-[#4c4637]/10 pb-2">
             <span>To: {selectedRecipient?.display_name}</span>
           </div>
           <input
             type="text"
             bind:value={newSubject}
             placeholder="Subject..."
-            class="w-full bg-transparent border-none font-black text-sm text-[#4c4637] placeholder-[#4c4637]/40 focus:outline-none mb-2"
+            class="w-full bg-transparent border-none font-black text-sm text-[#4c4637] placeholder-[#4c4637]/40 focus:outline-none"
           />
+        </div>
+
+        <!-- Stationery Bottom -->
+        <div 
+          class={`w-full aspect-[3/4] rounded-xl shadow-2xl flex flex-col p-6 ${selectedStationery.bgClass} relative z-10`}
+          style={selectedStationery.style}
+        >
           <textarea
             bind:value={newMessage}
             placeholder="Write your letter here..."
-            class="w-full flex-1 bg-transparent border-none resize-none font-medium leading-relaxed text-[#4c4637] placeholder-[#4c4637]/40 focus:outline-none ac-scrollbar"
+            class="w-full flex-1 bg-transparent border-none resize-none font-medium leading-relaxed text-[#4c4637] placeholder-[#4c4637]/40 focus:outline-none ac-scrollbar mt-2"
             style="font-family: 'Comic Sans MS', cursive, sans-serif;"
           ></textarea>
           
           <button 
             onclick={handleSend}
             disabled={!newMessage.trim() || sending}
-            class="absolute -bottom-4 right-4 bg-[#8b3a3a] text-white px-6 py-2 rounded-full font-bold shadow-lg hover:bg-[#6a2c2c] disabled:opacity-50 transition cursor-pointer flex items-center gap-2"
+            class="absolute -bottom-4 right-4 bg-[#8b3a3a] text-white px-6 py-2 rounded-full font-bold shadow-lg hover:bg-[#6a2c2c] disabled:opacity-50 transition cursor-pointer flex items-center gap-2 z-20"
           >
             <Send class="w-4 h-4" /> Send
           </button>
         </div>
       </div>
 
+    {:else if view === "chat"}
       <div in:fly={{x: 20, duration: 200}} class="h-full flex flex-col">
         <!-- Messages Area (Thread) -->
-        <div class="flex-1 overflow-y-auto p-4 flex flex-col items-center gap-6 pb-32">
+        <div class="flex-1 overflow-y-auto p-2.5 flex flex-col items-center gap-6 pb-32">
           {#if activeLetter}
             {@const stationery = getStationery(activeLetter.stationery_id)}
-            <!-- Main Letter -->
-            <div 
-              class={`w-full max-w-sm aspect-[3/4] rounded-lg shadow-md flex flex-col p-6 ${stationery.bgClass} relative mt-2`}
-              style={stationery.style}
-            >
-              <div class="font-bold text-[#4c4637] mb-2 shrink-0 border-b border-[#4c4637]/10 pb-2">
-                {activeLetter.is_sent_by_me ? 'To:' : 'From:'} {activeLetter.partner_name}
+            <!-- Envelope Top -->
+            <div class="w-full bg-white rounded-xl shadow-md relative app-mail-border p-5 flex flex-col gap-2 z-20 mt-2 mb-4">
+              <div class="font-bold text-[#4c4637] flex justify-between items-center text-sm border-b border-[#4c4637]/10 pb-2">
+                <span>{activeLetter.is_sent_by_me ? 'To:' : 'From:'} {activeLetter.partner_name}</span>
               </div>
-              <div class="font-black text-sm text-[#4c4637] mb-2">
+              <div class="font-black text-sm text-[#4c4637]">
                 {activeLetter.subject}
               </div>
-              <div class="flex-1 font-medium leading-relaxed text-[#4c4637] overflow-y-auto ac-scrollbar whitespace-pre-wrap" style="font-family: 'Comic Sans MS', cursive, sans-serif;">
+            </div>
+
+            <!-- Stationery Bottom -->
+            <div 
+              class={`w-full rounded-xl shadow-md flex flex-col p-6 ${stationery.bgClass} relative z-10`}
+              style={stationery.style}
+            >
+              <div class="flex-1 font-medium leading-relaxed text-[#4c4637] overflow-y-auto ac-scrollbar whitespace-pre-wrap mt-2" style="font-family: 'Comic Sans MS', cursive, sans-serif;">
                 {activeLetter.content}
               </div>
               <div class="text-right text-[10px] font-bold text-[#4c4637]/50 mt-4">

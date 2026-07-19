@@ -3,11 +3,13 @@
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import NookAppIcon from '../atoms/NookAppIcon.svelte';
   import { playSound } from '@/lib/audio';
+  import { scale } from 'svelte/transition';
+  import { backOut } from 'svelte/easing';
 
   const ctx = getPhoneContext();
 
-  let cols = $derived(nookState.settings.gridSize || 3);
-  let rows = 3;
+  let cols = 3;
+  let rows = $derived(nookState.settings.gridSize || 3);
   let appsPerPage = $derived(cols * rows);
 
   let pages = $derived.by(() => {
@@ -233,26 +235,29 @@
   >
     {#each pages as page, i}
       <div class={`w-full h-full shrink-0 snap-center flex flex-col items-center ${ctx.isEditMode ? 'overflow-visible' : ''}`}>
-        <div class={`w-full max-w-full grid gap-y-[24px] gap-x-[10px] px-[30px] pt-[10px] justify-items-center content-start ${cols === 4 ? 'grid-cols-4 gap-x-2' : cols === 5 ? 'grid-cols-5 gap-x-1' : 'grid-cols-3'} ${ctx.isEditMode ? 'overflow-visible' : ''}`}>
-          {#each page as app (app.id || app.name)}
-            <div 
-              class={`transition-all duration-200 ${hoveredId === (app.id || app.name) && draggedId !== (app.id || app.name) ? 'ring-4 ring-dashed ring-[#8cc3b0] scale-95 rounded-3xl' : ''}`}
-              ondragover={(e) => handleDragOverApp(e, app.id || app.name)}
-              ondrop={(e) => handleDropOnApp(e, app.id || app.name)}
-              onpointerdown={(e) => handleAppPointerDown(e, app.id || app.name)}
-              onpointermove={(e) => handleAppPointerMove(e, app.id || app.name)}
-              onpointerup={(e) => handleAppPointerUp(e, app.id || app.name)}
-            >
-              <NookAppIcon 
-                app={app} 
-                size="lg" 
-                showText={false}
-                onClick={() => ctx.handleAppLaunch(app.id || app.name)}
-                onMouseEnter={() => ctx.hoveredAppName = app.name}
-                onMouseLeave={() => ctx.hoveredAppName = "NookPhone"}
-              />
-            </div>
-          {/each}
+        <div class={`w-full max-w-full grid gap-y-[24px] gap-x-[10px] px-[30px] pt-[10px] justify-items-center content-start grid-cols-3 ${ctx.isEditMode ? 'overflow-visible' : ''}`}>
+          {#if !ctx.isBooting && !nookState.isPhoneLocked}
+            {#each page as app, index (app.id || app.name)}
+              <div 
+                in:scale={{ duration: 400, delay: index * 40, start: 0.5, easing: backOut }}
+                class={`transition-all duration-200 ${hoveredId === (app.id || app.name) && draggedId !== (app.id || app.name) ? 'ring-4 ring-dashed ring-[#8cc3b0] scale-95 rounded-3xl' : ''}`}
+                ondragover={(e) => handleDragOverApp(e, app.id || app.name)}
+                ondrop={(e) => handleDropOnApp(e, app.id || app.name)}
+                onpointerdown={(e) => handleAppPointerDown(e, app.id || app.name)}
+                onpointermove={(e) => handleAppPointerMove(e, app.id || app.name)}
+                onpointerup={(e) => handleAppPointerUp(e, app.id || app.name)}
+              >
+                <NookAppIcon 
+                  app={app} 
+                  size="lg" 
+                  showText={false}
+                  onClick={() => ctx.handleAppLaunch(app.id || app.name)}
+                  onMouseEnter={() => ctx.hoveredAppName = app.name}
+                  onMouseLeave={() => ctx.hoveredAppName = "NookPhone"}
+                />
+              </div>
+            {/each}
+          {/if}
         </div>
       </div>
     {/each}

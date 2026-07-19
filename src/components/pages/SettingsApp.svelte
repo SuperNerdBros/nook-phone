@@ -318,7 +318,7 @@
                   </div>
                   <div>
                     <div class="font-black text-[#5c5446] text-sm">App Grid Size</div>
-                    <div class="text-[10px] font-bold text-[#8a816f]">Columns on homescreen ({nookState.settings.gridSize || 3})</div>
+                    <div class="text-[10px] font-bold text-[#8a816f]">Rows on homescreen ({nookState.settings.gridSize || 3})</div>
                   </div>
                 </div>
                 <div class="flex items-center gap-2 bg-[#f4f2e8] p-1 rounded-full border-2 border-[#e1d9be]">

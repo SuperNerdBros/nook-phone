@@ -4,16 +4,20 @@
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import cellularStatusImg from '@/assets/img/cellular_status.png';
   import { resolveAssetUrl } from '@/lib/utils';
+  import { isProUser } from '@/lib/api';
   
   const ctx = getPhoneContext();
 </script>
 
-
-
 <div class="bg-transparent px-8 pr-4 pt-3 pb-2 flex justify-between items-center text-[18px] font-['Varela_Round',sans-serif] text-[#d0cbb5] font-bold select-none z-[70] shrink-0">
   <!-- Left side (Signal / Notifications) -->
   <div class="w-[55px] flex items-center justify-center gap-1.5">
-    <img src={resolveAssetUrl(cellularStatusImg)} alt="Signal" class="h-[18px] object-contain opacity-70" />
+    <img 
+      src={resolveAssetUrl(cellularStatusImg)} 
+      alt="Signal" 
+      class="h-[18px] object-contain" 
+      style={isProUser() ? "filter: invert(72%) sepia(80%) saturate(450%) hue-rotate(65deg) brightness(1.2) contrast(1);" : "opacity: 0.7;"} 
+    />
     <button 
       onclick={() => {
         ctx.showNotificationCenter = !ctx.showNotificationCenter;

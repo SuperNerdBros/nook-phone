@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { fetchNookipediaItems, searchNookipediaItems, fetchNookipediaVillagers } from '@/lib/api';
   import NookAppTemplate from '@/components/organisms/NookAppTemplate.svelte';
   import NookIcon from '@/components/atoms/NookIcon.svelte';
@@ -115,9 +115,9 @@
   ];
   let isLoading = $state(true);
 
-  // Tom Nook Dialog states
+  // Timmy & Tommy Dialog states
   let isNookDialogActive = $state(false);
-  let nookDialogText = $state("Hello, yes, yes! Welcome to the search service. What item are you looking for?");
+  let nookDialogText = $state("Welcome! ...Welcome! What item are you looking for?");
   let nookSearchInput = $state("");
   let isSearchingNook = $state(false);
   let hasSearched = $state(false);
@@ -166,7 +166,7 @@
     
     if (nookSearchInput.trim().length === 0) {
       dialogSuggestions = [];
-      nookDialogText = "Hello, yes, yes! Welcome to the search service. What item are you looking for?";
+      nookDialogText = "Welcome! ...Welcome! What item are you looking for?";
       return;
     }
 
@@ -175,53 +175,26 @@
       return;
     }
 
-    suggestionTimeout = setTimeout(async () => {
+    suggestionTimeout = setTimeout(() => {
       isFetchingSuggestions = true;
       try {
-        const results = await searchNookipediaItems(nookSearchInput);
+        const queryLower = nookSearchInput.toLowerCase();
+        const results = allItems.filter(item => item.name.toLowerCase().includes(queryLower));
         dialogSuggestions = results ? results.slice(0, 8) : [];
         if (results && results.length > 0) {
-          nookDialogText = `I found ${results.length} items, yes, yes! Is this what you're looking for?`;
+          nookDialogText = `We found ${results.length} items! ...items! Is this what you're looking for?`;
         } else {
-          nookDialogText = `Oh, my... I couldn't find any items matching '${nookSearchInput}', yes. Try another name!`;
+          nookDialogText = `Oh no! We couldn't find any items matching '${nookSearchInput}'. ...matching! Try another name!`;
         }
       } catch (e) {
-        console.error("Failed to fetch suggestions", e);
+        console.error("Failed to filter suggestions locally", e);
       } finally {
         isFetchingSuggestions = false;
       }
     }, 250);
   });
 
-  // Debounced search query fetching for main template
-  let searchTimeout: ReturnType<typeof setTimeout> | null = null;
-  $effect(() => {
-    if (!hasSearched) return;
 
-    // Track reactively
-    const query = searchTerm;
-    const cat = activeCategory;
-
-    if (searchTimeout) clearTimeout(searchTimeout);
-
-    searchTimeout = setTimeout(async () => {
-      isLoading = true;
-      try {
-        if (query.trim() === "") {
-          const items = await fetchNookipediaItems();
-          allItems = items || [];
-        } else {
-          const searchCat = cat === "Daily Selection" ? undefined : cat;
-          const results = await searchNookipediaItems(query, searchCat);
-          allItems = results || [];
-        }
-      } catch (e) {
-        console.error("Failed to query search results", e);
-      } finally {
-        isLoading = false;
-      }
-    }, 400);
-  });
 
   async function sendGift(friend: any, item: any) {
     if (nookState.settings.soundEffects) {
@@ -254,21 +227,14 @@
       analytics.trackInteraction('search_catalog', 'shopping', nookSearchInput);
     });
 
-    try {
-      const results = await searchNookipediaItems(nookSearchInput);
-      allItems = results || [];
-      searchTerm = nookSearchInput;
-      activeCategory = "All";
-      hasSearched = true;
-      isNookDialogActive = false;
-      selectedItem = null;
-      currentView = "browse";
-    } catch (e) {
-      console.error("Nook search query failed", e);
-      nookDialogText = "Oh, my... it seems we couldn't connect to the server, yes? Let's try again!";
-    } finally {
-      isSearchingNook = false;
-    }
+    // Use local filtering instead of fetching from API
+    searchTerm = nookSearchInput;
+    activeCategory = "All";
+    hasSearched = true;
+    isNookDialogActive = false;
+    selectedItem = null;
+    currentView = "browse";
+    isSearchingNook = false;
   }
 
   let filteredItems = $derived(allItems.filter((r, i) => {
@@ -311,6 +277,39 @@
     { id: "Tools", icon: Wrench, label: "Tools", color: "#f5ecd0" },
     { id: "All", icon: Search, label: "Search All", color: "#b8dff7" },
   ];
+
+  let counterInterval: ReturnType<typeof setInterval> | null = null;
+  let counterDelayTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  function startCounterChange(itemId: string, type: 'storage' | 'wishlist' | 'trade', direction: 1 | -1) {
+    const change = (amount: number) => {
+      const current = nookState.getItemQuantity(itemId, type);
+      nookState.setItemQuantity(itemId, Math.max(0, current + amount), type);
+    };
+
+    change(direction);
+
+    counterDelayTimeout = setTimeout(() => {
+      counterInterval = setInterval(() => {
+        change(direction * 10);
+      }, 150);
+    }, 500);
+  }
+
+  function stopCounterChange() {
+    if (counterDelayTimeout) {
+      clearTimeout(counterDelayTimeout);
+      counterDelayTimeout = null;
+    }
+    if (counterInterval) {
+      clearInterval(counterInterval);
+      counterInterval = null;
+    }
+  }
+
+  onDestroy(() => {
+    stopCounterChange();
+  });
 </script>
 
 <NookAppTemplate
@@ -319,7 +318,7 @@
   headerBgClass="bg-[#ebce3f]"
   bgClass="nook-shop-bg"
   textClass="text-[#4c4637]"
-  showSearch={hasSearched}
+  showSearch={currentView !== "home"}
   bind:searchTerm={searchTerm}
   searchPlaceholder="Search catalog..."
   searchThemeColorClass="text-[#caa253]"
@@ -418,7 +417,7 @@
             if (cat.id === "All") {
               isNookDialogActive = true;
               nookSearchInput = "";
-              nookDialogText = "Hello, yes, yes! Welcome to the search service. What item are you looking for?";
+              nookDialogText = "Welcome! ...Welcome! What item are you looking for?";
             } else {
               navigateToCategory(cat.id);
             }
@@ -443,7 +442,7 @@
     <div class="fixed inset-0 bg-black/40 z-50 flex items-end justify-center p-4 pb-20">
       <div class="w-full max-w-md animate-fade-in-up">
         <AcnhBubble
-          title="Tom Nook"
+          title="Timmy & Tommy"
           dialogText={nookDialogText}
           isActive={true}
           onDismiss={() => { isNookDialogActive = false; }}
@@ -560,38 +559,80 @@
 
                 <!-- Storage Badge -->
                 <div class="bg-[#fcfaf4]/90 backdrop-blur-md pl-4 pr-3 py-1.5 rounded-l-full shadow-sm flex items-center gap-3 border-y-2 border-l-2 border-[#e1d9be]">
-                  <button class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(0, nookState.getItemQuantity(activeItem.id, 'storage') - 1), 'storage')}>-</button>
+                  <button 
+                    class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5 cursor-pointer select-none" 
+                    onpointerdown={(e) => { if (e.button === 0) startCounterChange(activeItem.id, 'storage', -1); }}
+                    onpointerup={stopCounterChange}
+                    onpointerleave={stopCounterChange}
+                    onpointercancel={stopCounterChange}
+                    oncontextmenu={(e) => e.preventDefault()}
+                  >-</button>
                   <button onclick={() => { nookState.toggleStorageItem(activeItem.id); }} class="flex items-center gap-2">
                     <Archive class="w-5 h-5 {nookState.isStorageItem(activeItem.id) ? 'fill-[#bedad4] text-[#2d5c56]' : 'text-[#8c8577] hover:text-[#82c56f]'}" strokeWidth={nookState.isStorageItem(activeItem.id) ? 3 : 2} />
                     <span class="text-[14px] font-black w-4 text-center {nookState.isStorageItem(activeItem.id) ? 'text-[#2d5c56]' : 'text-[#a89f91]'}">
                       {nookState.getItemQuantity(activeItem.id, 'storage')}
                     </span>
                   </button>
-                  <button class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, nookState.getItemQuantity(activeItem.id, 'storage') + 1, 'storage')}>+</button>
+                  <button 
+                    class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5 cursor-pointer select-none" 
+                    onpointerdown={(e) => { if (e.button === 0) startCounterChange(activeItem.id, 'storage', 1); }}
+                    onpointerup={stopCounterChange}
+                    onpointerleave={stopCounterChange}
+                    onpointercancel={stopCounterChange}
+                    oncontextmenu={(e) => e.preventDefault()}
+                  >+</button>
                 </div>
                 
                 <!-- Wishlist Badge -->
                 <div class="bg-[#fcfaf4]/90 backdrop-blur-md pl-4 pr-3 py-1.5 rounded-l-full shadow-sm flex items-center gap-3 border-y-2 border-l-2 border-[#e1d9be]">
-                  <button class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(0, nookState.getItemQuantity(activeItem.id, 'wishlist') - 1), 'wishlist')}>-</button>
+                  <button 
+                    class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5 cursor-pointer select-none" 
+                    onpointerdown={(e) => { if (e.button === 0) startCounterChange(activeItem.id, 'wishlist', -1); }}
+                    onpointerup={stopCounterChange}
+                    onpointerleave={stopCounterChange}
+                    onpointercancel={stopCounterChange}
+                    oncontextmenu={(e) => e.preventDefault()}
+                  >-</button>
                   <button onclick={() => { nookState.toggleWishlistItem(activeItem.id); }} class="flex items-center gap-2">
                     <Heart class="w-5 h-5 {nookState.isWishlistItem(activeItem.id) ? 'fill-[#fdafb2] text-[#8c2a2e]' : 'text-[#8c8577] hover:text-[#82c56f]'}" />
                     <span class="text-[14px] font-black w-4 text-center {nookState.isWishlistItem(activeItem.id) ? 'text-[#8c2a2e]' : 'text-[#a89f91]'}">
                       {nookState.getItemQuantity(activeItem.id, 'wishlist')}
                     </span>
                   </button>
-                  <button class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, nookState.getItemQuantity(activeItem.id, 'wishlist') + 1, 'wishlist')}>+</button>
+                  <button 
+                    class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5 cursor-pointer select-none" 
+                    onpointerdown={(e) => { if (e.button === 0) startCounterChange(activeItem.id, 'wishlist', 1); }}
+                    onpointerup={stopCounterChange}
+                    onpointerleave={stopCounterChange}
+                    onpointercancel={stopCounterChange}
+                    oncontextmenu={(e) => e.preventDefault()}
+                  >+</button>
                 </div>
 
                 <!-- Trade Badge -->
                 <div class="bg-[#fcfaf4]/90 backdrop-blur-md pl-4 pr-3 py-1.5 rounded-l-full shadow-sm flex items-center gap-3 border-y-2 border-l-2 border-[#e1d9be]">
-                  <button class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, Math.max(0, nookState.getItemQuantity(activeItem.id, 'trade') - 1), 'trade')}>-</button>
+                  <button 
+                    class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5 cursor-pointer select-none" 
+                    onpointerdown={(e) => { if (e.button === 0) startCounterChange(activeItem.id, 'trade', -1); }}
+                    onpointerup={stopCounterChange}
+                    onpointerleave={stopCounterChange}
+                    onpointercancel={stopCounterChange}
+                    oncontextmenu={(e) => e.preventDefault()}
+                  >-</button>
                   <button onclick={() => { nookState.toggleForTradeItem(activeItem.id); }} class="flex items-center gap-2">
                     <Handshake class="w-5 h-5 {nookState.isForTradeItem(activeItem.id) ? 'text-[#b36b19]' : 'text-[#8c8577] hover:text-[#82c56f]'}" strokeWidth={nookState.isForTradeItem(activeItem.id) ? 3 : 2} />
                     <span class="text-[14px] font-black w-4 text-center {nookState.isForTradeItem(activeItem.id) ? 'text-[#b36b19]' : 'text-[#a89f91]'}">
                       {nookState.getItemQuantity(activeItem.id, 'trade')}
                     </span>
                   </button>
-                  <button class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5" onclick={() => nookState.setItemQuantity(activeItem.id, nookState.getItemQuantity(activeItem.id, 'trade') + 1, 'trade')}>+</button>
+                  <button 
+                    class="text-[#8c8577] hover:text-[#82c56f] active:scale-95 transition-transform font-black text-xl w-7 h-7 flex items-center justify-center pb-0.5 cursor-pointer select-none" 
+                    onpointerdown={(e) => { if (e.button === 0) startCounterChange(activeItem.id, 'trade', 1); }}
+                    onpointerup={stopCounterChange}
+                    onpointerleave={stopCounterChange}
+                    onpointercancel={stopCounterChange}
+                    oncontextmenu={(e) => e.preventDefault()}
+                  >+</button>
                 </div>
 
               </div>

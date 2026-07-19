@@ -67,7 +67,7 @@ export const CORE_APPS: CoreApp[] = [
     id: "contacts",
     name: "Contacts",
     icon: "contacts",
-    bg: "bg-[#e5b382]",
+    bg: "bg-[#9cc677]",
     image: contactsIcon
   },
   {

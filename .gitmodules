@@ -4,3 +4,6 @@
 [submodule "apps/happy-island-designer"]
 	path = apps/happy-island-designer
 	url = git@github.com:SuperNerdBros/HappyIslandDesigner.git
+[submodule "apps/nookipedia-api"]
+	path = apps/nookipedia-api
+	url = git@github.com:SuperNerdBros/nookipedia-api.git
