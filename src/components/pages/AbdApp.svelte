@@ -5,9 +5,12 @@
   import { X } from "@lucide/svelte";
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import { resolveAssetUrl } from '@/lib/utils';
+  import { isProUser } from '@/lib/api';
   import walletIcon from "@/assets/img/Wallet.png";
+  import LoanPaymentDialog from '../organisms/LoanPaymentDialog.svelte';
   
   const ctx = getPhoneContext();
+  let showLoanDialog = $state(false);
   
   // Format numbers with commas
   const formatBells = (num: number) => {
@@ -15,11 +18,28 @@
   };
 
   const handleDepositClick = () => {
-    nookState.addNotification(
-      "Patreon Link", 
-      "The Patreon tier linking system ($5, $10, $100) is currently under construction. Stay tuned!", 
-      "Tom Nook"
-    );
+    if (!isProUser()) {
+      nookState.addNotification(
+        "Patreon Link Required", 
+        "You need to link a Patreon account to deposit Bells. Please use the Premium Upsell button on your Lock Screen or Support app!", 
+        "Tom Nook"
+      );
+      return;
+    }
+
+    if (nookState.patreonTierCents > 0) {
+      nookState.addNotification(
+        "Patreon Linked!", 
+        `Your Patreon tier of $${(nookState.patreonTierCents / 100).toFixed(2)} is successfully synced! Enjoy your stay on the island!`, 
+        "Tom Nook"
+      );
+    } else {
+      nookState.addNotification(
+        "No Active Tier", 
+        "We see you linked your Patreon, but you don't have an active pledge. Head over to our Patreon page to subscribe and deposit Bells!", 
+        "Tom Nook"
+      );
+    }
   };
 
   const handleWithdrawalClick = () => {
@@ -86,10 +106,10 @@
       
       <!-- Loan Balance -->
       <div class="flex justify-between items-end border-b-2 border-[#e6f9cd] pb-2 mb-3">
-        <span class="text-[#c1c1c1] font-bold text-[15px]">Loan Balance</span>
+        <span class="{nookState.loanBalance > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-[15px]">Loan Balance</span>
         <div class="flex items-end">
-          <span class="text-[#c1c1c1] font-bold text-2xl leading-none">0</span>
-          <span class="text-[#c1c1c1] font-bold text-xs ml-1 mb-[2px]">Bells</span>
+          <span class="{nookState.loanBalance > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-2xl leading-none">{formatBells(nookState.loanBalance)}</span>
+          <span class="{nookState.loanBalance > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-xs ml-1 mb-[2px]">Bells</span>
         </div>
       </div>
       
@@ -105,6 +125,29 @@
 
     <!-- Action Buttons -->
     <div class="flex flex-col gap-4 mt-10 w-[75%] z-10">
+      <!-- Loan Payment Button -->
+      {#if nookState.loanBalance > 0}
+        <button 
+          class="group relative w-full h-[52px] rounded-full overflow-hidden shadow-sm transition-transform active:scale-95"
+          onclick={() => showLoanDialog = true}
+          aria-label="Loan Payment"
+        >
+          <div class="absolute inset-0 bg-[#e05638] abd-stripes abd-hover-animate"></div>
+          <!-- Inner dark border effect -->
+          <div class="absolute inset-0 rounded-full border-[3px] border-[#c84022] opacity-50 m-[2px] pointer-events-none"></div>
+          
+          <div class="relative h-full flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#681604" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span class="text-[#681604] font-extrabold text-[17px] tracking-wide mt-0.5">Loan Payment</span>
+          </div>
+
+          <!-- Pointing Hand Hover Effect -->
+          <div class="absolute left-[-15px] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-200 pointer-events-none">
+            <span class="text-3xl drop-shadow-md">👉</span>
+          </div>
+        </button>
+      {/if}
+
       <!-- Deposit Button -->
       <button 
         class="group relative w-full h-[52px] rounded-full overflow-hidden shadow-sm transition-transform active:scale-95"
@@ -143,6 +186,10 @@
     </div>
   </div>
 </div>
+
+{#if showLoanDialog}
+  <LoanPaymentDialog onClose={() => showLoanDialog = false} />
+{/if}
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');

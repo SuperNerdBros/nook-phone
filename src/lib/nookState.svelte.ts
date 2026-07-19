@@ -112,6 +112,9 @@ export interface NookOSState {
   dockApps: string[];
   subscribedSublogs: string[];
   appDonations: Record<string, number>;
+  patreonTierCents?: number;
+  loanBalance?: number;
+  hasReceivedAllowance?: boolean;
 }
 
 const DEFAULT_GRID_LEAF = [
@@ -208,7 +211,9 @@ const INITIAL_STATE: NookOSState = {
   subRoute: "",
   dockApps: ["directory", "contacts", "settings"],
   subscribedSublogs: ["bb/Isabelle", "bb/TomNook"],
-  appDonations: {}
+  appDonations: {},
+  loanBalance: 0,
+  hasReceivedAllowance: false
 };
 
 class NookStateManager {
@@ -306,6 +311,26 @@ class NookStateManager {
 
   get appDonations() { return this.state.appDonations || {}; }
   set appDonations(val) { this.state.appDonations = val; }
+
+  get patreonTierCents() { return this.state.patreonTierCents || 0; }
+  set patreonTierCents(val) { this.state.patreonTierCents = val; }
+
+  get loanBalance() { return this.state.loanBalance || 0; }
+  set loanBalance(val) { this.state.loanBalance = val; this.save(); }
+
+  get hasReceivedAllowance() { return this.state.hasReceivedAllowance || false; }
+  set hasReceivedAllowance(val) { this.state.hasReceivedAllowance = val; this.save(); }
+
+  payLoan(amount: number): boolean {
+    const currentLoan = this.state.loanBalance || 0;
+    if (this.state.bells < amount) return false;
+    const toPay = Math.min(amount, currentLoan);
+    if (toPay <= 0) return false;
+    this.state.bells -= toPay;
+    this.state.loanBalance = currentLoan - toPay;
+    this.save();
+    return true;
+  }
 
   isAppPermanent(appId: string): boolean {
     if (!this.state.appDonations) return false;
@@ -414,6 +439,20 @@ class NookStateManager {
         // Seamless Merge: Cloud is empty, push local state up
         this.syncToCloud(true);
       }
+    }
+    
+    // Check if they linked Patreon and need their 500k allowance deposited
+    if (this.state.patreonTierCents && this.state.patreonTierCents > 0 && !this.state.hasReceivedAllowance) {
+      this.state.bells += 500000;
+      this.state.loanBalance = 50000;
+      this.state.hasReceivedAllowance = true;
+      this.save();
+      
+      this.addNotification(
+        "Premium Allowance Deposited!",
+        "Yes, yes! We've deposited your monthly 500,000 Bells allowance into your ABD. Note that your cell service fee loan of 50,000 Bells is now due!",
+        "Tom Nook"
+      );
     }
   }
 

@@ -74,6 +74,20 @@
     const initialTipTimeout = setTimeout(deliverRandomTip, 10000);
     const tipInterval = setInterval(deliverRandomTip, 75000);
 
+    const checkLoanReminder = () => {
+      if (nookState.loanBalance > 0) {
+        nookState.addNotification(
+          "Cell Service Payment Due",
+          `Hello! A friendly reminder that your cell phone service fee of ${nookState.loanBalance.toLocaleString()} Bells is still unpaid. Please visit the ABD app to pay it off, yes, yes!`,
+          "Tom Nook"
+        );
+      }
+    };
+
+    // Send a loan reminder notification after 20 seconds of app loading, and then every 90 seconds
+    const initialLoanTimeout = setTimeout(checkLoanReminder, 20000);
+    const loanInterval = setInterval(checkLoanReminder, 90000);
+
     const handleNotificationReceived = (e: Event) => {
       const notif = (e as CustomEvent).detail;
       ctx.activeToast = notif;
@@ -110,6 +124,8 @@
       clearInterval(interval);
       clearTimeout(initialTipTimeout);
       clearInterval(tipInterval);
+      clearTimeout(initialLoanTimeout);
+      clearInterval(loanInterval);
       window.removeEventListener("nook-notification", handleNotificationReceived);
       window.removeEventListener("hashchange", handleHashChange);
     };

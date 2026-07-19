@@ -26,7 +26,7 @@
     if (authUrl) {
       window.location.href = authUrl;
     } else {
-      window.open("https://www.patreon.com/xophz", "_blank");
+      window.open("https://www.patreon.com/cw/NookPhone", "_blank");
     }
   };
 </script>
