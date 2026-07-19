@@ -1,14 +1,14 @@
 <script lang="ts">
-  const { allSublogs, defaultSublog, onCancel, onSubmit } = $props<{
-    allSublogs: string[];
-    defaultSublog: string;
+  const { allBoards, defaultBoard, onCancel, onSubmit } = $props<{
+    allBoards: string[];
+    defaultBoard: string;
     onCancel: () => void;
-    onSubmit: (title: string, content: string, sublog: string) => void;
+    onSubmit: (title: string, content: string, board: string) => void;
   }>();
 
   let newTitle = $state("");
   let newContent = $state("");
-  let newSublog = $state(defaultSublog);
+  let newBoard = $state(defaultBoard);
 </script>
 
 <div class="bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-sm text-left flex flex-col gap-4">
@@ -28,16 +28,16 @@
     />
   </div>
 
-  <!-- Sublog Selection -->
+  <!-- Board Selection -->
   <div class="flex flex-col gap-1">
-    <label for="new-thread-sublog" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Post to Sublog</label>
+    <label for="new-thread-board" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Post to Board</label>
     <select
-      id="new-thread-sublog"
-      bind:value={newSublog}
+      id="new-thread-board"
+      bind:value={newBoard}
       class="bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-semibold cursor-pointer appearance-none"
     >
-      {#each allSublogs.filter(s => s !== "bb/All") as sub}
-        <option value={sub}>{sub}</option>
+      {#each allBoards.filter(s => s !== "bb/All") as board}
+        <option value={board}>{board}</option>
       {/each}
     </select>
   </div>
@@ -63,7 +63,7 @@
       Cancel
     </button>
     <button
-      onclick={() => onSubmit(newTitle, newContent, newSublog)}
+      onclick={() => onSubmit(newTitle, newContent, newBoard)}
       disabled={!newTitle.trim() || !newContent.trim()}
       class="px-6 py-2 bg-[#afd485] hover:bg-opacity-95 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
     >

@@ -53,7 +53,7 @@
       </p>
       <ul class="m-0 pl-5 flex flex-col gap-1 list-disc">
         <li><strong>Free Plan:</strong> All gameplay progress (DIYs, Critters, settings) is stored locally in your browser cache. Minimal data is saved on the servers.</li>
-        <li><strong>PRO Membership:</strong> Enables full cloud synchronization of your Bells, XP progression levels, Bulletin Board sublogs, direct message channels, and app review history.</li>
+        <li><strong>PRO Membership:</strong> Enables full cloud synchronization of your Bells, XP progression levels, Bulletin Board posts, direct message channels, and app review history.</li>
       </ul>
 
       <h3 class="text-base font-black text-[#1e3d37] border-b-2 border-dashed border-[#bedad4] pb-1 m-0">3. Data Sharing & Security</h3>

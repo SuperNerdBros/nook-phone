@@ -9,7 +9,7 @@
   import { fetchThreads, createThread, fetchComments, createComment, isProUser } from '@/lib/api';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NewThreadForm from './NewThreadForm.svelte';
-  import CreateSublogForm from './CreateSublogForm.svelte';
+  import CreateBoardForm from './CreateBoardForm.svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
 
@@ -19,6 +19,7 @@
     content: string;
     subnook: string;
     author_name: string;
+    author_island?: string;
     date: string;
     comment_count: number;
     likes?: number;
@@ -27,16 +28,16 @@
 
   // Helper to normalize island name for n/ prefix (removes " Island" suffix)
   const ctx = getPhoneContext();
-  const getIslandSublog = () => {
+  const getIslandBoard = () => {
     const raw = nookState.passport.islandName || "Nook";
     const clean = raw.replace(/\s*Island\s*$/gi, "");
     return "bb/" + clean.replace(/\s+/g, "");
   };
 
-  let islandSublog = $derived(getIslandSublog());
+  let islandBoard = $derived(getIslandBoard());
 
-  // Default villager sublogs
-  const DEFAULT_SUBLOGS = [
+  // Default villager boards
+  const DEFAULT_BOARDS = [
     "bb/Isabelle",
     "bb/TomNook",
     "bb/Blathers",
@@ -44,15 +45,15 @@
     "bb/KKSlider"
   ];
 
-  let customSublogs = $state<string[]>([]);
-  let allSublogs = $derived([
+  let customBoards = $state<string[]>([]);
+  let allBoards = $derived([
     "bb/All",
-    islandSublog,
-    ...DEFAULT_SUBLOGS,
-    ...customSublogs
+    islandBoard,
+    ...DEFAULT_BOARDS,
+    ...customBoards
   ]);
 
-  let selectedSublogFilter = $state("bb/All");
+  let selectedBoardFilter = $state("bb/All");
 
   const MOCK_THREADS = (): Thread[] => [
     {
@@ -61,6 +62,7 @@
       content: "Dodo code is C1TY9. Tips are appreciated! Resident Services is right outside the airport. Please be respectful of my hybrid flowers!",
       subnook: "bb/Isabelle",
       author_name: "Isabelle",
+      author_island: "Resident Services",
       date: new Date(Date.now() - 600000).toISOString(),
       comment_count: 2,
       likes: 18,
@@ -72,6 +74,7 @@
       content: "Can trade for Gold Nuggets or Nook Miles Tickets! Let me know if your villagers are crafting or if you have spare recipe cards.",
       subnook: "bb/TomNook",
       author_name: "Tom Nook",
+      author_island: "Nook Inc.",
       date: new Date(Date.now() - 3600000).toISOString(),
       comment_count: 1,
       likes: 4,
@@ -83,6 +86,7 @@
       content: "Check my designer code MA-4829-1092-4820. Let me know if you like the brick border textures!",
       subnook: "bb/Lottie",
       author_name: "Lottie",
+      author_island: "Archipelago",
       date: new Date(Date.now() - 7200000).toISOString(),
       comment_count: 0,
       likes: 24,
@@ -93,36 +97,36 @@
   let threads = $state<Thread[]>([]);
   let activeThread = $state<Thread | null>(null);
   let threadComments = $state<any[]>([]);
-  let view = $state<"list" | "detail" | "new" | "create_sublog">("list");
+  let view = $state<"list" | "detail" | "new" | "create_board">("list");
   
   // Form fields
   let newTitle = $state("");
   let newContent = $state("");
   let newSubnook = $state(""); // keep database structure t.subnook
-  let newSublogName = $state("");
+  let newBoardName = $state("");
   let replyText = $state("");
   let loading = $state(false);
 
-  // Filter threads by active sublog selection
+  // Filter threads by active board selection
   let filteredThreads = $derived(threads.filter(t => {
-    if (selectedSublogFilter === "bb/All") return true;
-    return t.subnook.toLowerCase() === selectedSublogFilter.toLowerCase();
+    if (selectedBoardFilter === "bb/All") return true;
+    return t.subnook.toLowerCase() === selectedBoardFilter.toLowerCase();
   }));
 
   async function loadThreads() {
     loading = true;
     
-    // Load custom sublogs
-    const storedSubs = localStorage.getItem("nook_custom_sublogs");
+    // Load custom boards
+    const storedSubs = localStorage.getItem("nook_custom_boards");
     if (storedSubs) {
-      customSublogs = JSON.parse(storedSubs);
+      customBoards = JSON.parse(storedSubs);
     }
 
     if (isProUser()) {
       const data = await fetchThreads();
       threads = data.map((t: any) => ({
         ...t,
-        subnook: t.subnook || islandSublog,
+        subnook: t.subnook || islandBoard,
         likes: t.likes || Math.floor(Math.random() * 12),
         hasLiked: false
       }));
@@ -167,7 +171,7 @@
     const author = nookState.passport.name || "Resident";
     loading = true;
 
-    const subnookTarget = newSubnook || islandSublog;
+    const subnookTarget = newSubnook || islandBoard;
 
     if (isProUser()) {
       const result = await createThread(newTitle.trim(), newContent.trim());
@@ -185,6 +189,7 @@
         content: newContent.trim(),
         subnook: subnookTarget,
         author_name: author,
+        author_island: nookState.passport.islandName || "Nook Island",
         date: new Date().toISOString(),
         comment_count: 0,
         likes: 0,
@@ -237,14 +242,14 @@
     }
   }
 
-  function handleCreateSublog() {
-    if (!newSublogName.trim()) return;
-    const formatted = "bb/" + newSublogName.trim().replace(/\s+/g, "");
-    if (!customSublogs.includes(formatted)) {
-      customSublogs = [...customSublogs, formatted];
-      localStorage.setItem("nook_custom_sublogs", JSON.stringify(customSublogs));
+  function handleCreateBoard() {
+    if (!newBoardName.trim()) return;
+    const formatted = "bb/" + newBoardName.trim().replace(/\s+/g, "");
+    if (!customBoards.includes(formatted)) {
+      customBoards = [...customBoards, formatted];
+      localStorage.setItem("nook_custom_boards", JSON.stringify(customBoards));
     }
-    newSublogName = "";
+    newBoardName = "";
     view = "list";
   }
 
@@ -271,24 +276,24 @@
   function handleClearLog() {
     if (confirm("Clear local chat/thread history?")) {
       localStorage.removeItem("nook_mock_threads");
-      localStorage.removeItem("nook_custom_sublogs");
-      customSublogs = [];
+      localStorage.removeItem("nook_custom_boards");
+      customBoards = [];
       loadThreads();
     }
   }
 
   onMount(() => {
-    newSubnook = islandSublog;
+    newSubnook = islandBoard;
     loadThreads();
   });
 
-  const getSublogColor = (sub: string) => {
+  const getBoardColor = (sub: string) => {
     if (sub.startsWith("bb/Isabelle")) return "bg-[#e6f4d2] text-[#4d7319] border-[#c0e096]";
     if (sub.startsWith("bb/TomNook")) return "bg-[#ffecd1] text-[#995c00] border-[#ffd599]";
     if (sub.startsWith("bb/Lottie")) return "bg-[#ffe0f0] text-[#991f66] border-[#ffb3da]";
     if (sub.startsWith("bb/KKSlider")) return "bg-[#e0f0ff] text-[#005299] border-[#b3daff]";
     if (sub.startsWith("bb/Blathers")) return "bg-[#d1f4e0] text-[#197340] border-[#96e0b8]";
-    // Custom island / user sublogs
+    // Custom island / user boards
     return "bg-[#e6e0ff] text-[#401999] border-[#c2b3ff]";
   };
 
@@ -306,7 +311,7 @@
   <!-- Header -->
   <NookAppHeader 
     title="Bulletin Board"
-    subtitle="Bulleted Sublog boards & local logs"
+    subtitle="Bulleted boards & local logs"
     bgClass="bg-[#eb6a9d]"
     textClass="text-white"
   >
@@ -329,25 +334,18 @@
       {#if view === "list"}
         <div class="flex items-center gap-1">
           <NookToolbarButton
-            onclick={() => view = "create_sublog"}
+            onclick={() => view = "create_board"}
             class="!w-auto !px-2 text-[9px] font-black uppercase tracking-wider text-[#eb6a9d]"
-            title="Create Sublog"
+            title="Create Board"
           >
-            <Plus class="w-3.5 h-3.5 stroke-[2.5px] mr-0.5" /> Sublog
+            <Plus class="w-3.5 h-3.5 stroke-[2.5px] mr-0.5" /> Board
           </NookToolbarButton>
           <NookToolbarButton
-            onclick={() => { view = "new"; newSubnook = selectedSublogFilter === "bb/All" ? islandSublog : selectedSublogFilter; }}
+            onclick={() => { view = "new"; newSubnook = selectedBoardFilter === "bb/All" ? islandBoard : selectedBoardFilter; }}
             class="text-[#eb6a9d]"
             title="New thread"
           >
             <Plus class="w-3.5 h-3.5 stroke-[2.5px]" />
-          </NookToolbarButton>
-          <NookToolbarButton
-            onclick={handleClearLog}
-            class="text-[#eb6a9d]"
-            title="Reset mockup logs"
-          >
-            <Trash2 class="w-3.5 h-3.5 stroke-[2.5px]" />
           </NookToolbarButton>
         </div>
       {/if}
@@ -357,13 +355,13 @@
     {/snippet}
   </NookAppHeader>
  
-  <!-- Sublogs Horizontal Selector Bar -->
+  <!-- Boards Horizontal Selector Bar -->
   {#if view === "list"}
     <div class="bg-[#f4f1e3] border-b-2 border-[#e1d9be] py-2.5 px-3 flex gap-2.5 overflow-x-auto shrink-0 ac-scrollbar shadow-inner">
-      {#each allSublogs as sub}
+      {#each allBoards as sub}
         <button
-          onclick={() => selectedSublogFilter = sub}
-          class={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider transition-all border shrink-0 cursor-pointer ${selectedSublogFilter === sub ? 'bg-[#eb6a9d] border-[#c94d7d] text-white shadow-sm scale-105' : 'bg-white hover:bg-gray-50 border-[#dcd3be] text-gray-700 active:scale-95'}`}
+          onclick={() => selectedBoardFilter = sub}
+          class={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider transition-all border shrink-0 cursor-pointer ${selectedBoardFilter === sub ? 'bg-[#eb6a9d] border-[#c94d7d] text-white shadow-sm scale-105' : 'bg-white hover:bg-gray-50 border-[#dcd3be] text-gray-700 active:scale-95'}`}
         >
           {sub}
         </button>
@@ -383,7 +381,7 @@
       {#if filteredThreads.length === 0}
         <div class="text-center py-20 text-gray-400 text-sm">
           <MessageSquare class="w-12 h-12 mx-auto opacity-25 mb-2" />
-          No discussions found in {selectedSublogFilter}. Tap the + icon above to write a post!
+          No discussions found in {selectedBoardFilter}. Tap the + icon above to write a post!
         </div>
       {:else}
         {#each filteredThreads as thread (thread.id)}
@@ -398,25 +396,18 @@
             <div class="absolute -top-4 -right-4 w-12 h-12 bg-[#f4f1e3] rounded-full opacity-50 group-hover:scale-125 transition-transform duration-300"></div>
 
             <!-- Top bar -->
-            <div class="flex justify-between items-center w-full text-[11px] text-[#9b8d71] font-bold z-10">
-              <div class="flex items-center gap-1.5 bg-[#fcfaf5] py-1 px-2.5 rounded-xl border-2 border-[#e8dfc7]">
-                <div class="w-5 h-5 rounded-full bg-[#f4ebd0] border-2 border-white flex items-center justify-center text-[10px] shrink-0 shadow-sm">
-                  🐾
-                </div>
-                <span>{thread.author_name}</span>
+            <div class="flex justify-between items-start w-full z-10">
+              <div class="flex flex-col text-left leading-tight">
+                <span class="text-[10px] font-black uppercase tracking-wider" style="color: var(--theme-color, #eb6a9d)">{thread.subnook}</span>
+                <span class="text-[11px] font-black text-[#5c3a21] mt-0.5">{thread.author_name}@{thread.author_island || 'Nook'}</span>
               </div>
-              <span class="opacity-80">{getFormatDate(thread.date)}</span>
+              <span class="text-[10px] text-[#9b8d71] font-bold opacity-80">{getFormatDate(thread.date)}</span>
             </div>
 
             <!-- Content -->
-            <div class="flex flex-col gap-1.5 z-10">
-              <div class="flex items-center gap-2">
-                <span class={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border-2 ${getSublogColor(thread.subnook)}`}>
-                  {thread.subnook}
-                </span>
-                <h3 class="text-sm font-black text-[#5c3a21] line-clamp-1">{thread.title}</h3>
-              </div>
-              <p class="text-[12px] text-[#786b51] line-clamp-2 leading-relaxed mt-1 font-medium">{thread.content}</p>
+            <div class="flex flex-col gap-1.5 z-10 text-center py-2 px-1">
+              <h3 class="text-sm font-black text-[#5c3a21] leading-snug line-clamp-1">{thread.title}</h3>
+              <p class="text-[12px] text-[#786b51] line-clamp-2 leading-relaxed font-medium">{thread.content}</p>
             </div>
 
             <!-- Bottom Controls -->
@@ -446,18 +437,15 @@
           <div class="absolute top-0 left-0 w-full h-2 bg-[#eb6a9d] opacity-80"></div>
           
           <div class="flex justify-between items-center w-full text-[11px] text-[#9b8d71] font-bold pb-3 border-b-2 border-dashed border-[#e8dfc7] pt-2">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-full bg-[#f4ebd0] border-2 border-white shadow-sm flex items-center justify-center text-sm">
-                🐾
-              </div>
-              <span class="text-[13px] text-[#5c3a21]">{activeThread.author_name}</span>
+            <div class="flex flex-col text-left leading-tight">
+              <span class="text-[13px] font-black text-[#5c3a21]">{activeThread.author_name}@{activeThread.author_island || 'Nook'}</span>
             </div>
             <span>{getFormatDate(activeThread.date)}</span>
           </div>
 
           <div class="flex flex-col gap-2">
             <div class="flex items-center gap-2 mb-1">
-              <span class={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border-2 ${getSublogColor(activeThread.subnook)}`}>
+              <span class={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border-2 ${getBoardColor(activeThread.subnook)}`}>
                 {activeThread.subnook}
               </span>
             </div>
@@ -512,23 +500,23 @@
 
     {:else if view === "new"}
       <NewThreadForm
-        allSublogs={allSublogs}
-        defaultSublog={islandSublog}
+        allBoards={allBoards}
+        defaultBoard={islandBoard}
         onCancel={() => view = "list"}
-        onSubmit={(title, content, sublog) => {
+        onSubmit={(title, content, board) => {
           newTitle = title;
           newContent = content;
-          newSubnook = sublog;
+          newSubnook = board;
           submitThread();
         }}
       />
 
-    {:else if view === "create_sublog"}
-      <CreateSublogForm
+    {:else if view === "create_board"}
+      <CreateBoardForm
         onCancel={() => view = "list"}
         onCreate={(name) => {
-          newSublogName = name;
-          handleCreateSublog();
+          newBoardName = name;
+          handleCreateBoard();
         }}
       />
     {/if}

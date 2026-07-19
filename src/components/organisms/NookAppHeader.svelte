@@ -30,6 +30,19 @@
   } = $props();
 
   let isCollapsed = $state(false);
+
+  // Extract hex color from bgClass or bgStyle to set theme color for the header buttons
+  let themeColor = $derived.by(() => {
+    if (bgStyle) {
+      const match = bgStyle.match(/#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})/);
+      if (match) return match[0];
+    }
+    if (bgClass) {
+      const match = bgClass.match(/#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})/);
+      if (match) return match[0];
+    }
+    return '';
+  });
 </script>
 
 {#if isCollapsed}
@@ -45,7 +58,7 @@
   </button>
 {:else}
   <!-- Expanded: Full rich header -->
-  <div class="ext-header {bgClass} {textClass}" style={bgStyle}>
+  <div class="ext-header {bgClass} {textClass}" style="{bgStyle}; --theme-color: {themeColor || 'currentColor'}">
     <!-- Rich Gradient Overlay -->
     <div class="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/20 via-transparent to-black/20 mix-blend-overlay"></div>
 
@@ -267,7 +280,7 @@
     cursor: pointer;
     transition: all 0.15s;
     background: rgba(255,255,255,0.92);
-    color: inherit;
+    color: var(--theme-color, currentColor);
     box-shadow: 0 2px 4px rgba(0,0,0,0.12);
   }
   :global(.nook-header-btn:hover) {
