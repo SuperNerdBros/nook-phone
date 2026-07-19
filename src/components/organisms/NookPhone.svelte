@@ -41,6 +41,12 @@
 
   const ctx = setPhoneContext();
 
+  const isExternalApp = $derived(
+    nookState.currentApp && 
+    !CORE_APPS.some(a => a.id === nookState.currentApp) && 
+    nookState.currentApp !== 'privacy' && 
+    nookState.currentApp !== 'terms'
+  );
   onMount(() => {
     setTimeout(() => {
       ctx.isBooting = false;
@@ -126,7 +132,9 @@
       <Onboarding />
     {:else}
       <!-- Dynamic Status Bar -->
-      <NookStatusBar />
+      {#if !isExternalApp}
+        <NookStatusBar />
+      {/if}
       
       <!-- Lock Screen overlay -->
       <NookLockScreen />
@@ -184,7 +192,9 @@
 
         <NookNotificationCenter />
         <NookNotificationToast />
-        <NookDock />
+        {#if !isExternalApp}
+          <NookDock />
+        {/if}
       </div>
     {/if}
 

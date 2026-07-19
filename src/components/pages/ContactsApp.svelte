@@ -547,7 +547,7 @@
                <h3 class="text-[#8a7f66] font-black text-xs uppercase mb-3 tracking-widest text-center">
                  Filter by Species
                </h3>
-               <div class="grid grid-cols-4 gap-2">
+               <div class="grid grid-cols-5 gap-2">
                  {#each allSpecies as species}
                    <button 
                      onclick={() => selectedSpecies = species}
