@@ -190,7 +190,8 @@
       .filter((p) => {
         const matchesSearch =
           p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.description.toLowerCase().includes(searchTerm.toLowerCase());
+          p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (p.information && p.information.some((info) => info.toLowerCase() === searchTerm.toLowerCase()));
         const matchesCategory =
           selectedCategory === "all" ||
           (selectedCategory === "featured"
@@ -656,13 +657,16 @@
         <div class="flex-1 overflow-y-auto ac-scrollbar flex flex-col gap-4 pb-6">
           <!-- Compact Hero Card -->
           <div
-            class="flex gap-4 items-center bg-white/40 p-4 rounded-3xl border border-white/20 shadow-sm relative overflow-hidden shrink-0"
+            class="flex flex-col bg-white/40 p-4 rounded-3xl border border-white/20 shadow-sm relative overflow-hidden shrink-0"
           >
             <!-- Subtle background pattern -->
             <div
               class="absolute inset-0 opacity-[0.03] pointer-events-none"
               style="background-image: radial-gradient(#2d5c56 1px, transparent 1px); background-size: 8px 8px;"
             ></div>
+
+            <!-- Top Row (Icon + Details) -->
+            <div class="flex gap-4 items-center relative z-10">
 
             <!-- App Icon -->
             <div class="w-[42%] aspect-square flex items-center justify-center shrink-0 z-10">
@@ -845,48 +849,42 @@
             </div>
           </div>
 
-          <!-- Information Grid -->
-          <div
-            class="bg-white/40 p-4 rounded-3xl border border-white/20 shadow-sm flex flex-col gap-3"
-          >
-            <span class="text-[9px] font-black text-[#2d5c56]/50 uppercase tracking-wider"
-              >Specifications</span
-            >
-
-            <div class="grid grid-cols-2 gap-3 text-[11px] font-bold text-[#2d5c56]">
-              <!-- Languages -->
-              <div class="flex flex-col bg-white/30 p-2.5 rounded-2xl border border-white/10">
-                <span class="text-[9px] text-[#45a38f] font-black uppercase tracking-wide mb-1"
-                  >Languages</span
-                >
-                <div class="flex flex-wrap gap-1">
-                  {#each selectedApp.languages as l}
-                    <span
-                      class="bg-[#bedad4] text-[#2d5c56] text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase"
-                    >
-                      {l}
-                    </span>
-                  {/each}
-                </div>
+          <!-- Footnotes / Specs (Full Width Footer) -->
+          <div class="mt-4 pt-3 border-t border-white/30 flex flex-col gap-2 text-[9.5px] font-bold text-[#2d5c56]/80 relative z-10">
+            <div class="flex items-center gap-2">
+              <span class="text-[#45a38f] font-black uppercase tracking-wider w-14 shrink-0">Scope</span>
+              <div class="flex-1 flex flex-wrap gap-1">
+                {#each selectedApp.information as info}
+                  <button
+                    onclick={() => {
+                      searchTerm = info;
+                      currentView = "grid";
+                    }}
+                    class="bg-[#bedad4] text-[#2d5c56] text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wide cursor-pointer hover:bg-[#a6ccc4] active:scale-95 transition-all border-none outline-none"
+                  >
+                    {info}
+                  </button>
+                {/each}
               </div>
-
-              <!-- Scope -->
-              <div class="flex flex-col bg-white/30 p-2.5 rounded-2xl border border-white/10">
-                <span class="text-[9px] text-[#45a38f] font-black uppercase tracking-wide mb-1"
-                  >Scope</span
-                >
-                <div class="flex flex-wrap gap-1">
-                  {#each selectedApp.information as info}
-                    <span
-                      class="bg-[#bedad4] text-[#2d5c56] text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase"
-                    >
-                      {info}
-                    </span>
-                  {/each}
-                </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[#45a38f] font-black uppercase tracking-wider w-14 shrink-0">Langs</span>
+              <div class="flex-1 flex flex-wrap gap-1">
+                {#each selectedApp.languages as lang}
+                  <button
+                    onclick={() => {
+                      selectedLanguage = lang;
+                      currentView = "grid";
+                    }}
+                    class="bg-[#bedad4] text-[#2d5c56] text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wide cursor-pointer hover:bg-[#a6ccc4] active:scale-95 transition-all border-none outline-none"
+                  >
+                    {lang}
+                  </button>
+                {/each}
               </div>
             </div>
           </div>
+        </div>
 
           <!-- Review Input Section -->
           {#if isInstalled && proUser}

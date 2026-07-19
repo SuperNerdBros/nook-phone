@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search } from '@lucide/svelte';
+  import { Search, X } from '@lucide/svelte';
 
   let {
     value = $bindable(""),
@@ -26,6 +26,16 @@
     type="text"
     placeholder={placeholder}
     bind:value={value}
-    class={`w-full ${bgClass} pl-11 pr-4 py-3 rounded-2xl text-[13px] font-black border-4 ${borderColorClass} focus:outline-none ${focusBorderClass} ${textClass} placeholder:opacity-50 transition-colors shadow-inner`}
+    class={`w-full ${bgClass} pl-11 pr-11 py-3 rounded-2xl text-[13px] font-black border-4 ${borderColorClass} focus:outline-none ${focusBorderClass} ${textClass} placeholder:opacity-50 transition-colors shadow-inner`}
   />
+  {#if value.length > 0}
+    <button
+      type="button"
+      onclick={() => value = ""}
+      class={`absolute right-3 top-2.5 p-1 rounded-full hover:bg-black/5 active:scale-95 transition-all ${themeColorClass}`}
+      aria-label="Clear search"
+    >
+      <X class="w-5 h-5 stroke-[3px]" />
+    </button>
+  {/if}
 </div>
