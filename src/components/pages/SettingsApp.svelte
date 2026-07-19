@@ -119,6 +119,12 @@
         playSound('beep');
       }
       
+      // Ensure the server has our latest NookState before making a server-side purchase
+      if (typeof nookState.syncToCloud === 'function') {
+        // We have to use any here because we are modifying the prototype or checking if it supports async
+        await (nookState.syncToCloud(true) as any);
+      }
+      
       const { spendGP } = await import('@/lib/api');
       const success = await spendGP(STORAGE_UPGRADE_PRICE, `Storage Upgrade`);
 

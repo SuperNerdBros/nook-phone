@@ -484,12 +484,12 @@ class NookStateManager {
     }
   }
 
-  syncToCloud(immediate = false) {
+  async syncToCloud(immediate = false) {
     if (!isProUser()) return;
     if (this.syncTimeout) clearTimeout(this.syncTimeout);
     
     if (immediate) {
-      saveRemoteState(this.state);
+      await saveRemoteState(this.state);
     } else {
       this.syncTimeout = setTimeout(() => {
         saveRemoteState(this.state);
