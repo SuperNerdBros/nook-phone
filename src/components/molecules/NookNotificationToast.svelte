@@ -11,7 +11,13 @@
   <button
     onclick={() => {
       playSound('click', !nookState.settings.soundEffects);
-      ctx.showNotificationCenter = true;
+      
+      if (ctx.activeToast?.actionAppId) {
+        ctx.handleAppLaunch(ctx.activeToast.actionAppId);
+      } else {
+        ctx.showNotificationCenter = true;
+      }
+      
       if (nookState.markAllNotificationsAsRead) {
         nookState.markAllNotificationsAsRead();
       }

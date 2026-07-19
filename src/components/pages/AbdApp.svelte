@@ -7,27 +7,27 @@
   import { resolveAssetUrl } from '@/lib/utils';
   import { isProUser } from '@/lib/api';
   import walletIcon from "@/assets/img/Wallet.png";
-  import LoanPaymentDialog from '../organisms/LoanPaymentDialog.svelte';
+  import ServicePlanDialog from '../organisms/ServicePlanDialog.svelte';
   import { Tween } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
   
   const ctx = getPhoneContext();
-  let showLoanDialog = $state(false);
+  let showServicePlanDialog = $state(false);
   
   let animatedBells = new Tween(nookState.bells, { duration: 2500, easing: cubicOut });
-  let animatedLoan = new Tween(nookState.loanBalance, { duration: 2500, easing: cubicOut });
+  let animatedLoan = new Tween(nookState.servicePlanBalance, { duration: 2500, easing: cubicOut });
 
   $effect(() => {
     const bellsChanged = animatedBells.target !== nookState.bells;
-    const loanChanged = animatedLoan.target !== nookState.loanBalance;
+    const loanChanged = animatedLoan.target !== nookState.servicePlanBalance;
     
     if (bellsChanged || loanChanged) {
       animatedBells.target = nookState.bells;
-      animatedLoan.target = nookState.loanBalance;
+      animatedLoan.target = nookState.servicePlanBalance;
       
       const interval = setInterval(() => {
         const isBellsDone = Math.abs(animatedBells.current - nookState.bells) < 1;
-        const isLoanDone = Math.abs(animatedLoan.current - nookState.loanBalance) < 1;
+        const isLoanDone = Math.abs(animatedLoan.current - nookState.servicePlanBalance) < 1;
         
         if (isBellsDone && isLoanDone) {
           clearInterval(interval);
@@ -134,7 +134,7 @@
       
       <!-- Loan Balance -->
       <div class="flex justify-between items-end border-b-2 border-[#e6f9cd] pb-2 mb-3">
-        <span class="{animatedLoan.current > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-[15px]">Loan Balance</span>
+        <span class="{animatedLoan.current > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-[15px]">Service Plan Balance</span>
         <div class="flex items-end">
           <span class="{animatedLoan.current > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-2xl leading-none">{formatBells(animatedLoan.current)}</span>
           <span class="{animatedLoan.current > 0 ? 'text-[#e05638]' : 'text-[#c1c1c1]'} font-bold text-xs ml-1 mb-[2px]">Bells</span>
@@ -154,11 +154,11 @@
     <!-- Action Buttons -->
     <div class="flex flex-col gap-4 mt-10 w-[75%] z-10">
       <!-- Loan Payment Button -->
-      {#if nookState.loanBalance > 0}
+      {#if nookState.servicePlanBalance > 0}
         <button 
           class="group relative w-full h-[52px] rounded-full overflow-hidden shadow-sm transition-transform active:scale-95"
-          onclick={() => showLoanDialog = true}
-          aria-label="Loan Payment"
+          onclick={() => showServicePlanDialog = true}
+          aria-label="Pay Service Plan"
         >
           <div class="absolute inset-0 bg-[#e05638] abd-stripes abd-hover-animate"></div>
           <!-- Inner dark border effect -->
@@ -166,7 +166,7 @@
           
           <div class="relative h-full flex items-center justify-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#681604" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span class="text-[#681604] font-extrabold text-[17px] tracking-wide mt-0.5">Loan Payment</span>
+            <span class="text-[#681604] font-extrabold text-[17px] tracking-wide mt-0.5">Pay Service Plan</span>
           </div>
 
           <!-- Pointing Hand Hover Effect -->
@@ -215,8 +215,8 @@
   </div>
 </div>
 
-{#if showLoanDialog}
-  <LoanPaymentDialog onClose={() => showLoanDialog = false} />
+{#if showServicePlanDialog}
+  <ServicePlanDialog onClose={() => showServicePlanDialog = false} />
 {/if}
 
 <style>

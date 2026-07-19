@@ -54,9 +54,9 @@
         <li>Attempting to bypass PRO restrictions or modify gold coin (Bells) count via illegal exploits.</li>
       </ul>
 
-      <h3 class="text-base font-black text-[#5c3a21] border-b-2 border-dashed border-[#edd8aa] pb-1 m-0">3. Loan Repayments</h3>
+      <h3 class="text-base font-black text-[#5c3a21] border-b-2 border-dashed border-[#edd8aa] pb-1 m-0">3. Service Plan Payments</h3>
       <p class="m-0">
-        House expansions, infrastructure upgrades, and bridges are subject to standard loan repayments to Tom Nook. While loans have 0% interest, we reserve the right to prompt you via the Resident Services kiosk until paid in full.
+        House expansions, infrastructure upgrades, and bridges are subject to standard service plan payments. While the service plan has 0% interest, we reserve the right to prompt you via the Resident Services kiosk until paid in full.
       </p>
 
       <h3 class="text-base font-black text-[#5c3a21] border-b-2 border-dashed border-[#edd8aa] pb-1 m-0">4. Service Changes</h3>

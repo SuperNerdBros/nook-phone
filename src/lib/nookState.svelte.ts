@@ -12,7 +12,7 @@ import {
   type MapBuilding,
   type MilesChallenge
 } from "./nookData";
-import { fetchRemoteState, saveRemoteState, isProUser } from "./api";
+import { fetchRemoteState, saveRemoteState, isProUser, processTransaction } from "./api";
 import { playSound } from "./audio";
 
 export interface PassportInfo {
@@ -48,6 +48,7 @@ export interface NookNotification {
   sender: string;
   timestamp: string;
   isRead: boolean;
+  actionAppId?: string;
 }
 
 export interface NookOSState {
@@ -113,7 +114,7 @@ export interface NookOSState {
   subscribedSublogs: string[];
   appDonations: Record<string, number>;
   patreonTierCents?: number;
-  loanBalance?: number;
+  servicePlanBalance?: number;
   hasReceivedAllowance?: boolean;
   maxAppSlots?: number;
 }
@@ -193,8 +194,8 @@ const INITIAL_STATE: NookOSState = {
     { id: "d3", name: "Custom Tile", grid: Array(16).fill(null).map(() => Array(16).fill("#ffffff")), creator: "Villager" }
   ],
   activeWallpaperId: "default",
-  pinnedApps: ["camera", "miles", "critter", "diy", "designs", "designer", "map", "chat", "passport", "messages", "shopping", "best_friends", "tune_maker", "abd"],
-  installedApps: ["tune_maker"],
+  pinnedApps: ["camera", "miles", "critter", "diy", "designs", "designer", "map", "chat", "passport", "messages", "shopping", "best_friends", "abd", "Miles", "Critterpedia", "Dodo Air", "Happy Island Designer", "Pattern Tool"],
+  installedApps: ["Miles", "Critterpedia", "Dodo Air", "Happy Island Designer", "Pattern Tool"],
   hasCompletedOnboarding: false,
   settings: {
     use24HourTime: false,
@@ -214,7 +215,7 @@ const INITIAL_STATE: NookOSState = {
   dockApps: ["directory", "contacts", "settings"],
   subscribedSublogs: ["bb/Isabelle", "bb/TomNook"],
   appDonations: {},
-  loanBalance: 0,
+  servicePlanBalance: 0,
   hasReceivedAllowance: false
 };
 
@@ -317,8 +318,8 @@ class NookStateManager {
   get patreonTierCents() { return this.state.patreonTierCents || 0; }
   set patreonTierCents(val) { this.state.patreonTierCents = val; }
 
-  get loanBalance() { return this.state.loanBalance || 0; }
-  set loanBalance(val) { this.state.loanBalance = val; this.save(); }
+  get servicePlanBalance() { return this.state.servicePlanBalance || 0; }
+  set servicePlanBalance(val) { this.state.servicePlanBalance = val; this.save(); }
 
   get hasReceivedAllowance() { return this.state.hasReceivedAllowance || false; }
   set hasReceivedAllowance(val) { this.state.hasReceivedAllowance = val; this.save(); }
@@ -326,13 +327,18 @@ class NookStateManager {
   get maxAppSlots() { return this.state.maxAppSlots || 18; }
   set maxAppSlots(val) { this.state.maxAppSlots = val; this.save(); }
 
-  payLoan(amount: number): boolean {
-    const currentLoan = this.state.loanBalance || 0;
+  async payServicePlan(amount: number): Promise<boolean> {
+    const currentLoan = this.state.servicePlanBalance || 0;
     if (this.state.bells < amount) return false;
     const toPay = Math.min(amount, currentLoan);
     if (toPay <= 0) return false;
+    
+    const tx = await processTransaction(-toPay, 'Service Plan Payment');
+    if (!tx.success) return false;
+
     this.state.bells -= toPay;
-    this.state.loanBalance = currentLoan - toPay;
+    this.state.servicePlanBalance = currentLoan - toPay;
+    if (tx.newBalance !== undefined) this.state.bells = tx.newBalance;
     this.save();
     return true;
   }
@@ -342,14 +348,18 @@ class NookStateManager {
     return (this.state.appDonations[appId] || 0) >= 98000;
   }
 
-  donateToApp(appId: string, amount: number): boolean {
+  async donateToApp(appId: string, amount: number): Promise<boolean> {
     if (this.state.bells < amount) return false;
+    
+    const tx = await processTransaction(-amount, `App Donation: ${appId}`);
+    if (!tx.success) return false;
     
     if (!this.state.appDonations) this.state.appDonations = {};
     const current = this.state.appDonations[appId] || 0;
     
     this.state.bells -= amount;
     this.state.appDonations[appId] = current + amount;
+    if (tx.newBalance !== undefined) this.state.bells = tx.newBalance;
     this.save();
     return true;
   }
@@ -442,10 +452,14 @@ class NookStateManager {
     return this.state.patreonTierCents && this.state.patreonTierCents > 0 && !this.state.hasReceivedAllowance;
   }
 
-  depositAllowance() {
+  async depositAllowance() {
+    const tx = await processTransaction(500000, 'Patreon Allowance');
+    if (!tx.success) return;
+    
     this.state.bells += 500000;
-    this.state.loanBalance = 50000;
+    this.state.servicePlanBalance = 50000;
     this.state.hasReceivedAllowance = true;
+    if (tx.newBalance !== undefined) this.state.bells = tx.newBalance;
     this.save();
   }
 
@@ -891,7 +905,8 @@ class NookStateManager {
         this.addNotification(
           "New App Installed!", 
           `Yes, yes! ${appName} has been successfully downloaded and placed on your homescreen!`, 
-          "Tom Nook"
+          "Tom Nook",
+          appName
         );
       }, 2500);
       return true;
@@ -907,14 +922,17 @@ class NookStateManager {
   }
 
   isAppInstalled(appName: string): boolean {
-    const systemAppNames = new Set([
+    const coreAppIds = new Set([
       "camera", "miles", "critter", "diy", "designs", "designer", "map", "passport",
-      "chat", "settings", "directory", "messages", "contacts", "dodo_air", "best_friends",
-      "rescue", "changelog", "ac miles", "acnh critterpedia", "diy recipes", "nook shopping",
-      "happy island designer", "animal crossing pattern tool", "bulletin board", "settings",
-      "residential recycle box", "messages", "contacts", "best friends", "rescue service"
+      "chat", "settings", "directory", "messages", "contacts", "dodo_air", "rescue", "changelog", "best_friends", "abd"
     ]);
-    if (systemAppNames.has(appName.toLowerCase())) return true;
+
+    // Check if it's an exact core app ID.
+    // We do NOT use toLowerCase() here to avoid collisions where a 3rd party app
+    // like "Miles" accidentally matches the core app ID "miles".
+    if (coreAppIds.has(appName)) return true;
+    
+    // Otherwise it must be a 3rd party app.
     if (!this.state.installedApps) return false;
     return this.state.installedApps.includes(appName);
   }
@@ -947,7 +965,7 @@ class NookStateManager {
   }
 
 
-  addNotification(title: string, message: string, sender: string) {
+  addNotification(title: string, message: string, sender: string, actionAppId?: string) {
     if (!this.state.notifications) {
       this.state.notifications = [];
     }
@@ -963,7 +981,8 @@ class NookStateManager {
       message,
       sender,
       timestamp: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
-      isRead: false
+      isRead: false,
+      actionAppId
     };
     this.state.notifications.unshift(newNotif);
     this.save();

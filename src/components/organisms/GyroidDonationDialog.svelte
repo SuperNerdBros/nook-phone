@@ -60,15 +60,17 @@
     }
   });
 
-  function handleDonate() {
+  async function handleDonate() {
     if (donationAmount > 0 && donationAmount <= bellsAvailable) {
       const donated = donationAmount;
-      nookState.donateToApp(appId, donated);
+      const success = await nookState.donateToApp(appId, donated);
       
-      // Play sound
-      import('@/lib/audio').then(m => m.playSound('success'));
-      
-      currentState = 'donated_success';
+      if (success) {
+        // Play sound
+        import('@/lib/audio').then(m => m.playSound('success'));
+        
+        currentState = 'donated_success';
+      }
     }
   }
   

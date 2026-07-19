@@ -57,7 +57,6 @@ export const linkPassport = async (passportData: any) => {
 };
 
 export const fetchApps = async () => {
-  if (!isProUser()) return [];
   try {
     const res = await fetch(getApiUrl('apps'), { headers: getApiHeaders() });
     if (!res.ok) return [];
@@ -84,12 +83,16 @@ export const rateApp = async (appSlug: string, rating: number, comment: string =
 };
 
 export const installAppTracker = async (appSlug: string) => {
-  if (!isProUser()) return false;
   try {
+    let deviceUuid = localStorage.getItem('nookos_uuid');
+    if (!deviceUuid) {
+      deviceUuid = crypto.randomUUID();
+      localStorage.setItem('nookos_uuid', deviceUuid);
+    }
     const res = await fetch(getApiUrl('install'), {
       method: 'POST',
       headers: getApiHeaders(),
-      body: JSON.stringify({ app_slug: appSlug })
+      body: JSON.stringify({ app_slug: appSlug, uuid: deviceUuid })
     });
     return res.ok;
   } catch (e) {
@@ -339,19 +342,27 @@ export const fetchNookipediaVillagers = async () => {
 };
 
 export const spendGP = async (gpCost: number, itemName: string) => {
-  if (!isProUser()) return false;
+  const result = await processTransaction(-gpCost, `Purchased: ${itemName}`);
+  return result.success;
+};
+
+export const processTransaction = async (amount: number, reason: string): Promise<{ success: boolean; newBalance?: number }> => {
+  if (!isProUser()) {
+    // Allow local/offline mode transactions to succeed optimistically
+    return { success: true };
+  }
   try {
     const root = window.wpApiSettings?.root || '/wp-json/';
-    const res = await fetch(`${root}xp/v1/spend-gp`, {
+    const res = await fetch(`${root}xp/v1/transaction`, {
       method: 'POST',
       headers: getApiHeaders(),
-      body: JSON.stringify({ gp: gpCost, item: itemName })
+      body: JSON.stringify({ amount, reason })
     });
-    if (!res.ok) return false;
+    if (!res.ok) return { success: false };
     const data = await res.json();
-    return data.success === true;
+    return { success: data.success, newBalance: data.balance };
   } catch (e) {
-    console.error('Failed to spend GP', e);
-    return false;
+    console.error('Failed to process transaction', e);
+    return { success: false };
   }
 };

@@ -96,10 +96,10 @@
     const tipInterval = setInterval(deliverRandomTip, 75000);
 
     const checkLoanReminder = () => {
-      if (nookState.loanBalance > 0) {
+      if (nookState.servicePlanBalance > 0) {
         nookState.addNotification(
           "Cell Service Payment Due",
-          `Hello! A friendly reminder that your cell phone service fee of ${nookState.loanBalance.toLocaleString()} Bells is still unpaid. Please visit the ABD app to pay it off, yes, yes!`,
+          `Hello! A friendly reminder that your cell phone service fee of ${nookState.servicePlanBalance.toLocaleString()} Bells is still unpaid. Please visit the ABD app to pay it off, yes, yes!`,
           "Tom Nook"
         );
       }

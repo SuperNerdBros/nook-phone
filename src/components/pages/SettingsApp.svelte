@@ -64,12 +64,13 @@
         playSound('beep');
       }
       
-      const { spendGP } = await import('@/lib/api');
-      const success = await spendGP(WALLPAPER_PRICE, `Wallpaper: ${purchaseDialogWallpaper?.name}`);
+      const { processTransaction } = await import('@/lib/api');
+      const tx = await processTransaction(-WALLPAPER_PRICE, `Wallpaper: ${purchaseDialogWallpaper?.name}`);
 
-      if (success) {
+      if (tx.success) {
         setTimeout(async () => {
           nookState.bells -= WALLPAPER_PRICE;
+          if (tx.newBalance !== undefined) nookState.bells = tx.newBalance;
           if (purchaseDialogWallpaper) {
             nookState.catalog.purchasedIds.push(purchaseDialogWallpaper.id);
             nookState.activeWallpaperId = purchaseDialogWallpaper.id;
@@ -119,18 +120,13 @@
         playSound('beep');
       }
       
-      // Ensure the server has our latest NookState before making a server-side purchase
-      if (typeof nookState.syncToCloud === 'function') {
-        // We have to use any here because we are modifying the prototype or checking if it supports async
-        await (nookState.syncToCloud(true) as any);
-      }
-      
-      const { spendGP } = await import('@/lib/api');
-      const success = await spendGP(STORAGE_UPGRADE_PRICE, `Storage Upgrade`);
+      const { processTransaction } = await import('@/lib/api');
+      const tx = await processTransaction(-STORAGE_UPGRADE_PRICE, `Storage Upgrade`);
 
-      if (success) {
+      if (tx.success) {
         setTimeout(async () => {
           nookState.bells -= STORAGE_UPGRADE_PRICE;
+          if (tx.newBalance !== undefined) nookState.bells = tx.newBalance;
           nookState.maxAppSlots = (nookState.maxAppSlots || 18) + 9;
           nookState.save();
           if (nookState.settings.soundEffects) {

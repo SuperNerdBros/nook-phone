@@ -75,7 +75,7 @@
   
   // Mock data for guests
   const MOCK_LETTERS: Letter[] = [
-    { id: 101, partner_id: 1, partner_name: "Tom Nook", subject: "Loan Payment", content: "Hello! Have you checked your mail?\nYour loan is due, yes, yes!", date: new Date(Date.now() - 7200000).toISOString(), unread_count: 1, stationery_id: 'airmail', is_sent_by_me: false },
+    { id: 101, partner_id: 1, partner_name: "Tom Nook", subject: "Service Plan Payment", content: "Hello! Have you checked your mail?\nYour service plan is due, yes, yes!", date: new Date(Date.now() - 7200000).toISOString(), unread_count: 1, stationery_id: 'airmail', is_sent_by_me: false },
     { id: 102, partner_id: 2, partner_name: "Isabelle", subject: "Announcements", content: "Good morning!\nHere are the morning announcements!", date: new Date(Date.now() - 3600000).toISOString(), unread_count: 0, stationery_id: 'cute', is_sent_by_me: false }
   ];
   const MOCK_COMMENTS: (Message & {thread_id: number})[] = [
