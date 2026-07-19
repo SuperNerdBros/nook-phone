@@ -805,7 +805,7 @@ class NookStateManager {
       "camera", "miles", "critter", "diy", "designs", "designer", "map", "passport",
       "chat", "settings", "directory", "messages", "contacts", "dodo_air", "best_friends",
       "rescue", "changelog", "ac miles", "acnh critterpedia", "diy recipes", "nook shopping",
-      "happy island designer", "animal crossing pattern tool", "nookit", "settings",
+      "happy island designer", "animal crossing pattern tool", "bulletin board", "settings",
       "residential recycle box", "messages", "contacts", "best friends", "rescue service"
     ]);
     if (systemAppNames.has(appName.toLowerCase())) return true;

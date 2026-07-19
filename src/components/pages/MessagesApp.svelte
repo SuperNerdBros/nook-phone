@@ -2,9 +2,9 @@
   import { getPhoneContext } from '@/components/organisms/phoneContext.svelte';
   import { onMount } from 'svelte';
   import { fade, fly, slide } from 'svelte/transition';
-  import { ArrowLeft, Send, Search, CheckCheck, MessageSquare, X, Plus, Grid, Mail, Inbox, Mailbox } from '@lucide/svelte';
+  import { ArrowLeft, Send, Search, CheckCheck, MessageSquare, X, Plus, Grid, Mail, Inbox, Mailbox, Cat, Heart, Star, Trash } from '@lucide/svelte';
   import nookState from '@/lib/nookState.svelte';
-  import { fetchPrivateLetters, createPrivateLetter, fetchComments, createComment, fetchNookUsers, isProUser } from '@/lib/api';
+  import { fetchPrivateLetters, createPrivateLetter, fetchComments, createComment, fetchNookUsers, isProUser, deleteDM, deleteConversation } from '@/lib/api';
   import NookAppTemplate from '@/components/organisms/NookAppTemplate.svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
@@ -33,7 +33,7 @@
   }
 
   const STATIONERY_OPTIONS = [
-    { id: 'airmail', name: 'Airmail', bgClass: 'bg-[#f4f1e1]', style: 'border: 8px solid transparent; border-image: repeating-linear-gradient(45deg, #d32f2f, #d32f2f 10px, transparent 10px, transparent 20px, #1976d2 20px, #1976d2 30px, transparent 30px, transparent 40px) 8; background-clip: padding-box;' },
+    { id: 'airmail', name: 'Airmail', bgClass: 'bg-[#f4f1e1]', style: 'border: 8px solid transparent; border-image: repeating-linear-gradient(45deg, #d32f2f, #d32f2f 10px, transparent 10px, transparent 20px, #1976d2 20px, #1976d2 30px, transparent 30px, transparent 40px) 8;' },
     { id: 'lined', name: 'Lined', bgClass: 'bg-[#fffae8]', style: 'background-image: repeating-linear-gradient(transparent, transparent 24px, #a3c4f3 25px); background-size: 100% 25px;' },
     { id: 'parchment', name: 'Parchment', bgClass: 'bg-[#e2d4a6]', style: 'box-shadow: inset 0 0 30px rgba(100,60,20,0.2);' },
     { id: 'cute', name: 'Cute', bgClass: 'bg-[#ffdceb]', style: 'background-image: radial-gradient(#ffb6c1 15%, transparent 16%), radial-gradient(#ffb6c1 15%, transparent 16%); background-size: 20px 20px; background-position: 0 0, 10px 10px;' }
@@ -58,7 +58,7 @@
   let selectedStationery = $state<any>(STATIONERY_OPTIONS[0]);
 
   let activeCategory = $state("All");
-  const categories = ["All", "Inbox", "Unread", "Outbox"];
+  const categories = ["All", "Inbox", "Unread", "Outbox", "Villagers", "Best Friends", "Favorites"];
   
   const getCategoryIcon = (cat: string) => {
     switch (cat) {
@@ -66,6 +66,9 @@
       case "Inbox": return Inbox;
       case "Unread": return Mail;
       case "Outbox": return Send;
+      case "Villagers": return Cat;
+      case "Best Friends": return Heart;
+      case "Favorites": return Star;
       default: return Mailbox;
     }
   };
@@ -146,6 +149,9 @@
       if (activeCategory === "Unread" && u.unread_count === 0) return false;
       if (activeCategory === "Inbox" && !u.has_received) return false;
       if (activeCategory === "Outbox" && !u.has_sent) return false;
+      if (activeCategory === "Villagers" && !nookState.isResident(u.partner_id)) return false;
+      if (activeCategory === "Best Friends" && !nookState.isBestFriend(u.partner_id)) return false;
+      if (activeCategory === "Favorites") return false; // Mocked / Not implemented yet
       return true;
     })
     .sort((a: any, b: any) => new Date(b.latest_date).getTime() - new Date(a.latest_date).getTime())
@@ -218,13 +224,45 @@
     view = "new-draft";
   };
 
-  const handleSend = async () => {
+  const handleDeleteLetter = async (id: number) => {
+    if (!confirm("Are you sure you want to throw away this letter?")) return;
+    
+    if (isProUser()) {
+      const success = await deleteDM(id);
+      if (success) {
+        letters = letters.filter(l => l.id !== id);
+      }
+    } else {
+      letters = letters.filter(l => l.id !== id);
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!activeChatPartner) return;
+    if (!confirm(`Are you sure you want to clean up all letters with ${activeChatPartner.name}?`)) return;
+
+    if (isProUser()) {
+      const success = await deleteConversation(activeChatPartner.id);
+      if (success) {
+        letters = letters.filter(l => l.partner_id !== activeChatPartner.id);
+        view = "inbox";
+        activeChatPartner = null;
+      }
+    } else {
+      letters = letters.filter(l => l.partner_id !== activeChatPartner.id);
+      view = "inbox";
+      activeChatPartner = null;
+    }
+  };
+
+  const handleSend = async (sendType?: 'comment' | 'reply') => {
     if (!newMessage.trim() || (!activeLetter && !selectedRecipient)) return;
     
     sending = true;
+    const type = sendType || (view === "chat" ? "comment" : "reply");
+
     if (isProUser()) {
       if (view === "new-draft") {
-        // Creating a new Post/Letter
         const subject = newSubject.trim() || 'No Subject';
         const result = await createPrivateLetter(selectedRecipient.ID, subject, newMessage, selectedStationery.id);
         
@@ -243,35 +281,42 @@
           letters = [newLetter, ...letters];
           activeChatPartner = { id: selectedRecipient.ID, name: selectedRecipient.display_name };
           view = "user-letters";
-        } else {
-          // Fallback if API fails but we still want to simulate success for the user temporarily
-          const newLetter = {
-            id: Date.now(),
-            partner_id: selectedRecipient.ID,
-            partner_name: selectedRecipient.display_name,
-            subject: subject,
-            content: newMessage,
-            date: new Date().toISOString(),
-            unread_count: 0,
-            stationery_id: selectedStationery.id,
-            is_sent_by_me: true
-          };
-          letters = [newLetter, ...letters];
-          activeChatPartner = { id: selectedRecipient.ID, name: selectedRecipient.display_name };
-          view = "user-letters";
         }
       } else if (activeLetter) {
-        // Replying (creating a comment)
-        const result = await createComment(activeLetter.id, newMessage);
-        if (result) {
-          messages = [...messages, {
-            id: Date.now(), // Optimistic ID
-            sender_id: nookState.passport.name ? 0 : 0, 
-            content: newMessage,
-            date: new Date().toISOString(),
-            is_read: false
-          }];
-          newMessage = "";
+        if (type === "comment") {
+          const result = await createComment(activeLetter.id, newMessage);
+          if (result) {
+            messages = [...messages, {
+              id: Date.now(),
+              sender_id: 0, 
+              content: newMessage,
+              date: new Date().toISOString(),
+              is_read: false
+            }];
+            newMessage = "";
+          }
+        } else {
+          // Reply creates a new Message (letter)
+          const subject = activeLetter.subject.startsWith("Re:") ? activeLetter.subject : `Re: ${activeLetter.subject}`;
+          const partnerId = activeChatPartner?.id || activeLetter.partner_id;
+          const stationeryId = activeLetter.stationery_id || 'airmail';
+          const result = await createPrivateLetter(partnerId, subject, newMessage, stationeryId);
+          if (result && result.id) {
+            const newLetter = {
+              id: result.id,
+              partner_id: partnerId,
+              partner_name: activeChatPartner?.name || activeLetter.partner_name,
+              subject: subject,
+              content: newMessage,
+              date: result.date || new Date().toISOString(),
+              unread_count: 0,
+              stationery_id: stationeryId,
+              is_sent_by_me: true
+            };
+            letters = [newLetter, ...letters];
+            newMessage = "";
+            view = "user-letters";
+          }
         }
       }
     } else {
@@ -293,14 +338,34 @@
         activeChatPartner = { id: selectedRecipient.ID, name: selectedRecipient.display_name };
         view = "user-letters";
       } else if (activeLetter) {
-        messages = [...messages, {
-          id: Date.now(),
-          sender_id: 0, 
-          content: newMessage,
-          date: new Date().toISOString(),
-          is_read: false
-        }];
-        newMessage = "";
+        if (type === "comment") {
+          messages = [...messages, {
+            id: Date.now(),
+            sender_id: 0, 
+            content: newMessage,
+            date: new Date().toISOString(),
+            is_read: false
+          }];
+          newMessage = "";
+        } else {
+          const subject = activeLetter.subject.startsWith("Re:") ? activeLetter.subject : `Re: ${activeLetter.subject}`;
+          const partnerId = activeChatPartner?.id || activeLetter.partner_id;
+          const stationeryId = activeLetter.stationery_id || 'airmail';
+          const newLetter = {
+            id: Date.now(),
+            partner_id: partnerId,
+            partner_name: activeChatPartner?.name || activeLetter.partner_name,
+            subject: subject,
+            content: newMessage,
+            date: new Date().toISOString(),
+            unread_count: 0,
+            stationery_id: stationeryId,
+            is_sent_by_me: true
+          };
+          letters = [newLetter, ...letters];
+          newMessage = "";
+          view = "user-letters";
+        }
       }
     }
     sending = false;
@@ -310,8 +375,44 @@
 
   function formatDate(iso: string) {
     const d = new Date(iso);
-    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    const timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    return `${dateStr} ${timeStr}`;
   }
+
+  const getSenderName = (letter: Letter) => {
+    if (letter.is_sent_by_me) {
+      return nookState.passport?.name || "Resident";
+    } else {
+      return letter.partner_name;
+    }
+  };
+
+  const getSenderIsland = (letter: Letter) => {
+    if (letter.is_sent_by_me) {
+      return nookState.passport?.islandName || "Nook Island";
+    } else {
+      const partnerUser = users.find(u => u.ID === letter.partner_id || u.id === letter.partner_id);
+      return partnerUser?.islandName || "Nook Island";
+    }
+  };
+
+  const getRecipientName = (letter: Letter) => {
+    if (letter.is_sent_by_me) {
+      return letter.partner_name;
+    } else {
+      return nookState.passport?.name || "Resident";
+    }
+  };
+
+  const getRecipientIsland = (letter: Letter) => {
+    if (letter.is_sent_by_me) {
+      const partnerUser = users.find(u => u.ID === letter.partner_id || u.id === letter.partner_id);
+      return partnerUser?.islandName || "Nook Island";
+    } else {
+      return nookState.passport?.islandName || "Nook Island";
+    }
+  };
 
   // --- Dialogue / Thread State ---
   let visibleRepliesCount = $state(1);
@@ -337,6 +438,21 @@
 </script>
 
 <style>
+  /* Global Mail Border for App */
+  .app-mail-border {
+    position: relative;
+  }
+  .app-mail-border::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 100;
+    border: 8px solid transparent;
+    border-image: repeating-linear-gradient(45deg, #8b3a3a, #8b3a3a 15px, transparent 15px, transparent 30px, #4a5e78 30px, #4a5e78 45px, transparent 45px, transparent 60px) 8;
+    opacity: 0.8;
+  }
+
   /* Premium Animated Bubble Background */
   .animated-bg {
     background: linear-gradient(-45deg, #2b1a1a, #5c2a2a, #8b3a3a, #3d1c1c);
@@ -386,6 +502,47 @@
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(139, 58, 58, 0.1);
     overflow: hidden;
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease;
+  }
+  .envelope-item:hover {
+    transform: translateY(-4px) scale(1.02) skew(-2deg, 1deg);
+    box-shadow: 0 8px 20px rgba(139, 58, 58, 0.2);
+  }
+
+  .postmark {
+    position: absolute;
+    top: 6px;
+    right: 76px;
+    width: 28px;
+    height: 28px;
+    border: 1.5px dashed rgba(138, 127, 102, 0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5px;
+    font-weight: 900;
+    color: rgba(138, 127, 102, 0.5);
+    text-transform: uppercase;
+    transform: rotate(-15deg);
+    pointer-events: none;
+    user-select: none;
+    z-index: 10;
+  }
+  .postmark::after {
+    content: '';
+    position: absolute;
+    left: 24px;
+    top: 8px;
+    width: 16px;
+    height: 10px;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(138, 127, 102, 0.3) 2px,
+      rgba(138, 127, 102, 0.3) 3px
+    );
   }
   
   .envelope-item::before {
@@ -422,6 +579,10 @@
       transparent 60px
     );
     opacity: 0.8;
+  }
+
+  .envelope-item.is-read::before {
+    display: none;
   }
 </style>
 
@@ -463,6 +624,15 @@
     {/snippet}
     
     {#snippet headerActions()}
+      {#if view === "user-letters"}
+        <NookToolbarButton 
+          variant="ghost"
+          onclick={handleDeleteConversation}
+          title="Clean Up Conversation"
+        >
+          <Trash class="w-4 h-4 text-white" />
+        </NookToolbarButton>
+      {/if}
       {#if view === "inbox"}
         <NookToolbarButton 
           variant="ghost"
@@ -475,9 +645,9 @@
     {/snippet}
 
   <!-- VIEWS -->
-  <div class="flex-1 overflow-hidden relative z-10 bg-transparent">
+  <div class="flex-1 overflow-hidden relative z-10 bg-transparent app-mail-border">
     {#if view === "inbox"}
-      <div in:fade={{duration: 200}} class="h-full overflow-y-auto ac-scrollbar p-3 space-y-2">
+      <div in:fade={{duration: 200}} class="h-full overflow-y-auto ac-scrollbar p-3 space-y-4">
         {#if !isProUser()}
           <div class="bg-amber-50 border border-amber-200 text-amber-800 p-2 rounded-xl text-xs font-bold text-center mb-3">
             Preview Mode: DMs require a Pro (Logged in) account.
@@ -495,7 +665,8 @@
           {#each inboxUsers as user}
             <button
               onclick={() => loadUserLetters(user.partner_id, user.partner_name)}
-              class="envelope-item w-full p-4 pt-5 pb-5 flex items-center gap-3 text-left hover:border-[#8b3a3a] hover:shadow-[0_8px_20px_rgba(139,58,58,0.2)] transition-all cursor-pointer active:scale-95 group"
+              class="envelope-item bg-[#faf6eb] w-full p-4 pt-5 pb-5 flex items-center gap-3 text-left hover:border-[#8b3a3a] hover:shadow-[0_8px_20px_rgba(139,58,58,0.2)] hover:-rotate-1 hover:skew-x-1 transition-all cursor-pointer active:scale-95 group"
+              class:is-read={user.unread_count === 0}
             >
               <!-- Wax Seal Avatar -->
               <div class="w-12 h-12 rounded-full bg-[#8b3a3a] text-[#fcfaf5] border-2 border-[#6a2c2c] shadow-inner flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform relative z-10" style="box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.1);">
@@ -528,32 +699,60 @@
         {#if activeUserLetters.length === 0}
           <div class="text-center text-[#8a7f66] p-10 text-xs font-bold">No letters found.</div>
         {:else}
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 px-2 pb-10 pt-4">
             {#each activeUserLetters as letter}
-              {@const stationery = getStationery(letter.stationery_id)}
-              <button
+              <div
+                role="button"
+                tabindex="0"
                 onclick={() => loadLetter(letter)}
-                class={`w-full aspect-[3/4] rounded-lg shadow-sm flex flex-col p-3 text-left relative transition-transform hover:-translate-y-1 hover:shadow-md cursor-pointer ${stationery.bgClass}`}
-                style={stationery.style}
+                onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); loadLetter(letter); } }}
+                class="envelope-item bg-[#faf6eb] w-full aspect-[8/5] p-4 flex flex-col relative active:scale-95 cursor-pointer shadow-md text-left transition-all hover:shadow-xl hover:-translate-y-1 hover:-rotate-1 hover:skew-x-1"
+                class:is-read={letter.unread_count === 0}
               >
-                <div class="text-[10px] font-bold text-[#4c4637]/60 mb-2 truncate border-b border-[#4c4637]/10 pb-1 flex justify-between">
-                  <span>{formatDate(letter.date)}</span>
-                  <span class={letter.is_sent_by_me ? 'text-blue-600/70' : 'text-green-700/70'}>{letter.is_sent_by_me ? 'To' : 'From'}</span>
+                <!-- From in top left -->
+                <div class="text-[9px] font-black text-[#5c523c]/70 absolute top-3 left-4 uppercase tracking-wider leading-tight">
+                  From<br/>
+                  <span class="font-extrabold text-[#4c4637] normal-case">{getSenderName(letter)}</span><br/>
+                  <span class="font-medium text-[#6c6451] normal-case">{getSenderIsland(letter)}</span>
                 </div>
-                <div class="text-[12px] font-black text-[#4c4637] mb-1 truncate leading-tight">
-                  {letter.subject}
+
+                <!-- Postmark -->
+                <div class="postmark">
+                  <span>Nook Mail</span>
                 </div>
-                <div class="flex-1 overflow-hidden">
-                  <p class="text-[11px] font-medium leading-relaxed text-[#4c4637] m-0" style="font-family: 'Comic Sans MS', cursive, sans-serif; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;">
-                    {letter.content}
-                  </p>
+
+                <!-- Date stamp in top right -->
+                <div class="bg-white/80 px-1.5 py-0.5 border border-dashed border-[#dcd3be] text-[8px] font-bold text-[#8a7f66] absolute top-3 right-4 rotate-2 shadow-sm">
+                  {formatDate(letter.date)}
                 </div>
+
+                <!-- To and Subject in the center -->
+                <div class="flex-1 flex flex-col items-center justify-center text-center mt-3 px-2 w-full">
+                  <div class="text-[10px] font-bold text-[#5c523c]/80 mb-0.5 uppercase tracking-wide">
+                    To<br/>
+                    <span class="font-extrabold text-[#4c4637] normal-case">{getRecipientName(letter)}</span><br/>
+                    <span class="font-medium text-[#6c6451] normal-case">{getRecipientIsland(letter)}</span>
+                  </div>
+                  <div class="text-[12px] font-black text-[#8b3a3a] leading-tight w-full truncate px-1 mt-2">
+                    {letter.subject}
+                  </div>
+                </div>
+
+                <!-- Trash button to delete letter -->
+                <button
+                  onclick={(e) => { e.stopPropagation(); handleDeleteLetter(letter.id); }}
+                  class="absolute bottom-3 right-4 bg-white/90 hover:bg-red-50 text-[#8a7f66] hover:text-red-600 p-1.5 rounded-full border border-[#dcd3be] transition shadow-xs z-20 cursor-pointer flex items-center justify-center"
+                  title="Delete Letter"
+                >
+                  <Trash class="w-3.5 h-3.5" />
+                </button>
+
                 {#if letter.unread_count > 0}
-                  <div class="absolute -top-2 -right-2 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shadow-md border-2 border-white">
+                  <div class="absolute -top-1.5 -right-1.5 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shadow-md border-2 border-white z-20">
                     {letter.unread_count}
                   </div>
                 {/if}
-              </button>
+              </div>
             {/each}
           </div>
         {/if}
@@ -637,10 +836,9 @@
         </div>
       </div>
 
-    {:else if view === "chat"}
       <div in:fly={{x: 20, duration: 200}} class="h-full flex flex-col">
         <!-- Messages Area (Thread) -->
-        <div class="flex-1 overflow-y-auto p-4 flex flex-col items-center gap-6 pb-20">
+        <div class="flex-1 overflow-y-auto p-4 flex flex-col items-center gap-6 pb-32">
           {#if activeLetter}
             {@const stationery = getStationery(activeLetter.stationery_id)}
             <!-- Main Letter -->
@@ -698,21 +896,36 @@
 
         <!-- Input Area (Only show if all replies are visible) -->
         {#if visibleRepliesCount > replies.length || replies.length === 0}
-          <div in:fly={{y: 20, duration: 300}} class="p-4 bg-white/80 backdrop-blur-md border-t border-white/50 shrink-0 flex gap-3 items-end shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-20 absolute bottom-0 left-0 right-0">
-            <textarea
-              bind:value={newMessage}
-              placeholder="Write a reply..."
-              rows="1"
-              class="flex-1 bg-white border-2 border-[#e6e2d3] rounded-3xl py-3 px-4 text-[13px] font-bold resize-none focus:outline-none focus:border-[#8b3a3a] focus:ring-4 focus:ring-[#8b3a3a]/20 transition-all ac-scrollbar max-h-24 shadow-inner"
-              onkeydown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-            ></textarea>
-            <button 
-              onclick={handleSend}
-              disabled={!newMessage.trim() || sending}
-              class="bg-gradient-to-br from-[#8b3a3a] to-[#6a2c2c] text-white p-3 rounded-full cursor-pointer hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0 h-11 w-11 shadow-[0_4px_10px_rgba(139,58,58,0.3)]"
-            >
-              <Send class="w-5 h-5 -ml-0.5 stroke-[2.5px]" />
-            </button>
+          <div in:fly={{y: 20, duration: 300}} class="p-4 bg-white/90 backdrop-blur-md border-t border-[#e1d9be] shrink-0 flex flex-col gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-20 absolute bottom-0 left-0 right-0">
+            <div class="flex gap-3 items-end">
+              <textarea
+                bind:value={newMessage}
+                placeholder="Write a reply..."
+                rows="1"
+                class="flex-1 bg-white border-2 border-[#e6e2d3] rounded-3xl py-3 px-4 text-[13px] font-bold resize-none focus:outline-none focus:border-[#8b3a3a] focus:ring-4 focus:ring-[#8b3a3a]/20 transition-all ac-scrollbar max-h-20 shadow-inner"
+                onkeydown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend('comment'); } }}
+              ></textarea>
+            </div>
+            
+            <div class="flex justify-end gap-2 mt-1">
+              <button 
+                onclick={() => handleSend("comment")}
+                disabled={!newMessage.trim() || sending}
+                class="bg-gradient-to-br from-[#8b3a3a] to-[#6a2c2c] text-white px-4 py-2 rounded-2xl font-bold text-xs cursor-pointer hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm"
+                title="Leave a comment on this letter"
+              >
+                <MessageSquare class="w-4 h-4 stroke-[2px]" /> Comment
+              </button>
+              
+              <button 
+                onclick={() => handleSend("reply")}
+                disabled={!newMessage.trim() || sending}
+                class="bg-gradient-to-br from-teal-600 to-teal-800 text-white px-4 py-2 rounded-2xl font-bold text-xs cursor-pointer hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm"
+                title="Send a new reply letter"
+              >
+                <Send class="w-4 h-4 stroke-[2px]" /> Reply
+              </button>
+            </div>
           </div>
         {/if}
       </div>

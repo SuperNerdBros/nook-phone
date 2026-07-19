@@ -30,36 +30,36 @@
   const getIslandSublog = () => {
     const raw = nookState.passport.islandName || "Nook";
     const clean = raw.replace(/\s*Island\s*$/gi, "");
-    return "n/" + clean.replace(/\s+/g, "");
+    return "bb/" + clean.replace(/\s+/g, "");
   };
 
   let islandSublog = $derived(getIslandSublog());
 
   // Default villager sublogs
   const DEFAULT_SUBLOGS = [
-    "n/Isabelle",
-    "n/TomNook",
-    "n/Blathers",
-    "n/Lottie",
-    "n/KKSlider"
+    "bb/Isabelle",
+    "bb/TomNook",
+    "bb/Blathers",
+    "bb/Lottie",
+    "bb/KKSlider"
   ];
 
   let customSublogs = $state<string[]>([]);
   let allSublogs = $derived([
-    "n/All",
+    "bb/All",
     islandSublog,
     ...DEFAULT_SUBLOGS,
     ...customSublogs
   ]);
 
-  let selectedSublogFilter = $state("n/All");
+  let selectedSublogFilter = $state("bb/All");
 
   const MOCK_THREADS = (): Thread[] => [
     {
       id: 1,
       title: "Turnips selling for 542 bells! 💸",
       content: "Dodo code is C1TY9. Tips are appreciated! Resident Services is right outside the airport. Please be respectful of my hybrid flowers!",
-      subnook: "n/Isabelle",
+      subnook: "bb/Isabelle",
       author_name: "Isabelle",
       date: new Date(Date.now() - 600000).toISOString(),
       comment_count: 2,
@@ -70,7 +70,7 @@
       id: 2,
       title: "Looking for Ironwood DIY Recipes 🔨",
       content: "Can trade for Gold Nuggets or Nook Miles Tickets! Let me know if your villagers are crafting or if you have spare recipe cards.",
-      subnook: "n/TomNook",
+      subnook: "bb/TomNook",
       author_name: "Tom Nook",
       date: new Date(Date.now() - 3600000).toISOString(),
       comment_count: 1,
@@ -81,7 +81,7 @@
       id: 3,
       title: "Shared a new custom path pattern! 🌸",
       content: "Check my designer code MA-4829-1092-4820. Let me know if you like the brick border textures!",
-      subnook: "n/Lottie",
+      subnook: "bb/Lottie",
       author_name: "Lottie",
       date: new Date(Date.now() - 7200000).toISOString(),
       comment_count: 0,
@@ -105,7 +105,7 @@
 
   // Filter threads by active sublog selection
   let filteredThreads = $derived(threads.filter(t => {
-    if (selectedSublogFilter === "n/All") return true;
+    if (selectedSublogFilter === "bb/All") return true;
     return t.subnook.toLowerCase() === selectedSublogFilter.toLowerCase();
   }));
 
@@ -239,7 +239,7 @@
 
   function handleCreateSublog() {
     if (!newSublogName.trim()) return;
-    const formatted = "n/" + newSublogName.trim().replace(/\s+/g, "");
+    const formatted = "bb/" + newSublogName.trim().replace(/\s+/g, "");
     if (!customSublogs.includes(formatted)) {
       customSublogs = [...customSublogs, formatted];
       localStorage.setItem("nook_custom_sublogs", JSON.stringify(customSublogs));
@@ -283,11 +283,11 @@
   });
 
   const getSublogColor = (sub: string) => {
-    if (sub.startsWith("n/Isabelle")) return "bg-[#e6f4d2] text-[#4d7319] border-[#c0e096]";
-    if (sub.startsWith("n/TomNook")) return "bg-[#ffecd1] text-[#995c00] border-[#ffd599]";
-    if (sub.startsWith("n/Lottie")) return "bg-[#ffe0f0] text-[#991f66] border-[#ffb3da]";
-    if (sub.startsWith("n/KKSlider")) return "bg-[#e0f0ff] text-[#005299] border-[#b3daff]";
-    if (sub.startsWith("n/Blathers")) return "bg-[#d1f4e0] text-[#197340] border-[#96e0b8]";
+    if (sub.startsWith("bb/Isabelle")) return "bg-[#e6f4d2] text-[#4d7319] border-[#c0e096]";
+    if (sub.startsWith("bb/TomNook")) return "bg-[#ffecd1] text-[#995c00] border-[#ffd599]";
+    if (sub.startsWith("bb/Lottie")) return "bg-[#ffe0f0] text-[#991f66] border-[#ffb3da]";
+    if (sub.startsWith("bb/KKSlider")) return "bg-[#e0f0ff] text-[#005299] border-[#b3daff]";
+    if (sub.startsWith("bb/Blathers")) return "bg-[#d1f4e0] text-[#197340] border-[#96e0b8]";
     // Custom island / user sublogs
     return "bg-[#e6e0ff] text-[#401999] border-[#c2b3ff]";
   };
@@ -305,16 +305,16 @@
 <div id="chat-app" class="flex flex-col h-full ac-app-screen relative">
   <!-- Header -->
   <NookAppHeader 
-    title="Nookit"
+    title="Bulletin Board"
     subtitle="Bulleted Sublog boards & local logs"
-    bgClass="bg-[#135a4d]"
-    textClass="text-[#344d18]"
+    bgClass="bg-[#eb6a9d]"
+    textClass="text-white"
   >
     {#snippet iconSnippet()}
       {#if view !== "list"}
         <button 
           onclick={() => view = "list"}
-          class="text-[#344d18] p-1 rounded-full hover:bg-black/5 cursor-pointer flex items-center justify-center mr-1"
+          class="text-white p-1 rounded-full hover:bg-black/5 cursor-pointer flex items-center justify-center mr-1"
         >
           <ArrowLeft class="w-5 h-5 stroke-[2.5px]" />
         </button>
@@ -326,30 +326,32 @@
     {/snippet}
     
     {#snippet actions()}
-      {#if view === "list" && selectedSublogFilter === islandSublog}
+      {#if view === "list"}
         <div class="flex items-center gap-1">
           <NookToolbarButton
             onclick={() => view = "create_sublog"}
-            class="!w-auto !px-2 text-[9px] font-black uppercase tracking-wider text-[#344d18]"
+            class="!w-auto !px-2 text-[9px] font-black uppercase tracking-wider text-[#eb6a9d]"
             title="Create Sublog"
           >
             <Plus class="w-3.5 h-3.5 stroke-[2.5px] mr-0.5" /> Sublog
           </NookToolbarButton>
           <NookToolbarButton
-            onclick={() => { view = "new"; newSubnook = islandSublog; }}
+            onclick={() => { view = "new"; newSubnook = selectedSublogFilter === "bb/All" ? islandSublog : selectedSublogFilter; }}
+            class="text-[#eb6a9d]"
             title="New thread"
           >
             <Plus class="w-3.5 h-3.5 stroke-[2.5px]" />
           </NookToolbarButton>
           <NookToolbarButton
             onclick={handleClearLog}
+            class="text-[#eb6a9d]"
             title="Reset mockup logs"
           >
             <Trash2 class="w-3.5 h-3.5 stroke-[2.5px]" />
           </NookToolbarButton>
         </div>
       {/if}
-      <NookToolbarButton onclick={ctx.handleHomeButton} title="Close App">
+      <NookToolbarButton class="text-[#eb6a9d]" onclick={ctx.handleHomeButton} title="Close App">
         <X class="w-3.5 h-3.5 stroke-[3px]" />
       </NookToolbarButton>
     {/snippet}
@@ -361,7 +363,7 @@
       {#each allSublogs as sub}
         <button
           onclick={() => selectedSublogFilter = sub}
-          class={`px-4 py-1.5 rounded-2xl text-[11px] font-black tracking-wider transition-all border-b-4 shrink-0 cursor-pointer ${selectedSublogFilter === sub ? 'bg-[#ff9c5a] border-[#e87a31] text-white -translate-y-0.5' : 'bg-white hover:bg-orange-50 border-[#dcd3be] text-[#7a6f58] active:translate-y-0.5 active:border-b-2'}`}
+          class={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider transition-all border shrink-0 cursor-pointer ${selectedSublogFilter === sub ? 'bg-[#eb6a9d] border-[#c94d7d] text-white shadow-sm scale-105' : 'bg-white hover:bg-gray-50 border-[#dcd3be] text-gray-700 active:scale-95'}`}
         >
           {sub}
         </button>
@@ -421,7 +423,7 @@
             <div class="flex justify-between items-center w-full pt-2 mt-1 border-t-2 border-dashed border-[#e8dfc7] text-[11px] font-bold text-[#8a7f66] z-10">
               <button 
                 onclick={(e) => handleLike(thread.id, e)}
-                class={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-b-2 transition-all cursor-pointer ${thread.hasLiked ? 'bg-[#ff9c5a] border-[#e87a31] text-white active:translate-y-0.5 active:border-b-0' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-0.5 active:border-b-0'}`}
+                class={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-b-2 transition-all cursor-pointer ${thread.hasLiked ? 'bg-[#eb6a9d] border-[#c94d7d] text-white active:translate-y-0.5 active:border-b-0' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-0.5 active:border-b-0'}`}
               >
                 <ThumbsUp class="w-3.5 h-3.5 stroke-[2.5px]" />
                 <span class="font-black">{thread.likes || 0}</span>
@@ -441,7 +443,7 @@
       <div class="flex flex-col gap-4 pb-16">
         <!-- Post Header Card -->
         <div class="bg-white rounded-[24px] p-5 border-4 border-[#e1d9be] shadow-[0_4px_0_#dcd3be] text-left flex flex-col gap-4 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-full h-2 bg-[#ff9c5a] opacity-80"></div>
+          <div class="absolute top-0 left-0 w-full h-2 bg-[#eb6a9d] opacity-80"></div>
           
           <div class="flex justify-between items-center w-full text-[11px] text-[#9b8d71] font-bold pb-3 border-b-2 border-dashed border-[#e8dfc7] pt-2">
             <div class="flex items-center gap-2">
@@ -466,7 +468,7 @@
           <div class="flex items-center justify-between pt-3 mt-1 border-t-2 border-dashed border-[#e8dfc7]">
             <button 
               onclick={(e) => handleLike(activeThread!.id, e)}
-              class={`flex items-center gap-1.5 px-4 py-2 rounded-xl border-b-[3px] text-[12px] font-black transition-all cursor-pointer ${activeThread.hasLiked ? 'bg-[#ff9c5a] border-[#e87a31] text-white active:translate-y-[2px] active:border-b-[1px]' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-[2px] active:border-b-[1px]'}`}
+              class={`flex items-center gap-1.5 px-4 py-2 rounded-xl border-b-[3px] text-[12px] font-black transition-all cursor-pointer ${activeThread.hasLiked ? 'bg-[#eb6a9d] border-[#c94d7d] text-white active:translate-y-[2px] active:border-b-[1px]' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-[2px] active:border-b-[1px]'}`}
             >
               <ThumbsUp class="w-4 h-4 stroke-[2.5px]" />
               <span>{activeThread.likes || 0} Upvotes</span>
@@ -541,12 +543,12 @@
         placeholder="Type a reply to this bulletin..."
         bind:value={replyText}
         onkeydown={(e) => e.key === "Enter" && submitComment()}
-        class="flex-1 bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-[#ff9c5a]/30 focus:border-[#ff9c5a] text-[#5c3a21] placeholder-[#a09477] transition-all"
+        class="flex-1 bg-[#fbf9f0] border border-[#dcd3be] p-2 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#eb6a9d] text-[#4c4637]"
       />
       <button
         onclick={submitComment}
         disabled={!replyText.trim()}
-        class="bg-[#ff9c5a] text-white p-3 rounded-xl border-b-4 border-[#e87a31] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center disabled:active:translate-y-0 disabled:active:border-b-4 disabled:hover:brightness-100"
+        class="bg-[#eb6a9d] text-white p-2 rounded-xl hover:bg-opacity-95 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
       >
         <Send class="w-5 h-5 stroke-[2.5px]" />
       </button>

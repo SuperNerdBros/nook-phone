@@ -84,7 +84,7 @@
     { id: 'diy', name: 'DIY Recipes', icon: 'diy', filter: (app: any) => app.id === 'diy' || app.information?.includes('items') },
     { id: 'map', name: 'Island Map', icon: 'map', filter: (app: any) => app.id === 'map' },
     { id: 'designer', name: 'Island Designer', icon: 'designer', filter: (app: any) => app.id === 'designer' || app.tools?.includes('simulator') },
-    { id: 'chat', name: 'Nookit', icon: 'chat', filter: (app: any) => app.id === 'chat' },
+    { id: 'chat', name: 'Bulletin Board', icon: 'chat', filter: (app: any) => app.id === 'chat' },
   ];
 
   const getEligibleApps = (intentId: string) => {

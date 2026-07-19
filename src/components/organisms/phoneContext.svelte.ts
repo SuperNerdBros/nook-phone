@@ -87,9 +87,9 @@ export const CORE_APPS: CoreApp[] = [
   },
   {
     id: "chat",
-    name: "Nookit",
+    name: "Bulletin Board",
     icon: "chat",
-    bg: "bg-[#d3e551]",
+    bg: "bg-[#eb6a9d]",
     image: chatIcon,
     proOnly: true
   },

@@ -36,7 +36,7 @@
     { icon: Users, name: 'Best Friends', desc: 'Social hub, passports & friend connections', color: 'bg-[#ffd375]', text: 'text-[#9a7520]' },
     { icon: Mail, name: 'Messages', desc: 'Direct messaging between residents', color: 'bg-[#8b3a3a]', text: 'text-white' },
 
-    { icon: MessageSquare, name: 'Nookit', desc: 'Public bulletin boards & island-wide announcements', color: 'bg-[#d3e551]', text: 'text-[#6b7a10]' },
+    { icon: MessageSquare, name: 'Bulletin Board', desc: 'Public bulletin boards & island-wide announcements', color: 'bg-[#eb6a9d]', text: 'text-[#4a1727]' },
     { icon: Layers, name: 'App Directory', desc: 'Browse & install third-party island apps', color: 'bg-[#45a38f]', text: 'text-white' },
   ];
 </script>

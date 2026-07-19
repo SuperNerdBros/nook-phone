@@ -878,7 +878,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['tracking']
 	},
 	{
-		name: 'Nookit',
+		name: 'Bulletin Board',
 		appIcon: 'chat',
 		description: 'Review recent dialogue and system logs from residents and notifications.',
 		languages: ['en'],

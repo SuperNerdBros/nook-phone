@@ -199,6 +199,36 @@ export const fetchNookUsers = async () => {
   }
 };
 
+export const deleteDM = async (dmId: number) => {
+  if (!isProUser()) return false;
+  try {
+    const res = await fetch(getApiUrl('dms/delete'), {
+      method: 'POST',
+      headers: getApiHeaders(),
+      body: JSON.stringify({ dm_id: dmId })
+    });
+    return res.ok;
+  } catch (e) {
+    console.error('Failed to delete DM', e);
+    return false;
+  }
+};
+
+export const deleteConversation = async (partnerId: number) => {
+  if (!isProUser()) return false;
+  try {
+    const res = await fetch(getApiUrl('dms/delete'), {
+      method: 'POST',
+      headers: getApiHeaders(),
+      body: JSON.stringify({ partner_id: partnerId })
+    });
+    return res.ok;
+  } catch (e) {
+    console.error('Failed to delete conversation', e);
+    return false;
+  }
+};
+
 export const fetchRemoteState = async () => {
   if (!isProUser()) return null;
   try {
