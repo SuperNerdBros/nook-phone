@@ -110,6 +110,7 @@ export interface NookOSState {
   bestFriendsCommunicationsOn: boolean;
   subRoute?: string;
   dockApps: string[];
+  subscribedSublogs: string[];
 }
 
 const DEFAULT_GRID_LEAF = [
@@ -204,7 +205,8 @@ const INITIAL_STATE: NookOSState = {
   bestFriends: [],
   bestFriendsCommunicationsOn: true,
   subRoute: "",
-  dockApps: ["directory", "contacts", "settings"]
+  dockApps: ["directory", "contacts", "settings"],
+  subscribedSublogs: ["bb/Isabelle", "bb/TomNook"]
 };
 
 class NookStateManager {
@@ -227,6 +229,19 @@ class NookStateManager {
 
   get passport() { return this.state.passport; }
   set passport(val) { this.state.passport = val; }
+
+  get subscribedSublogs() { return this.state.subscribedSublogs; }
+  set subscribedSublogs(val) { this.state.subscribedSublogs = val; }
+
+  isSubscribed(sublog: string) { return this.state.subscribedSublogs.includes(sublog); }
+  toggleSubscription(sublog: string) {
+    if (this.isSubscribed(sublog)) {
+      this.state.subscribedSublogs = this.state.subscribedSublogs.filter(s => s !== sublog);
+    } else {
+      this.state.subscribedSublogs = [...this.state.subscribedSublogs, sublog];
+    }
+    this.saveState();
+  }
 
   get critters() { return this.state.critters; }
   set critters(val) { this.state.critters = val; }

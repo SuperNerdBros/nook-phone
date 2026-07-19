@@ -4,7 +4,7 @@
   import { onMount } from 'svelte';
   import { 
     MessageSquare, Send, Trash2, ArrowLeft, Plus, 
-    ThumbsUp, Calendar, User, MessageCircle, Hash 
+    ThumbsUp, Calendar, User, MessageCircle, Hash, Coins
   , X } from '@lucide/svelte';
   import { fetchThreads, createThread, fetchComments, createComment, isProUser } from '@/lib/api';
   import NookIcon from '../atoms/NookIcon.svelte';
@@ -12,6 +12,7 @@
   import CreateBoardForm from './CreateBoardForm.svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
+  import AcnhBubble from '@/components/molecules/AcnhBubble.svelte';
 
   interface Thread {
     id: number;
@@ -36,22 +37,11 @@
 
   let islandBoard = $derived(getIslandBoard());
 
-  // Default villager boards
-  const DEFAULT_BOARDS = [
-    "bb/Isabelle",
-    "bb/TomNook",
-    "bb/Blathers",
-    "bb/Lottie",
-    "bb/KKSlider"
-  ];
-
-  let customBoards = $state<string[]>([]);
-  let allBoards = $derived([
+  let allBoards = $derived(Array.from(new Set([
     "bb/All",
     islandBoard,
-    ...DEFAULT_BOARDS,
-    ...customBoards
-  ]);
+    ...nookState.subscribedSublogs
+  ])));
 
   let selectedBoardFilter = $state("bb/All");
 
@@ -99,6 +89,29 @@
   let threadComments = $state<any[]>([]);
   let view = $state<"list" | "detail" | "new" | "create_board">("list");
   
+  let currentDialogueIndex = $state(0);
+  let dialogueSequence = $derived.by(() => {
+    if (!activeThread) return [];
+    const seq = [];
+    
+    // 1. Replies
+    for (const reply of threadComments) {
+      let replyText = typeof reply.content === 'object' ? reply.content.rendered : reply.content;
+      let cleanText = replyText.replace(/<[^>]*>?/gm, '');
+      const repParagraphs = cleanText.split('\n').filter(p => p.trim());
+      for (const rp of repParagraphs) {
+         seq.push({
+           type: 'reply',
+           author_name: reply.author_name,
+           author_island: reply.author_island || 'Nook',
+           text: rp.trim(),
+           date: reply.date
+         });
+      }
+    }
+    return seq;
+  });
+
   // Form fields
   let newTitle = $state("");
   let newContent = $state("");
@@ -106,6 +119,7 @@
   let newBoardName = $state("");
   let replyText = $state("");
   let loading = $state(false);
+  let showReplies = $state(false);
 
   // Filter threads by active board selection
   let filteredThreads = $derived(threads.filter(t => {
@@ -116,11 +130,7 @@
   async function loadThreads() {
     loading = true;
     
-    // Load custom boards
-    const storedSubs = localStorage.getItem("nook_custom_boards");
-    if (storedSubs) {
-      customBoards = JSON.parse(storedSubs);
-    }
+    // Subscriptions handled by nookState
 
     if (isProUser()) {
       const data = await fetchThreads();
@@ -163,6 +173,8 @@
   async function selectThread(thread: Thread) {
     activeThread = thread;
     await loadComments(thread.id);
+    currentDialogueIndex = 0;
+    showReplies = false;
     view = "detail";
   }
 
@@ -239,18 +251,23 @@
         activeThread.comment_count++;
       }
       replyText = "";
+      // Advance dialogue index if they are at the end so they see their new reply
+      setTimeout(() => {
+        if (currentDialogueIndex < dialogueSequence.length - 1) {
+          currentDialogueIndex = dialogueSequence.length - 1;
+        }
+      }, 50);
     }
   }
 
   function handleCreateBoard() {
     if (!newBoardName.trim()) return;
     const formatted = "bb/" + newBoardName.trim().replace(/\s+/g, "");
-    if (!customBoards.includes(formatted)) {
-      customBoards = [...customBoards, formatted];
-      localStorage.setItem("nook_custom_boards", JSON.stringify(customBoards));
+    if (!nookState.isSubscribed(formatted)) {
+      nookState.toggleSubscription(formatted);
     }
-    newBoardName = "";
     view = "list";
+    newBoardName = "";
   }
 
   function handleLike(threadId: number, event: Event) {
@@ -276,8 +293,6 @@
   function handleClearLog() {
     if (confirm("Clear local chat/thread history?")) {
       localStorage.removeItem("nook_mock_threads");
-      localStorage.removeItem("nook_custom_boards");
-      customBoards = [];
       loadThreads();
     }
   }
@@ -285,6 +300,14 @@
   onMount(() => {
     newSubnook = islandBoard;
     loadThreads();
+    
+    if (nookState.subRoute) {
+      selectedBoardFilter = nookState.subRoute;
+      if (!nookState.isSubscribed(nookState.subRoute) && nookState.subRoute !== islandBoard) {
+         nookState.toggleSubscription(nookState.subRoute);
+      }
+      nookState.subRoute = ""; 
+    }
   });
 
   const getBoardColor = (sub: string) => {
@@ -310,8 +333,8 @@
 <div id="chat-app" class="flex flex-col h-full ac-app-screen relative">
   <!-- Header -->
   <NookAppHeader 
-    title="Bulletin Board"
-    subtitle="Bulleted boards & local logs"
+    title={view === 'detail' && activeThread ? activeThread.title : "Bulletin Board"}
+    subtitle={view === 'detail' && activeThread ? activeThread.subnook : "Bulleted boards & local logs"}
     bgClass="bg-[#eb6a9d]"
     textClass="text-white"
   >
@@ -348,6 +371,16 @@
             <Plus class="w-3.5 h-3.5 stroke-[2.5px]" />
           </NookToolbarButton>
         </div>
+      {/if}
+      {#if view === "detail" && activeThread}
+        <NookToolbarButton 
+          class={activeThread.hasLiked ? "text-white bg-[#eb6a9d] !px-2" : "text-[#eb6a9d] !px-2"}
+          onclick={(e) => handleLike(activeThread!.id, e)} 
+          title="Upvote"
+        >
+          <ThumbsUp class="w-3.5 h-3.5 stroke-[2.5px] mr-1" />
+          <span class="text-[10px] font-black">{activeThread.likes || 0}</span>
+        </NookToolbarButton>
       {/if}
       <NookToolbarButton class="text-[#eb6a9d]" onclick={ctx.handleHomeButton} title="Close App">
         <X class="w-3.5 h-3.5 stroke-[3px]" />
@@ -405,24 +438,26 @@
             </div>
 
             <!-- Content -->
-            <div class="flex flex-col gap-1.5 z-10 text-center py-2 px-1">
+            <div class="flex flex-col gap-1 z-10 text-center pt-1 pb-4 px-1">
               <h3 class="text-sm font-black text-[#5c3a21] leading-snug line-clamp-1">{thread.title}</h3>
               <p class="text-[12px] text-[#786b51] line-clamp-2 leading-relaxed font-medium">{thread.content}</p>
             </div>
 
-            <!-- Bottom Controls -->
-            <div class="flex justify-between items-center w-full pt-2 mt-1 border-t-2 border-dashed border-[#e8dfc7] text-[11px] font-bold text-[#8a7f66] z-10">
+            <!-- Bottom Controls (Stats) -->
+            <div class="flex items-center justify-end gap-2 w-full pt-3 mt-1 border-t-2 border-dashed border-[#e8dfc7] z-10">
               <button 
-                onclick={(e) => handleLike(thread.id, e)}
-                class={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-b-2 transition-all cursor-pointer ${thread.hasLiked ? 'bg-[#eb6a9d] border-[#c94d7d] text-white active:translate-y-0.5 active:border-b-0' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-0.5 active:border-b-0'}`}
+                onclick={(e) => { e.stopPropagation(); handleLike(thread.id, e); }}
+                class={`flex items-center gap-1.5 px-3 py-1 rounded-full border-2 transition-all cursor-pointer ${thread.hasLiked ? 'bg-[#facc15] border-[#ca8a04] text-white shadow-sm' : 'bg-[#fefce8] border-[#fde047] hover:bg-[#fef08a] text-[#a16207]'}`}
               >
-                <ThumbsUp class="w-3.5 h-3.5 stroke-[2.5px]" />
-                <span class="font-black">{thread.likes || 0}</span>
+                <Coins class="w-4 h-4 stroke-[2.5px]" />
+                <span class="text-[11px] font-black tracking-wide">
+                  {thread.likes ? `${thread.likes}00 Bells` : 'Donate'}
+                </span>
               </button>
 
-              <div class="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-[#fcfaf5] border-2 border-[#e8dfc7]">
-                <MessageCircle class="w-3.5 h-3.5 stroke-[2.5px] text-[#a09477]" />
-                <span>{thread.comment_count} replies</span>
+              <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fcfaf5] border-2 border-[#e1d9be] text-[#7a6f58]">
+                <MessageCircle class="w-3.5 h-3.5 stroke-[3px]" />
+                <span class="text-[11px] font-black">{thread.comment_count || 0}</span>
               </div>
             </div>
           </div>
@@ -430,72 +465,72 @@
       {/if}
       
     {:else if view === "detail" && activeThread}
-      <!-- THREAD DETAIL VIEW -->
-      <div class="flex flex-col gap-4 pb-16">
-        <!-- Post Header Card -->
-        <div class="bg-white rounded-[24px] p-5 border-4 border-[#e1d9be] shadow-[0_4px_0_#dcd3be] text-left flex flex-col gap-4 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-full h-2 bg-[#eb6a9d] opacity-80"></div>
-          
-          <div class="flex justify-between items-center w-full text-[11px] text-[#9b8d71] font-bold pb-3 border-b-2 border-dashed border-[#e8dfc7] pt-2">
-            <div class="flex flex-col text-left leading-tight">
-              <span class="text-[13px] font-black text-[#5c3a21]">{activeThread.author_name}@{activeThread.author_island || 'Nook'}</span>
-            </div>
-            <span>{getFormatDate(activeThread.date)}</span>
-          </div>
-
-          <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2 mb-1">
-              <span class={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border-2 ${getBoardColor(activeThread.subnook)}`}>
-                {activeThread.subnook}
-              </span>
-            </div>
-            <h2 class="text-base font-black text-[#5c3a21] leading-tight">{activeThread.title}</h2>
-            <p class="text-[13px] text-[#786b51] leading-relaxed mt-2 font-medium bg-[#fcfaf5] p-3 rounded-xl border border-[#e8dfc7]">{activeThread.content}</p>
-          </div>
-
-          <div class="flex items-center justify-between pt-3 mt-1 border-t-2 border-dashed border-[#e8dfc7]">
-            <button 
-              onclick={(e) => handleLike(activeThread!.id, e)}
-              class={`flex items-center gap-1.5 px-4 py-2 rounded-xl border-b-[3px] text-[12px] font-black transition-all cursor-pointer ${activeThread.hasLiked ? 'bg-[#eb6a9d] border-[#c94d7d] text-white active:translate-y-[2px] active:border-b-[1px]' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-[2px] active:border-b-[1px]'}`}
-            >
-              <ThumbsUp class="w-4 h-4 stroke-[2.5px]" />
-              <span>{activeThread.likes || 0} Upvotes</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Replies Section Title -->
-        <div class="px-2 text-[11px] font-black text-[#8a7f66] uppercase tracking-widest flex items-center gap-2 mt-2 bg-[#e8dfc7] py-1.5 w-max rounded-xl">
-          <MessageCircle class="w-4 h-4 stroke-[2.5px]" />
-          <span>Replies ({threadComments.length})</span>
-        </div>
-
-        <!-- Comments List -->
-        <div class="flex flex-col gap-3">
-          {#each threadComments as comment (comment.id)}
-            <div class="bg-white/95 border-2 border-[#e1d9be] rounded-[20px] p-3.5 flex flex-col gap-2 text-left shadow-sm hover:border-[#d0c6a8] transition-colors">
-              <div class="flex justify-between items-center text-[10px] font-bold text-[#9b8d71] mb-1">
-                <div class="flex items-center gap-1.5">
-                  <div class="w-4 h-4 rounded-full bg-[#f4ebd0] flex items-center justify-center text-[8px]">🐾</div>
-                  <span class="text-[#5c3a21] font-black text-[11px]">{comment.author_name}</span>
-                </div>
-                <span>{getFormatDate(comment.date)}</span>
+      <div class="relative z-20 w-full px-2 pb-[72px] flex flex-col gap-6 pt-4 min-h-full">
+         <!-- Static Main Post (Bulletin form) -->
+         <div class="w-full bg-white rounded-[24px] p-4 border-4 border-[#e1d9be] shadow-[0_6px_0_#dcd3be] text-left flex flex-col gap-3 relative overflow-hidden">
+            <!-- Decorative bubbly corner -->
+            <div class="absolute -top-4 -right-4 w-12 h-12 bg-[#f4f1e3] rounded-full opacity-50"></div>
+            
+            <!-- Top bar -->
+            <div class="flex justify-between items-start w-full z-10">
+              <div class="flex flex-col text-left leading-tight">
+                <span class="text-[10px] font-black uppercase tracking-wider" style="color: var(--theme-color, #eb6a9d)">{activeThread.subnook}</span>
+                <span class="text-[11px] font-black text-[#5c3a21] mt-0.5">{activeThread.author_name}@{activeThread.author_island || 'Nook'}</span>
               </div>
-              <div class="text-[12px] text-[#786b51] leading-relaxed font-medium pl-5.5">
-                {#if typeof comment.content === 'object'}
-                  {@html comment.content.rendered}
-                {:else}
-                  {comment.content}
-                {/if}
-              </div>
+              <span class="text-[10px] text-[#9b8d71] font-bold opacity-80">{getFormatDate(activeThread.date)}</span>
             </div>
-          {:else}
-            <div class="text-center py-10 text-[#a09477] text-xs font-bold bg-[#fcfaf5] rounded-[24px] border-2 border-dashed border-[#e8dfc7] shadow-inner">
-              <span class="text-3xl block mb-2 opacity-50">🍃</span>
-              No replies yet. Be the first to chime in!
+            
+            <!-- Content -->
+            <div class="flex flex-col gap-3 z-10 text-center pt-2 pb-2 px-1">
+              <h3 class="text-[15px] font-black text-[#5c3a21] leading-snug">{activeThread.title}</h3>
+              <p class="text-[13px] text-[#786b51] leading-relaxed font-medium whitespace-pre-wrap">{activeThread.content}</p>
             </div>
-          {/each}
-        </div>
+         </div>
+
+         <!-- Replies Wall of bubbles -->
+         {#if dialogueSequence.length > 0}
+           {#if !showReplies}
+             <div class="flex justify-center mt-2">
+               <button 
+                 onclick={() => showReplies = true}
+                 class="bg-[#eb6a9d] text-white px-5 py-2 rounded-full font-bold text-sm shadow-md hover:scale-105 active:scale-95 transition"
+               >
+                 Read Replies ({dialogueSequence.length})
+               </button>
+             </div>
+           {:else}
+             <div class="flex flex-col gap-4 mt-2 relative">
+               <!-- Dialogue Progress Indicator (just for replies now) -->
+               <div class="sticky top-2 mx-auto flex gap-1 z-10 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm w-fit mb-2">
+                 {#each dialogueSequence as _, i}
+                   <div class={`w-1.5 h-1.5 rounded-full transition-all ${i === currentDialogueIndex ? 'bg-[#eb6a9d] scale-125' : i < currentDialogueIndex ? 'bg-[#c94d7d] opacity-60' : 'bg-[#e1d9be]'}`}></div>
+                 {/each}
+               </div>
+
+               {#each dialogueSequence as seq, i}
+                 {#if i <= currentDialogueIndex}
+                   <AcnhBubble
+                     title={seq.author_name}
+                     dialogText={seq.text}
+                     isActive={true}
+                     class="w-full !min-h-[80px] reply-bubble transition-all animate-fade-in"
+                     onDismiss={i === currentDialogueIndex && i < dialogueSequence.length - 1 ? () => {
+                       currentDialogueIndex++;
+                       setTimeout(() => {
+                         const scrollEl = document.querySelector('#chat-app .overflow-y-auto');
+                         if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+                       }, 50);
+                     } : undefined}
+                   >
+                     <div class="absolute -top-3 right-4 bg-[#e8dfc7] text-[#8a7f66] px-3 py-0.5 rounded-full text-[9px] font-black tracking-wider border-2 border-white shadow-sm z-10">
+                        {getFormatDate(seq.date)}
+                     </div>
+                   </AcnhBubble>
+                 {/if}
+               {/each}
+             </div>
+           {/if}
+         {/if}
       </div>
 
     {:else if view === "new"}

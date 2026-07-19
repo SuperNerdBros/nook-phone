@@ -258,10 +258,18 @@
   const handleSend = async (sendType?: 'comment' | 'reply') => {
     if (!newMessage.trim() || (!activeLetter && !selectedRecipient)) return;
     
-    sending = true;
     const type = sendType || (view === "chat" ? "comment" : "reply");
+    const cost = (view === "new-draft") ? 200 : 50;
+
+    if (nookState.bells < cost) {
+      alert(`You need ${cost} Bells to send this message!`);
+      return;
+    }
+
+    sending = true;
 
     if (isProUser()) {
+      nookState.bells -= cost;
       if (view === "new-draft") {
         const subject = newSubject.trim() || 'No Subject';
         const result = await createPrivateLetter(selectedRecipient.ID, subject, newMessage, selectedStationery.id);

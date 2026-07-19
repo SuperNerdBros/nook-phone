@@ -51,6 +51,7 @@
   import fishing_rod_png from '@/assets/img/FishingRod.png';
   import shovel_png from '@/assets/img/Shovel.png';
   import coffee_roost_png from '@/assets/img/CoffeeRoost.png';
+  import { resolveAssetUrl } from '@/lib/utils';
 
   const { name, class: className = "" } = $props<{ name: string; class?: string }>();
 
@@ -98,22 +99,6 @@
 
   const logos = import.meta.glob('@/assets/img/logos/*', { eager: true, import: 'default' }) as Record<string, string>;
 
-  function resolveAssetUrl(assetPath: string) {
-    if (!assetPath) return assetPath;
-    if (assetPath.startsWith('http')) return assetPath;
-    
-    // In development, the assets are served from the Vite dev server (port 5175)
-    if (import.meta.env.DEV) {
-      return `${window.location.protocol}//${window.location.hostname}:5175${assetPath}`;
-    }
-    
-    // In production, we ensure it loads from the plugin directory if it's an absolute path
-    if (assetPath.startsWith('/assets/')) {
-      return (window as any).wpApiSettings?.pluginUrl + 'public/dist' + assetPath;
-    }
-    
-    return assetPath;
-  }
 
   const nameWithLogo = $derived(Object.keys(logos).find(k => k.endsWith(`/${name}`)));
 

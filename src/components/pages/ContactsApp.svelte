@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import nookState from '@/lib/nookState.svelte';
   import { fetchNookipediaVillagers, searchNookipediaItems } from '@/lib/api';
-  import { Search, Star, MessageCircle, Home, Info, ChevronLeft, Phone, Video, Users, Plus, Image as ImageIcon, Camera, Gift, Trash2, Check, UserPlus, Leaf, X as XIcon } from '@lucide/svelte';
+  import { Search, Star, MessageCircle, MessageSquare, Bookmark, Home, Info, ChevronLeft, Phone, Video, Users, Plus, Image as ImageIcon, Camera, Gift, Trash2, Check, UserPlus, Leaf, X as XIcon } from '@lucide/svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
@@ -304,15 +304,19 @@
   }
 
   async function messageContact(villager: any) {
-    const isResident = nookState.isResident(villager.id);
-    if (isResident || nookState.isBestFriend(villager.id)) {
-        nookState.sendChatMessage(villager.name, `Hey ${villager.name}!`, false);
-    }
+    const sublog = `bb/${villager.name.replace(/\s+/g, '')}`;
+    nookState.subRoute = sublog;
+    
     if (nookState.settings.soundEffects) {
       const { playSound } = await import('@/lib/audio');
       playSound('success');
     }
     nookState.navigate('chat');
+  }
+
+  function toggleSubscription(villager: any) {
+    const sublog = `bb/${villager.name.replace(/\s+/g, '')}`;
+    nookState.toggleSubscription(sublog);
   }
 </script>
 
@@ -353,16 +357,16 @@
           <span class="text-[10px] font-bold text-[#5c3a21]">Gift</span>
         </button>
         <button onclick={() => messageContact(selectedVillager)} class="flex flex-col items-center gap-1 cursor-pointer">
-          <div class="w-12 h-12 rounded-full bg-[#6cd476] text-white flex items-center justify-center shadow-md active:scale-95 transition-transform hover:bg-[#5bc265]">
-            <MessageCircle class="w-6 h-6 fill-current" />
+          <div class="w-12 h-12 rounded-full bg-[#eb6a9d] text-white flex items-center justify-center shadow-md active:scale-95 transition-transform hover:bg-[#c94d7d]">
+            <MessageSquare class="w-6 h-6 fill-current" />
           </div>
-          <span class="text-[10px] font-bold text-[#5c3a21]">Message</span>
+          <span class="text-[10px] font-bold text-[#5c3a21]">Bulletin</span>
         </button>
-        <button class="flex flex-col items-center gap-1 opacity-50 cursor-not-allowed">
-          <div class="w-12 h-12 rounded-full bg-[#f0b157] text-white flex items-center justify-center shadow-md">
-            <Phone class="w-6 h-6 fill-current" />
+        <button onclick={() => toggleSubscription(selectedVillager)} class="flex flex-col items-center gap-1 cursor-pointer">
+          <div class={`w-12 h-12 rounded-full text-white flex items-center justify-center shadow-md active:scale-95 transition-transform ${nookState.isSubscribed('bb/'+selectedVillager.name.replace(/\s+/g, '')) ? 'bg-[#eb6a9d]' : 'bg-[#e1d9be] hover:bg-[#d4ccb1]'}`}>
+            <Bookmark class="w-6 h-6 fill-current" />
           </div>
-          <span class="text-[10px] font-bold text-[#5c3a21]">Call</span>
+          <span class="text-[10px] font-bold text-[#5c3a21]">{nookState.isSubscribed('bb/'+selectedVillager.name.replace(/\s+/g, '')) ? 'Subscribed' : 'Subscribe'}</span>
         </button>
         <button class="flex flex-col items-center gap-1 opacity-50 cursor-not-allowed">
           <div class="w-12 h-12 rounded-full bg-[#6db3e6] text-white flex items-center justify-center shadow-md">

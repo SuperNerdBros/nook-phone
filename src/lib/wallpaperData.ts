@@ -1,17 +1,6 @@
 export const wallpaperImports = import.meta.glob('../assets/wallpapers/*.{png,webp,jpg}', { eager: true, query: '?url', import: 'default' });
 
-export function resolveAssetUrl(assetPath: string) {
-  if (!assetPath) return assetPath;
-  if (assetPath.startsWith('http')) return assetPath;
-  if (import.meta.env.DEV) {
-    return `${window.location.protocol}//${window.location.hostname}:5175${assetPath}`;
-  }
-  if (assetPath.startsWith('/assets/')) {
-    return (window as any).wpApiSettings?.pluginUrl + 'public/dist' + assetPath;
-  }
-  return assetPath;
-}
-
+import { resolveAssetUrl } from './utils';
 export const loadedWallpapers = Object.entries(wallpaperImports).map(([path, url]) => {
   const filename = path.split('/').pop()?.split('.')[0] || 'Unknown';
   const lcase = filename.toLowerCase();
