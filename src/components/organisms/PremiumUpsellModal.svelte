@@ -4,7 +4,6 @@
   import { X, Cloud, Sparkles, ChevronRight, PlusIcon } from "@lucide/svelte";
   import NookIcon from "../atoms/NookIcon.svelte";
   import NookAppIcon from "../atoms/NookAppIcon.svelte";
-  import nookIncLogo from "@/assets/img/Nook_Inc.svg";
   import cellularStatusImg from "@/assets/img/cellular_status.png";
   import { resolveAssetUrl } from "@/lib/utils";
   import { fetchPatreonAuthUrl, isProUser } from "@/lib/api";
@@ -14,10 +13,25 @@
 
   let authUrl = $state("");
   let isPro = $state(false);
+  let systemStats = $state({
+    memberSince: "Loading...",
+    postCount: 0,
+    xp: 0
+  });
 
   onMount(async () => {
     isPro = isProUser();
-    authUrl = (await fetchPatreonAuthUrl(window.location.href)) || "";
+    if (isPro) {
+      setTimeout(() => {
+        systemStats = {
+          memberSince: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45).toLocaleDateString(),
+          postCount: 38,
+          xp: 12500
+        };
+      }, 500);
+    } else {
+      authUrl = (await fetchPatreonAuthUrl(window.location.href)) || "";
+    }
   });
 
   const handleClose = () => {
@@ -46,8 +60,50 @@
       <X class="w-5 h-5" />
     </button>
 
-    <!-- Scrollable Content -->
-    <div
+    {#if isPro}
+      <!-- System Information Status Check -->
+      <div class="flex-1 flex flex-col bg-[#2b2b2b] text-white pt-16 px-6 relative z-10">
+        <div class="flex flex-col items-center mb-8">
+          <img
+            src={resolveAssetUrl(cellularStatusImg)}
+            alt="Signal"
+            class="h-16 object-contain mb-4 drop-shadow-md"
+            style="filter: invert(72%) sepia(80%) saturate(450%) hue-rotate(65deg) brightness(1.2) contrast(1);"
+          />
+          <h1 class="text-2xl font-black text-center mb-1 text-white">System Information</h1>
+          <p class="text-sm font-bold text-[#6ec94e] uppercase tracking-widest">Status: Verified</p>
+        </div>
+
+        <div class="bg-[#1e1e1e] border border-[#333] rounded-3xl p-5 shadow-inner">
+          <div class="space-y-5">
+            <div class="flex justify-between items-center border-b border-[#333] pb-3">
+              <span class="text-gray-400 font-bold text-sm">Member Since</span>
+              <span class="text-white font-black text-base">{systemStats.memberSince}</span>
+            </div>
+            <div class="flex justify-between items-center border-b border-[#333] pb-3">
+              <span class="text-gray-400 font-bold text-sm">Post Count</span>
+              <span class="text-white font-black text-base">{systemStats.postCount}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-400 font-bold text-sm">Experience Points</span>
+              <span class="text-[#6ec94e] font-black text-base">{systemStats.xp.toLocaleString()} XP</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-auto pb-10 text-center">
+           <p class="text-[11px] text-gray-500 font-semibold mb-3 uppercase tracking-wider">NookPhone+ Service Active</p>
+           <button
+             onclick={handleClose}
+             class="w-full bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white font-black text-[15px] py-4 rounded-2xl cursor-pointer transition-all border-0"
+           >
+             Close Diagnostics
+           </button>
+        </div>
+      </div>
+    {:else}
+      <!-- Scrollable Content -->
+      <div
       class="flex-1 overflow-y-auto overscroll-contain"
       style="scrollbar-width: none;"
     >
@@ -138,7 +194,15 @@
       </div>
 
       <!-- Tom Nook Pitch -->
-      <div class="px-2 -mt-2 relative z-10">
+      <div class="px-5 mt-2 relative z-10 mb-4">
+        <div class="rounded-3xl px-3 text-center overflow-hidden relative mb-4">
+          <span class="block text-[18px] font-black text-[#1b5e20] leading-none mb-2">
+            NookPhone+ Upgraded Plan
+          </span>
+          <span class="block text-[12px] text-[#388e3c] font-semibold leading-relaxed"
+            >Enjoy seamless connectivity, cloud save backups, and exclusive member bonuses.</span
+          >
+        </div>
         <div
           class="bg-white border border-[#e8e4d8] rounded-2xl p-4 shadow-sm relative transition-all duration-300"
         >
@@ -148,24 +212,15 @@
           ></div>
           <p class="text-[12.5px] text-[#5c5446] leading-relaxed m-0 relative z-10 animate-fade-in">
             <strong class="text-[#3a7a25]">Ah yes, yes!</strong> Thank you for your interest in the
-            <strong>NookPhone+ service plan</strong>, yes yes! For a small monthly fee, we'll
-            activate your cell service and unlock the full NookPhone+ experience. Plus, you'll be
+            <strong>NookPhone+ service plan</strong>, yes yes! By checking out securely through
+            <strong>Patreon</strong>, we'll activate your cell service and unlock the full
+            NookPhone+ experience. Plus, you'll be
             <strong>supporting the developer</strong> who keeps the servers running!
           </p>
         </div>
       </div>
-
       <!-- Plus Exclusive Features -->
       <div class="px-5 mt-4">
-        <div class="rounded-3xl px-3 text-center overflow-hidden relative mb-4">
-          <span class="block text-[18px] font-black text-[#1b5e20] leading-none mb-2">
-            NookPhone+ Upgraded Plan
-          </span>
-          <span class="block text-[12px] text-[#388e3c] font-semibold leading-relaxed"
-            >Enjoy seamless connectivity, cloud save backups, and exclusive member bonuses.</span
-          >
-        </div>
-
         <span
           class="text-[10px] font-black uppercase tracking-widest text-[#9a9585] block mb-2.5 px-1"
         >
@@ -191,8 +246,7 @@
             <li class="flex gap-2.5 items-start">
               <span class="text-[#61b948] mt-0.5 text-lg leading-none shrink-0">•</span>
               <div>
-                <strong class="text-[#3a7a25] block text-[13.5px]">Safe & Verified Community</strong
-                >
+                <strong class="text-[#3a7a25] block text-[13.5px]">Safe & Verified Community</strong>
                 Limits DMs, friend connections, and public bulletins to verified accounts to keep interactions
                 safe and spam-free
               </div>
@@ -200,9 +254,7 @@
             <li class="flex gap-2.5 items-start">
               <span class="text-[#61b948] mt-0.5 text-lg leading-none shrink-0">•</span>
               <div>
-                <strong class="text-[#3a7a25] block text-[13.5px]"
-                  >500k Monthly Bell Allowance</strong
-                >
+                <strong class="text-[#3a7a25] block text-[13.5px]">500k Monthly Bell Allowance</strong>
                 Receive +500,000 Bells deposited directly to your ABD monthly (minus the 50,000 Bell
                 cell fee. yes, yes.)
               </div>
@@ -222,7 +274,7 @@
       <!-- Price -->
       <div class="text-center mb-3">
         <div class="flex items-baseline justify-center gap-1.5">
-          <span class="text-[28px] font-black text-[#3d3a32] leading-none">$5</span>
+          <span class="text-[24px] font-black text-[#3d3a32] leading-none">50,000 Bells</span>
           <span class="text-[13px] font-bold text-[#8a8577]">/ month</span>
         </div>
         <p class="text-[10px] text-[#8a8577] font-semibold mt-1 mb-0">
@@ -236,11 +288,11 @@
         style="box-shadow: 0 4px 14px rgba(97, 185, 72, 0.4);"
       >
         <img
-          src={resolveAssetUrl(nookIncLogo)}
+          src={resolveAssetUrl(cellularStatusImg)}
           alt=""
-          class="w-5 h-5 brightness-0 invert"
+          class="h-5 w-auto object-contain brightness-0 invert"
         />
-        Activate NookPhone+
+        + Checkout with Patreon
         <ChevronRight class="w-4 h-4 opacity-70" />
       </button>
 
@@ -251,6 +303,7 @@
         Maybe Later
       </button>
     </div>
+    {/if}
   </div>
 {/if}
 

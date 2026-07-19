@@ -15,7 +15,7 @@
   <div class="flex flex-col gap-1">
     <label for="new-subnook-name" class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Board Name</label>
     <div class="flex gap-2 items-center">
-      <span class="text-sm font-black text-[#8a7f66]">n/</span>
+      <span class="text-sm font-black text-[#8a7f66]">bb/</span>
       <input
         id="new-subnook-name"
         type="text"

@@ -62,7 +62,7 @@ export const CORE_APPS: CoreApp[] = [
   { id: "map", name: "Map", icon: "map", bg: "bg-[#75cfbe]", image: mapIcon },
   { id: "passport", name: "Passport", icon: "passport", bg: "bg-[#7cb988]", image: passportIcon },
   { id: "settings", name: "Settings", icon: "settings", bg: "bg-[#5c4a3d]", image: settingsIcon },
-  { id: "directory", name: "Residential Recycle Box", icon: "directory", bg: "bg-[#45a38f]" },
+  { id: "directory", name: "App Directory", icon: "directory", bg: "bg-[#45a38f]" },
   {
     id: "contacts",
     name: "Contacts",
@@ -174,7 +174,7 @@ export class PhoneContext {
     const isCore = CORE_APPS.some((c) => c.id === appId);
     const isThirdParty = !isCore;
 
-    if (app && (app.proOnly || isThirdParty) && !isProUser()) {
+    if (app && app.proOnly && !isProUser()) {
       playSound('error', !nookState.settings.soundEffects);
       this.showPremiumUpsell = true;
       return;

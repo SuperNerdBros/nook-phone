@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Settings, Clock, Battery, Accessibility, Volume2, ChevronLeft, Image as ImageIcon, PaintBucket, Search, Smartphone, Info, LayoutList, ChevronDown , X } from '@lucide/svelte';
-  import { fly } from 'svelte/transition';
+  import { Settings, Clock, Accessibility, Volume2, ChevronLeft, Image as ImageIcon, PaintBucket, Search, Smartphone, Info, LayoutList, ChevronDown , X, Lock, Coins } from '@lucide/svelte';
+  import { fly, fade } from 'svelte/transition';
   import nookState from "@/lib/nookState.svelte";
   import { ALL_WALLPAPERS } from "@/lib/wallpaperData";
   import { getPhoneContext } from "../organisms/phoneContext.svelte";
@@ -8,20 +8,148 @@
   import NookIcon from "../atoms/NookIcon.svelte";
   import NookAppHeader from "../organisms/NookAppHeader.svelte";
   import NookToolbarButton from "../molecules/NookToolbarButton.svelte";
+  import AcnhBubble from "../molecules/AcnhBubble.svelte";
   import settingsIcon from "@/assets/img/icons/settings_icon.png";
 
   const ctx = getPhoneContext();
   const phone = getPhoneContext();
 
   const toggle24Hour = () => nookState.updateSettings({ use24HourTime: !nookState.settings.use24HourTime });
-  const toggleBattery = () => nookState.updateSettings({ showBatteryPercentage: !nookState.settings.showBatteryPercentage });
   const toggleMotion = () => nookState.updateSettings({ reduceMotion: !nookState.settings.reduceMotion });
   const toggleSound = () => nookState.updateSettings({ soundEffects: !nookState.settings.soundEffects });
 
-  const setWallpaper = (id: string) => {
-    nookState.activeWallpaperId = id;
-    nookState.save();
+  const freeWallpapers = new Set([
+    'classic',
+    'default',
+    'green-waves',
+    'green-waves-2',
+    'green-waves-3',
+    'green-waves-3-dark'
+  ]);
+
+  const setWallpaper = async (id: string) => {
+    const isFree = freeWallpapers.has(id);
+    const isPurchased = nookState.catalog.purchasedIds.includes(id);
+
+    if (isFree || isPurchased) {
+      nookState.activeWallpaperId = id;
+      nookState.save();
+      if (nookState.settings.soundEffects) {
+        const { playSound } = await import('@/lib/audio');
+        playSound('success');
+      }
+    } else {
+      purchaseDialogWallpaper = ALL_WALLPAPERS.find(w => w.id === id);
+      isPurchasing = false;
+      purchaseSuccess = false;
+    }
   };
+
+  let purchaseDialogWallpaper = $state<any>(null);
+  let isPurchasing = $state(false);
+  let purchaseSuccess = $state(false);
+  const WALLPAPER_PRICE = 500;
+
+  function closePurchaseDialog() {
+    purchaseDialogWallpaper = null;
+    purchaseSuccess = false;
+    isPurchasing = false;
+  }
+
+  async function handlePurchase() {
+    isPurchasing = true;
+    if (nookState.bells >= WALLPAPER_PRICE) {
+      if (nookState.settings.soundEffects) {
+        const { playSound } = await import('@/lib/audio');
+        playSound('beep');
+      }
+      
+      const { spendGP } = await import('@/lib/api');
+      const success = await spendGP(WALLPAPER_PRICE, `Wallpaper: ${purchaseDialogWallpaper?.name}`);
+
+      if (success) {
+        setTimeout(async () => {
+          nookState.bells -= WALLPAPER_PRICE;
+          if (purchaseDialogWallpaper) {
+            nookState.catalog.purchasedIds.push(purchaseDialogWallpaper.id);
+            nookState.activeWallpaperId = purchaseDialogWallpaper.id;
+          }
+          nookState.save();
+          if (nookState.settings.soundEffects) {
+            const { playSound } = await import('@/lib/audio');
+            playSound('success');
+          }
+          purchaseSuccess = true;
+          isPurchasing = false;
+        }, 800);
+      } else {
+        if (nookState.settings.soundEffects) {
+          const { playSound } = await import('@/lib/audio');
+          playSound('error');
+        }
+        isPurchasing = false;
+      }
+    } else {
+      if (nookState.settings.soundEffects) {
+        const { playSound } = await import('@/lib/audio');
+        playSound('error');
+      }
+      isPurchasing = false;
+    }
+  }
+  
+  let isStorageUpgradeDialogOpen = $state(false);
+  let isStoragePurchasing = $state(false);
+  let storagePurchaseSuccess = $state(false);
+  let storagePurchaseError = $state('');
+  const STORAGE_UPGRADE_PRICE = 10000;
+
+  function closeStorageDialog() {
+    isStorageUpgradeDialogOpen = false;
+    storagePurchaseSuccess = false;
+    isStoragePurchasing = false;
+    storagePurchaseError = '';
+  }
+
+  async function handleStoragePurchase() {
+    isStoragePurchasing = true;
+    if (nookState.bells >= STORAGE_UPGRADE_PRICE) {
+      if (nookState.settings.soundEffects) {
+        const { playSound } = await import('@/lib/audio');
+        playSound('beep');
+      }
+      
+      const { spendGP } = await import('@/lib/api');
+      const success = await spendGP(STORAGE_UPGRADE_PRICE, `Storage Upgrade`);
+
+      if (success) {
+        setTimeout(async () => {
+          nookState.bells -= STORAGE_UPGRADE_PRICE;
+          nookState.maxAppSlots = (nookState.maxAppSlots || 18) + 9;
+          nookState.save();
+          if (nookState.settings.soundEffects) {
+            const { playSound } = await import('@/lib/audio');
+            playSound('success');
+          }
+          storagePurchaseSuccess = true;
+          isStoragePurchasing = false;
+        }, 800);
+      } else {
+        if (nookState.settings.soundEffects) {
+          const { playSound } = await import('@/lib/audio');
+          playSound('error');
+        }
+        storagePurchaseError = "Network error or insufficient funds on the server.";
+        isStoragePurchasing = false;
+      }
+    } else {
+      if (nookState.settings.soundEffects) {
+        const { playSound } = await import('@/lib/audio');
+        playSound('error');
+      }
+      isStoragePurchasing = false;
+    }
+  }
 
   let currentView = $derived(nookState.subRoute || 'main');
   let searchQuery = $state('');
@@ -199,8 +327,14 @@
                     {/if}
                     
                     {#if nookState.activeWallpaperId === wp.id || (!nookState.activeWallpaperId && wp.id === 'default')}
-                      <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-[#6cd476] rounded-full border-2 border-white flex items-center justify-center shadow-sm">
+                      <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-[#6cd476] rounded-full border-2 border-white flex items-center justify-center shadow-sm z-30">
                         <div class="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                    {/if}
+
+                    {#if !freeWallpapers.has(wp.id) && !nookState.catalog.purchasedIds.includes(wp.id)}
+                      <div class="absolute inset-0 bg-black/30 flex items-center justify-center backdrop-blur-[1px] z-20">
+                        <Lock class="w-8 h-8 text-white drop-shadow-md" strokeWidth={2.5} />
                       </div>
                     {/if}
                   </div>
@@ -254,24 +388,7 @@
                 </button>
               </div>
 
-              <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
-                <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-2xl bg-[#7cb988] border-2 border-[#609d6c] flex items-center justify-center text-[#5c3a21] shadow-inner">
-                    <Battery class="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div class="font-black text-[#5c5446] text-sm">Battery Percentage</div>
-                    <div class="text-[10px] font-bold text-[#8a816f]">Show exact battery level</div>
-                  </div>
-                </div>
-                <button 
-                  aria-label="Toggle battery percentage"
-                  onclick={toggleBattery}
-                  class={`w-14 h-8 rounded-full p-1.5 transition-colors cursor-pointer border-2 shadow-inner flex items-center ${nookState.settings.showBatteryPercentage ? 'bg-[#6cd476] border-[#4ca454]' : 'bg-[#e1d9be] border-[#dcd3be]'}`}
-                >
-                  <div class={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${nookState.settings.showBatteryPercentage ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                </button>
-              </div>
+
 
               <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
                 <div class="flex items-center gap-4">
@@ -330,6 +447,30 @@
                       {size}
                     </button>
                   {/each}
+                </div>
+              </div>
+              
+              <div class="flex items-center justify-between py-3">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-2xl bg-[#ebd478] border-2 border-[#cfb85c] flex items-center justify-center text-[#5c3a21] shadow-inner">
+                    <Smartphone class="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div class="font-black text-[#5c5446] text-sm">App Space</div>
+                    <div class="text-[10px] font-bold text-[#8a816f]">Capacity: {nookState.maxAppSlots || 18} / 54 slots</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  {#if (nookState.maxAppSlots || 18) < 54}
+                    <button
+                      onclick={() => isStorageUpgradeDialogOpen = true}
+                      class="bg-[#4a2e19] text-white px-3 py-1.5 rounded-full text-[10px] font-black shadow-sm hover:bg-[#3d2514] active:scale-95 transition-transform cursor-pointer flex items-center gap-1 border-0"
+                    >
+                      <Coins class="w-3 h-3" /> {STORAGE_UPGRADE_PRICE.toLocaleString()}
+                    </button>
+                  {:else}
+                    <span class="text-[#8a816f] font-black text-[10px] px-3 py-1.5 bg-[#f4f2e8] rounded-full border border-[#e1d9be]">Maxed Out</span>
+                  {/if}
                 </div>
               </div>
             </div>
@@ -454,6 +595,120 @@
       </div>
     {/if}
   </div>
+
+  {#if isStorageUpgradeDialogOpen}
+    <div class="absolute inset-0 z-[100] bg-black/40 backdrop-blur-sm flex flex-col overflow-hidden animate-fade-in" in:fly={{y: 10, duration: 200}} out:fade={{duration: 200}}>
+      <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-32">
+         {#if isStoragePurchasing}
+           <div class="animate-bounce flex items-center gap-2 text-[#ffdf28] font-black text-3xl drop-shadow-lg">
+             <Coins class="w-10 h-10" />
+             -{STORAGE_UPGRADE_PRICE.toLocaleString()}
+           </div>
+         {/if}
+         {#if storagePurchaseSuccess}
+           <div class="animate-ping absolute w-48 h-48 bg-[#6cd476]/30 rounded-full"></div>
+           <div class="text-[#6cd476] font-black text-3xl drop-shadow-lg animate-bounce">
+             Upgraded!
+           </div>
+         {/if}
+      </div>
+
+      <div class="relative z-20 w-full px-4 pb-8 shrink-0 mt-auto">
+        <AcnhBubble
+          title="App Space Upgrade"
+          badgeBg="#d99c45"
+          badgeColor="#ffffff"
+          dialogText={
+            storagePurchaseSuccess 
+              ? `You've successfully upgraded your App Space! You now have ${(nookState.maxAppSlots || 18)} slots.` 
+              : storagePurchaseError
+                ? storagePurchaseError
+                : nookState.bells < STORAGE_UPGRADE_PRICE
+                ? `You don't have enough Bells. You need ${STORAGE_UPGRADE_PRICE.toLocaleString()} Bells but only have ${nookState.bells.toLocaleString()}.`
+                : `Upgrade your App Space by 9 slots for ${STORAGE_UPGRADE_PRICE.toLocaleString()} Bells? You currently have ${nookState.bells.toLocaleString()} Bells.`
+          }
+          isActive={true}
+        >
+          <div class="mt-4 border-t border-[#e1d9be]/60 pt-4 flex flex-col gap-3 animate-fade-in">
+            {#if storagePurchaseSuccess}
+               <button onclick={closeStorageDialog} class="bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform w-full text-center cursor-pointer border-0">
+                 Awesome!
+               </button>
+            {:else if storagePurchaseError || nookState.bells < STORAGE_UPGRADE_PRICE}
+               <button onclick={closeStorageDialog} class="bg-white border-2 border-[#e1d9be] text-[#8a7f66] px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-gray-50 active:scale-95 transition-transform text-center cursor-pointer w-full">
+                 Nevermind
+               </button>
+            {:else}
+               <div class="flex gap-2">
+                 <button onclick={handleStoragePurchase} disabled={isStoragePurchasing} class="flex-[2] border-0 bg-[#1ca349] disabled:opacity-50 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform text-center cursor-pointer">
+                   {isStoragePurchasing ? 'Processing...' : 'Upgrade!'}
+                 </button>
+                 <button onclick={closeStorageDialog} disabled={isStoragePurchasing} class="flex-1 bg-white border-2 border-[#e1d9be] text-[#8a7f66] px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-gray-50 active:scale-95 transition-transform text-center cursor-pointer">
+                   Cancel
+                 </button>
+               </div>
+            {/if}
+          </div>
+        </AcnhBubble>
+      </div>
+    </div>
+  {/if}
+
+  {#if purchaseDialogWallpaper}
+    <div class="absolute inset-0 z-[100] bg-black/40 backdrop-blur-sm flex flex-col overflow-hidden animate-fade-in" in:fly={{y: 10, duration: 200}} out:fade={{duration: 200}}>
+      <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-32">
+         {#if isPurchasing}
+           <div class="animate-bounce flex items-center gap-2 text-[#ffdf28] font-black text-3xl drop-shadow-lg">
+             <Coins class="w-10 h-10" />
+             -{WALLPAPER_PRICE}
+           </div>
+         {/if}
+         {#if purchaseSuccess}
+           <div class="animate-ping absolute w-48 h-48 bg-[#6cd476]/30 rounded-full"></div>
+           <div class="text-[#6cd476] font-black text-3xl drop-shadow-lg animate-bounce">
+             Purchased!
+           </div>
+         {/if}
+      </div>
+
+      <div class="relative z-20 w-full px-4 pb-8 shrink-0 mt-auto">
+        <AcnhBubble
+          title="Wallpaper Purchase"
+          badgeBg="#d99c45"
+          badgeColor="#ffffff"
+          dialogText={
+            purchaseSuccess 
+              ? `You've successfully purchased the ${purchaseDialogWallpaper.name} wallpaper!` 
+              : nookState.bells < WALLPAPER_PRICE
+                ? `You don't have enough Bells. You need ${WALLPAPER_PRICE} Bells but only have ${nookState.bells.toLocaleString()}.`
+                : `This ${purchaseDialogWallpaper.name} wallpaper costs ${WALLPAPER_PRICE} Bells. You currently have ${nookState.bells.toLocaleString()} Bells.`
+          }
+          isActive={true}
+        >
+          <div class="mt-4 border-t border-[#e1d9be]/60 pt-4 flex flex-col gap-3 animate-fade-in">
+            {#if purchaseSuccess}
+               <button onclick={closePurchaseDialog} class="bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform w-full text-center cursor-pointer border-0">
+                 Awesome!
+               </button>
+            {:else if nookState.bells < WALLPAPER_PRICE}
+               <button onclick={closePurchaseDialog} class="bg-white border-2 border-[#e1d9be] text-[#8a7f66] px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-gray-50 active:scale-95 transition-transform text-center cursor-pointer w-full">
+                 Nevermind
+               </button>
+            {:else}
+               <div class="flex gap-2">
+                 <button onclick={handlePurchase} disabled={isPurchasing} class="flex-[2] border-0 bg-[#1ca349] disabled:opacity-50 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform text-center cursor-pointer">
+                   {isPurchasing ? 'Processing...' : 'Buy it!'}
+                 </button>
+                 <button onclick={closePurchaseDialog} disabled={isPurchasing} class="flex-1 bg-white border-2 border-[#e1d9be] text-[#8a7f66] px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-gray-50 active:scale-95 transition-transform text-center cursor-pointer">
+                   Cancel
+                 </button>
+               </div>
+            {/if}
+          </div>
+        </AcnhBubble>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>

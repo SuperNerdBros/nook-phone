@@ -337,3 +337,21 @@ export const fetchNookipediaVillagers = async () => {
     return [];
   }
 };
+
+export const spendGP = async (gpCost: number, itemName: string) => {
+  if (!isProUser()) return false;
+  try {
+    const root = window.wpApiSettings?.root || '/wp-json/';
+    const res = await fetch(`${root}xp/v1/spend-gp`, {
+      method: 'POST',
+      headers: getApiHeaders(),
+      body: JSON.stringify({ gp: gpCost, item: itemName })
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.success === true;
+  } catch (e) {
+    console.error('Failed to spend GP', e);
+    return false;
+  }
+};

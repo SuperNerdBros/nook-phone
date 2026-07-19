@@ -1,6 +1,6 @@
 <script lang="ts">
   import NookIcon from './NookIcon.svelte';
-  import { X } from '@lucide/svelte';
+  import { X, Plus } from '@lucide/svelte';
   import { isProUser } from '@/lib/api';
   import { getPhoneContext, CORE_APPS } from '../organisms/phoneContext.svelte';
   import nookState from '@/lib/nookState.svelte';
@@ -31,7 +31,7 @@
     children?: import('svelte').Snippet;
   }>();
 
-  const isLocked = $derived(!forceUnlock && app && !isProUser() && (app.proOnly || !CORE_APPS.some(c => c.id === app.id)));
+  const isLocked = $derived(!forceUnlock && app && !isProUser() && app.proOnly);
 
   const sizeClasses = {
     sm: { button: 'w-[64px]', icon: 'w-[46px] h-[46px] rounded-full', p: 'p-1.5', text: 'text-[8.5px]' },
@@ -136,7 +136,7 @@
       
       {#if isLocked}
         <div class="absolute inset-0 bg-black/45 flex items-center justify-center backdrop-blur-[1.5px] z-20 rounded-full border-[3px] border-[#61b948]">
-          <img src={resolveAssetUrl(nookIncLogo)} alt="Locked" class="w-[60%] h-[60%] object-contain drop-shadow-sm" />
+          <Plus class="w-10 h-10 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]" strokeWidth={4} />
         </div>
       {/if}
     </div>

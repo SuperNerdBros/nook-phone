@@ -266,6 +266,7 @@
     if (!nookState.isSubscribed(formatted)) {
       nookState.toggleSubscription(formatted);
     }
+    selectedBoardFilter = formatted;
     view = "list";
     newBoardName = "";
   }
@@ -364,7 +365,7 @@
             <Plus class="w-3.5 h-3.5 stroke-[2.5px] mr-0.5" /> Board
           </NookToolbarButton>
           <NookToolbarButton
-            onclick={() => { view = "new"; newSubnook = selectedBoardFilter === "bb/All" ? islandBoard : selectedBoardFilter; }}
+            onclick={() => { view = "new"; newSubnook = selectedBoardFilter; }}
             class="text-[#eb6a9d]"
             title="New thread"
           >
@@ -540,7 +541,7 @@
     {:else if view === "new"}
       <NewThreadForm
         allBoards={allBoards}
-        defaultBoard={islandBoard}
+        defaultBoard={selectedBoardFilter === "bb/All" ? islandBoard : selectedBoardFilter}
         onCancel={() => view = "list"}
         onSubmit={(title, content, board) => {
           newTitle = title;

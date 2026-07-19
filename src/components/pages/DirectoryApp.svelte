@@ -80,7 +80,8 @@
   }));
 
   async function handleInstall(projectName: string) {
-    nookState.installApp(projectName);
+    const success = nookState.installApp(projectName);
+    if (!success) return;
     const slug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     await installAppTracker(slug);
     // Refresh stats
@@ -126,8 +127,8 @@
 </script>
 
 <NookAppTemplate
-  title="Residential Recycle Box"
-  subtitle="Salvage and install community-made utilities."
+  title="App Directory"
+  subtitle="Browse and install community-made apps."
   headerBgClass="bg-[#45a38f]"
   headerTextClass="text-[#fffdf5]"
   bgClass="bg-[#e5f1f0]"
@@ -292,7 +293,7 @@
       {@const isInstalled = nookState.isAppInstalled(selectedApp.name)}
       {@const slug = selectedApp.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}
       {@const stats = cloudApps[slug]}
-      {@const isSystem = stats?.is_system || CORE_APPS.some(a => a.name.toLowerCase() === selectedApp.name.toLowerCase() || a.id === selectedApp.appIcon)}
+      {@const isCoreApp = CORE_APPS.some(a => a.name.toLowerCase() === selectedApp.name.toLowerCase() || a.id === selectedApp.appIcon)}
 
       <div class="flex flex-col h-full overflow-hidden p-4">
         
@@ -392,37 +393,15 @@
 
         <!-- Action Buttons -->
         <div class="absolute bottom-6 left-6 right-6 flex flex-col gap-2 z-30">
-          {#if isSystem}
-            <button
-              onclick={async () => {
-                if (nookState.settings.soundEffects) {
-                  const { playSound } = await import('@/lib/audio');
-                  playSound('success');
-                }
-                currentView = 'grid';
-                const coreApp = CORE_APPS.find(a => a.name.toLowerCase() === selectedApp.name.toLowerCase());
-                const targetId = coreApp ? coreApp.id : (selectedApp.id || selectedApp.name);
-                nookState.navigate(targetId);
-              }}
-              class="w-full bg-[#1bc6b6] text-white py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#15a497] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
-            >
-              <Play class="w-4 h-4 mr-1.5 fill-current" /> Open Tool
-            </button>
+          {#if isCoreApp}
+            <div class="w-full bg-[#1bc6b6]/70 text-white py-3.5 rounded-full text-[15px] font-black shadow-inner flex items-center justify-center border-4 border-white/20 uppercase tracking-wider cursor-not-allowed">
+              <CheckCircle class="w-4 h-4 mr-1.5" /> Installed
+            </div>
           {:else if selectedPlatform === 'installable' && selectedApp.site}
             {#if isInstalled}
-              <button
-                onclick={async () => {
-                  if (nookState.settings.soundEffects) {
-                    const { playSound } = await import('@/lib/audio');
-                    playSound('success');
-                  }
-                  currentView = 'grid';
-                  nookState.navigate(selectedApp.id || selectedApp.name);
-                }}
-                class="w-full bg-[#1bc6b6] text-white py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#15a497] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"
-              >
-                <Play class="w-4 h-4 mr-1.5 fill-current" /> Open Tool
-              </button>
+              <div class="w-full bg-[#1bc6b6]/70 text-white py-3.5 rounded-full text-[15px] font-black shadow-inner flex items-center justify-center border-4 border-white/20 uppercase tracking-wider cursor-not-allowed">
+                <CheckCircle class="w-4 h-4 mr-1.5" /> Installed
+              </div>
               <button
                 onclick={() => { handleUninstall(selectedApp.name); currentView = "grid"; }}
                 class="w-full bg-[#fdafb2] text-[#8c2a2e] py-3.5 rounded-full text-[15px] font-black shadow-lg hover:bg-[#f09a9d] active:scale-95 transition-all flex items-center justify-center border-4 border-white/20 uppercase tracking-wider"

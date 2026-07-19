@@ -896,7 +896,7 @@ export const projectsData: ProjectItem[] = [
 		tools: ['utilities']
 	},
 	{
-		name: 'Residential Recycle Box',
+		name: 'App Directory',
 		appIcon: 'directory',
 		description: 'Access the residential catalog to search, install, and rate community web apps.',
 		languages: ['en'],

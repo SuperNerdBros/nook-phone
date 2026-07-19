@@ -36,7 +36,7 @@
       bind:value={newBoard}
       class="bg-[#fbf9f0] border-2 border-[#dcd3be] p-2.5 rounded-2xl text-xs focus:outline-none focus:border-[#afd485] text-[#4c4637] font-semibold cursor-pointer appearance-none"
     >
-      {#each allBoards.filter(s => s !== "bb/All") as board}
+      {#each allBoards as board}
         <option value={board}>{board}</option>
       {/each}
     </select>

@@ -115,6 +115,7 @@ export interface NookOSState {
   patreonTierCents?: number;
   loanBalance?: number;
   hasReceivedAllowance?: boolean;
+  maxAppSlots?: number;
 }
 
 const DEFAULT_GRID_LEAF = [
@@ -148,6 +149,7 @@ const INITIAL_STATE: NookOSState = {
   activeTab: 0,
   bells: 25000,
   miles: 1500,
+  maxAppSlots: 18,
   passport: {
     name: "Villager",
     islandName: "Nook Island",
@@ -247,7 +249,7 @@ class NookStateManager {
     } else {
       this.state.subscribedSublogs = [...this.state.subscribedSublogs, sublog];
     }
-    this.saveState();
+    this.save();
   }
 
   get critters() { return this.state.critters; }
@@ -320,6 +322,9 @@ class NookStateManager {
 
   get hasReceivedAllowance() { return this.state.hasReceivedAllowance || false; }
   set hasReceivedAllowance(val) { this.state.hasReceivedAllowance = val; this.save(); }
+
+  get maxAppSlots() { return this.state.maxAppSlots || 18; }
+  set maxAppSlots(val) { this.state.maxAppSlots = val; this.save(); }
 
   payLoan(amount: number): boolean {
     const currentLoan = this.state.loanBalance || 0;
@@ -397,6 +402,10 @@ class NookStateManager {
             if (!parsed.catalog.forTradeIds) parsed.catalog.forTradeIds = [];
             if (!parsed.catalog.itemQuantities) parsed.catalog.itemQuantities = {};
           }
+          if (parsed.settings) {
+            parsed.settings = { ...this.state.settings, ...parsed.settings };
+            if (parsed.settings.soundEffects === undefined) parsed.settings.soundEffects = true;
+          }
           this.state = { ...this.state, ...parsed };
         }
       } catch (e) {
@@ -445,6 +454,10 @@ class NookStateManager {
       const remoteState = await fetchRemoteState();
       if (remoteState) {
         // Cloud Overwrites Local (if cloud exists)
+        if (remoteState.settings) {
+          remoteState.settings = { ...this.state.settings, ...remoteState.settings };
+          if (remoteState.settings.soundEffects === undefined) remoteState.settings.soundEffects = true;
+        }
         this.state = { ...this.state, ...remoteState };
         this.saveLocal();
       } else {
@@ -850,6 +863,18 @@ class NookStateManager {
   installApp(appName: string) {
     if (!this.state.installedApps) this.state.installedApps = [];
     if (!this.state.installedApps.includes(appName)) {
+      // Calculate current desktop apps (Core apps: 19)
+      const currentDesktopApps = 19 - this.state.dockApps.length + this.state.installedApps.length;
+      if (currentDesktopApps >= (this.state.maxAppSlots || 18)) {
+        playSound('error', !this.state.settings.soundEffects);
+        this.addNotification(
+          "Storage Full!", 
+          "You don't have enough App Space to install this app. Please upgrade your storage in Settings!", 
+          "Nook Inc."
+        );
+        return false;
+      }
+
       playSound('beep', !this.state.settings.soundEffects);
       this.state.installingApp = appName;
       
@@ -869,7 +894,9 @@ class NookStateManager {
           "Tom Nook"
         );
       }, 2500);
+      return true;
     }
+    return false;
   }
 
   uninstallApp(appName: string) {

@@ -15,8 +15,11 @@
     <img 
       src={resolveAssetUrl(cellularStatusImg)} 
       alt="Signal" 
-      class="h-[18px] object-contain" 
+      class="h-[18px] object-contain cursor-pointer hover:scale-105 active:scale-95 transition" 
       style={isProUser() ? "filter: invert(72%) sepia(80%) saturate(450%) hue-rotate(65deg) brightness(1.2) contrast(1);" : "opacity: 0.7;"} 
+      onclick={() => {
+        ctx.showPremiumUpsell = true;
+      }}
     />
     <button 
       onclick={() => {
