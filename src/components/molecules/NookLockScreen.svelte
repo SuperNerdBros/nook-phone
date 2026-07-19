@@ -13,8 +13,8 @@
 
   onMount(async () => {
     isPro = isProUser();
-    if (!isPro) {
-      authUrl = await fetchPatreonAuthUrl() || '';
+    if (!isProUser()) {
+      authUrl = await fetchPatreonAuthUrl(window.location.href) || '';
     }
   });
 

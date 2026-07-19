@@ -309,10 +309,14 @@ export const searchNookipediaItems = async (query: string, category?: string) =>
   }
 };
 
-export const fetchPatreonAuthUrl = async () => {
+export const fetchPatreonAuthUrl = async (returnUrl?: string) => {
   try {
     const root = window.wpApiSettings?.root || '/wp-json/';
-    const res = await fetch(`${root}xophz/v1/auth/patreon/url`);
+    let url = `${root}xophz/v1/auth/patreon/url`;
+    if (returnUrl) {
+      url += `?return_url=${encodeURIComponent(returnUrl)}`;
+    }
+    const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
     return data.url || null;

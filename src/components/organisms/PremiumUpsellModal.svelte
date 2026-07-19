@@ -13,9 +13,13 @@
   const ctx = getPhoneContext();
 
   let authUrl = $state("");
+  let isPro = $state(false);
 
   onMount(async () => {
-    authUrl = (await fetchPatreonAuthUrl()) || "";
+    isPro = isProUser();
+    if (!isPro) {
+      authUrl = (await fetchPatreonAuthUrl(window.location.href)) || "";
+    }
   });
 
   const handleClose = () => {
