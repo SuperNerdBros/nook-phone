@@ -2,9 +2,9 @@
   import { getPhoneContext } from '../organisms/phoneContext.svelte';
   import { fly } from 'svelte/transition';
   import {
-    X, MessageSquare, Mail, Users, Coins, Cloud, Layers,
-    Wifi, Sparkles, ChevronRight
+    X, Cloud, Sparkles, ChevronRight
   } from '@lucide/svelte';
+  import NookIcon from '../atoms/NookIcon.svelte';
   import nookIncLogo from '@/assets/img/Nook_Inc.svg';
   import cellularStatusImg from '@/assets/img/cellular_status.png';
   import { resolveAssetUrl } from '@/lib/utils';
@@ -32,12 +32,11 @@
   };
 
   const premiumApps = [
-    { icon: Coins, name: 'ABD', desc: 'Automatic Bell Dispenser. 500k bells deposited to your account', color: 'bg-[#d9f6af]', text: 'text-[#4a7a28]' },
-    { icon: Users, name: 'Best Friends', desc: 'Social hub, passports & friend connections', color: 'bg-[#ffd375]', text: 'text-[#9a7520]' },
-    { icon: Mail, name: 'Messages', desc: 'Direct messaging between residents', color: 'bg-[#8b3a3a]', text: 'text-white' },
-
-    { icon: MessageSquare, name: 'Bulletin Board', desc: 'Public bulletin boards & island-wide announcements', color: 'bg-[#eb6a9d]', text: 'text-[#4a1727]' },
-    { icon: Layers, name: 'App Directory', desc: 'Browse & install third-party island apps', color: 'bg-[#45a38f]', text: 'text-white' },
+    { icon: 'wallet', name: 'ABD', desc: 'Automatic Bell Dispenser. 500k bells deposited to your account', color: 'bg-[#d9f6af]', text: 'text-[#4a7a28]' },
+    { icon: 'best_friend', name: 'Best Friends', desc: 'Social hub, multiple passports & friend connections', color: 'bg-[#ffd375]', text: 'text-[#9a7520]' },
+    { icon: 'mail', name: 'Messages', desc: 'Direct messaging between residents', color: 'bg-[#8b3a3a]', text: 'text-white' },
+    { icon: 'chat', name: 'Bulletin Board', desc: 'Public bulletin boards & island-wide announcements', color: 'bg-[#eb6a9d]', text: 'text-[#4a1727]' },
+    { icon: 'directory', name: 'App Directory', desc: 'Browse & install third-party island apps', color: 'bg-[#45a38f]', text: 'text-white' },
   ];
 </script>
 
@@ -76,8 +75,8 @@
           </div>
 
           <h1 class="text-[26px] font-black m-0 text-white drop-shadow-sm tracking-wide leading-none flex items-center justify-center gap-1.5">
-            NookPhone<span class="text-yellow-200">+</span>
             <img src={resolveAssetUrl(cellularStatusImg)} alt="Signal" class="h-5 object-contain" style="filter: invert(72%) sepia(80%) saturate(450%) hue-rotate(65deg) brightness(1.2) contrast(1);" />
+            NookPhone<span class="text-yellow-200">+</span>
           </h1>
           <p class="text-[11px] font-bold text-white/80 mt-1.5 mb-0 tracking-wider uppercase">Cell Service Upgrade Plan</p>
         </div>
@@ -102,11 +101,13 @@
         <span class="text-[10px] font-black uppercase tracking-widest text-[#9a9585] block mb-2.5 px-1">
           Plus Exclusive Features
         </span>
-        <div class="bg-gradient-to-br from-[#e8f5e9] to-[#c8e6c9] border border-[#a5d6a7] rounded-xl p-3.5 flex items-center gap-3.5 shadow-sm">
-          <img src={resolveAssetUrl(cellularStatusImg)} alt="" class="w-8 h-8 object-contain shrink-0" style="filter: invert(58%) sepia(61%) saturate(547%) hue-rotate(67deg) brightness(94%) contrast(92%);" />
-          <div class="flex-1 min-w-0">
-            <span class="block text-[13px] font-black text-[#1b5e20] leading-none">NookPhone+ Cell Service</span>
-            <span class="block text-[10.5px] text-[#388e3c] font-semibold mt-0.5 leading-snug">Full connectivity — communicate with residents worldwide</span>
+        <div class="bg-gradient-to-br from-[#e8f5e9] to-[#c8e6c9] border-2 border-[#a5d6a7] rounded-3xl p-5 flex flex-col items-center gap-2 shadow-sm text-center overflow-hidden relative">
+          <div class="absolute inset-0 opacity-[0.05]" style="background-image: radial-gradient(#1b5e20 2px, transparent 2px); background-size: 16px 16px;"></div>
+          <img src={resolveAssetUrl(cellularStatusImg)} alt="" class="w-40 h-40 object-contain shrink-0 drop-shadow-md relative z-10" style="filter: invert(58%) sepia(61%) saturate(547%) hue-rotate(67deg) brightness(94%) contrast(92%);" />
+<span class="text-yellow-200">+</span>
+          <div class="flex-1 min-w-0 mt-2 relative z-10">
+            <span class="block text-[18px] font-black text-[#1b5e20] leading-none mb-1.5">NookPhone+ Cell Service</span>
+            <span class="block text-[12px] text-[#388e3c] font-semibold leading-relaxed">Full connectivity — communicate with residents worldwide</span>
           </div>
         </div>
 
@@ -126,16 +127,13 @@
         <span class="text-[10px] font-black uppercase tracking-widest text-[#9a9585] block mb-2.5 px-1">
           Apps Included With Your Plan
         </span>
-        <div class="flex flex-col gap-2">
+        <div class="grid grid-cols-2 gap-3">
           {#each premiumApps as app}
-            <div class="bg-white border border-[#eae6da] rounded-xl p-3 flex items-center gap-3 shadow-sm">
-              <div class={`w-9 h-9 rounded-xl ${app.color} ${app.text} flex items-center justify-center shrink-0 shadow-sm`}>
-                <app.icon class="w-[18px] h-[18px]" />
-              </div>
-              <div class="flex-1 min-w-0">
-                <span class="block text-[13px] font-black text-[#3d3a32] leading-none">{app.name}</span>
-                <span class="block text-[10.5px] text-[#8a8577] font-semibold mt-0.5 leading-snug">{app.desc}</span>
-              </div>
+            <div class={`${app.color} border-2 border-black/5 rounded-3xl p-4 flex flex-col items-center justify-center text-center shadow-sm relative overflow-hidden group hover:scale-[1.02] transition-transform`}>
+              <div class="absolute inset-0 opacity-[0.05]" style="background-image: radial-gradient(#000000 1px, transparent 1px); background-size: 10px 10px;"></div>
+              <NookIcon name={app.icon} class={`w-12 h-12 mb-2 drop-shadow-sm`} />
+              <span class={`block text-[13px] font-black ${app.text} leading-tight mb-1 relative z-10 drop-shadow-sm`}>{app.name}</span>
+              <span class={`block text-[9.5px] ${app.text} opacity-90 font-bold leading-snug relative z-10`}>{app.desc}</span>
             </div>
           {/each}
         </div>

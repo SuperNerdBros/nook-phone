@@ -592,6 +592,23 @@
   .envelope-item.is-read::before {
     display: none;
   }
+
+  /* Sexy scrollbar style overrides for this app */
+  .ac-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .ac-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .ac-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(139, 58, 58, 0.35);
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .ac-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 58, 58, 0.7);
+  }
 </style>
 
   <NookAppTemplate 
@@ -704,7 +721,7 @@
 
     <!-- USER LETTERS LIST VIEW -->
     {#if view === 'user-letters'}
-      <div in:fly={{x: 20, duration: 200}} class="h-full overflow-y-auto p-4 flex flex-col gap-3">
+      <div in:fly={{x: 20, duration: 200}} class="h-full overflow-y-auto ac-scrollbar p-4 flex flex-col gap-3">
         {#if activeUserLetters.length === 0}
           <div class="text-center text-[#8a7f66] p-10 text-xs font-bold">No letters found.</div>
         {:else}
@@ -780,7 +797,7 @@
             />
           </div>
         </div>
-        <div class="flex-1 overflow-y-auto p-2">
+        <div class="flex-1 overflow-y-auto ac-scrollbar p-2">
           {#each filteredUsers as user}
             <button
               onclick={() => handleSelectRecipient(user)}
@@ -800,7 +817,7 @@
         <div class="p-4 text-center font-bold text-[#8b3a3a] text-sm shrink-0">
           Select Stationery
         </div>
-        <div class="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-4">
+        <div class="flex-1 overflow-y-auto ac-scrollbar p-4 grid grid-cols-2 gap-4">
           {#each STATIONERY_OPTIONS as opt}
             <button 
               class={`aspect-[3/4] rounded-lg shadow-sm flex items-center justify-center cursor-pointer transition hover:scale-105 active:scale-95 border-2 ${selectedStationery?.id === opt.id ? 'border-[#8b3a3a] shadow-md' : 'border-transparent'} ${opt.bgClass}`}
@@ -853,7 +870,7 @@
     {:else if view === "chat"}
       <div in:fly={{x: 20, duration: 200}} class="h-full flex flex-col">
         <!-- Messages Area (Thread) -->
-        <div class="flex-1 overflow-y-auto p-2.5 flex flex-col items-center gap-6 pb-32">
+        <div class="flex-1 overflow-y-auto ac-scrollbar p-2.5 flex flex-col items-center gap-6 pb-32">
           {#if activeLetter}
             {@const stationery = getStationery(activeLetter.stationery_id)}
             <!-- Envelope Top -->

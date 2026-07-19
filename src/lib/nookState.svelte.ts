@@ -111,6 +111,7 @@ export interface NookOSState {
   subRoute?: string;
   dockApps: string[];
   subscribedSublogs: string[];
+  appDonations: Record<string, number>;
 }
 
 const DEFAULT_GRID_LEAF = [
@@ -206,7 +207,8 @@ const INITIAL_STATE: NookOSState = {
   bestFriendsCommunicationsOn: true,
   subRoute: "",
   dockApps: ["directory", "contacts", "settings"],
-  subscribedSublogs: ["bb/Isabelle", "bb/TomNook"]
+  subscribedSublogs: ["bb/Isabelle", "bb/TomNook"],
+  appDonations: {}
 };
 
 class NookStateManager {
@@ -301,6 +303,26 @@ class NookStateManager {
 
   get villagerMilestones() { return this.state.villagerMilestones || {}; }
   set villagerMilestones(val) { this.state.villagerMilestones = val; }
+
+  get appDonations() { return this.state.appDonations || {}; }
+  set appDonations(val) { this.state.appDonations = val; }
+
+  isAppPermanent(appId: string): boolean {
+    if (!this.state.appDonations) return false;
+    return (this.state.appDonations[appId] || 0) >= 280000;
+  }
+
+  donateToApp(appId: string, amount: number): boolean {
+    if (this.state.bells < amount) return false;
+    
+    if (!this.state.appDonations) this.state.appDonations = {};
+    const current = this.state.appDonations[appId] || 0;
+    
+    this.state.bells -= amount;
+    this.state.appDonations[appId] = current + amount;
+    this.save();
+    return true;
+  }
 
 
   get bestFriendsCommunicationsOn() { return this.state.bestFriendsCommunicationsOn !== false; }

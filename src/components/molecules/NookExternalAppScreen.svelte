@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Globe, Code, ChevronRight, X, GripHorizontal, Link } from "@lucide/svelte";
+  import { Globe, Code, ChevronRight, X, GripHorizontal, Link, HandCoins } from "@lucide/svelte";
   import nookState from '@/lib/nookState.svelte';
   import { getPhoneContext, CORE_APPS } from '../organisms/phoneContext.svelte';
   import { projectsData } from '@/lib/nookData';
@@ -8,6 +8,7 @@
   import NookToolbarButton from './NookToolbarButton.svelte';
   import greenWavesBg from '@/assets/wallpapers/Green Waves 3 Dark.png?url';
   import { resolveAssetUrl } from '@/lib/utils';
+  import GyroidDonationDialog from '../organisms/GyroidDonationDialog.svelte';
 
   const ctx = getPhoneContext();
 
@@ -17,6 +18,33 @@
     } catch {
       return urlStr;
     }
+  }
+
+  let skippedDonation = $state(false);
+  let forceShowDonation = $state(false);
+
+  // Reset skippedDonation when app changes
+  $effect(() => {
+    if (nookState.currentApp) {
+      skippedDonation = false;
+    }
+  });
+
+  let currentAppId = $derived(nookState.currentApp || '');
+  let isPermanent = $derived(currentAppId ? nookState.isAppPermanent(currentAppId) : true);
+  let showDonationDialog = $derived(
+    currentAppId && 
+    !CORE_APPS.some(a => a.id === currentAppId) && 
+    currentAppId !== 'privacy' && 
+    currentAppId !== 'terms' && 
+    ((!isPermanent && !skippedDonation) || forceShowDonation)
+  );
+
+  function handleCloseDonation() {
+    if (!isPermanent) {
+      skippedDonation = true;
+    }
+    forceShowDonation = false;
   }
 </script>
 
@@ -54,6 +82,13 @@
           </NookToolbarButton>
         {/if}
         <NookToolbarButton
+          onclick={() => forceShowDonation = true}
+          class="!bg-[#e0d6c0] !text-[#5c5446] !border-2 !border-[#c7b79a] hover:!bg-[#d4c3a3] mr-1"
+          title="Donations"
+        >
+          <HandCoins class="w-3.5 h-3.5 stroke-[2.5px]" />
+        </NookToolbarButton>
+        <NookToolbarButton
           onclick={ctx.handleHomeButton}
           class="!bg-[#5c8e43] !text-[#ffffff] !border-2 !border-[#2f5525] hover:!bg-[#6a9e50]"
           title="Close App"
@@ -63,7 +98,15 @@
       {/snippet}
     </NookAppHeader>
     
-    <div class="flex-1 w-full relative bg-white">
+    <div class="flex-1 w-full relative bg-white overflow-hidden">
+      {#if showDonationDialog}
+        <GyroidDonationDialog 
+          appId={currentProject?.id || nookState.currentApp} 
+          appName={currentProject?.name || nookState.currentApp}
+          onClose={handleCloseDonation}
+        />
+      {/if}
+      
       {#if currentProject?.site}
         <iframe 
           src={nookState.subRoute && (nookState.subRoute.startsWith('http://') || nookState.subRoute.startsWith('https://')) ? nookState.subRoute : currentProject.site} 
