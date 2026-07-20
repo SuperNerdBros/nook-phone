@@ -7,6 +7,7 @@
   import Onboarding from './Onboarding.svelte';
   import DirectoryApp from '../pages/DirectoryApp.svelte';
   import PassportApp from '../pages/PassportApp.svelte';
+  import WalletOverlay from './WalletOverlay.svelte';
   import CameraApp from '../pages/CameraApp.svelte';
   import NookMilesApp from '../pages/NookMilesApp.svelte';
   import CritterpediaApp from '../pages/CritterpediaApp.svelte';
@@ -169,6 +170,7 @@
 <div id="nook-phone-canvas" class="w-full h-full max-h-full overflow-hidden relative z-10">
   <NookBootScreen />
   <PremiumUpsellModal />
+  <WalletOverlay />
   
   <!-- Main OS Frame -->
   <div class="w-full h-full max-h-full relative overflow-hidden flex flex-col bg-[#fdfcf2] select-none">
