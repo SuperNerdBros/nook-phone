@@ -4,8 +4,10 @@
   import nookState from '@/lib/nookState.svelte';
   import { Camera, Image as ImageIcon , X } from '@lucide/svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
+  import { isProUser, linkPassport } from '@/lib/api';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
+  import AcnhBubble from '../molecules/AcnhBubble.svelte';
 
   const ctx = getPhoneContext();
   const FILTERS = [
@@ -28,6 +30,8 @@
   let activeBorder = $state(BORDERS[0]);
   let cameraStream: MediaStream | null = $state(null);
   let permissionError = $state(false);
+  let dialogState = $state<'none' | 'confirm' | 'success'>('none');
+  let pendingPhotoUrl = $state('');
   let flash = $state(false);
   let activeView: "camera" | "roll" = $state("camera");
 
@@ -187,8 +191,8 @@
   }
 
   function setAsPassportPhoto(photoUrl: string) {
-    nookState.updatePassport({ photoUrl });
-    ctx.navigate('passport');
+    pendingPhotoUrl = photoUrl;
+    dialogState = 'confirm';
   }
 </script>
 
@@ -361,6 +365,59 @@
           Your camera roll is currently empty. Start snapping photos to fill it up!
         </div>
       {/if}
+    </div>
+  {/if}
+
+  {#if dialogState !== 'none'}
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in pointer-events-auto">
+      <AcnhBubble
+        title="Nook Camera"
+        badgeBg="#bda1d4"
+        badgeColor="#ffffff"
+        dialogText={dialogState === 'confirm' ? "Set this snapshot as your active passport photo?" : "Ok, it has been set!"}
+        isActive={true}
+      >
+        <div class="mt-4 border-t border-[#e1d9be]/60 pt-4 flex gap-2 w-full animate-fade-in relative z-50">
+          {#if dialogState === 'confirm'}
+            <button
+              onclick={async () => {
+                const photoUrl = pendingPhotoUrl;
+                
+                const updated = {
+                  ...nookState.passport,
+                  photoUrl
+                };
+                nookState.addOrUpdatePassport(updated);
+                if (isProUser() && updated.id !== 'local') {
+                  await linkPassport(updated);
+                }
+                // Transition to success screen
+                dialogState = 'success';
+              }}
+              class="flex-[2] border-0 bg-[#1ca349] text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform text-center cursor-pointer"
+            >
+              Yes, set it!
+            </button>
+            <button
+              onclick={() => { dialogState = 'none'; pendingPhotoUrl = ''; }}
+              class="flex-1 bg-white border-2 border-[#e1d9be] text-[#8a7f66] px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-gray-50 active:scale-95 transition-transform text-center cursor-pointer"
+            >
+              Cancel
+            </button>
+          {:else}
+            <button
+              onclick={() => {
+                dialogState = 'none';
+                pendingPhotoUrl = '';
+                ctx.navigate('passport');
+              }}
+              class="w-full bg-[#1ca349] border-0 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform text-center cursor-pointer"
+            >
+              OK
+            </button>
+          {/if}
+        </div>
+      </AcnhBubble>
     </div>
   {/if}
 </div>
