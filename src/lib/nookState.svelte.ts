@@ -19,7 +19,7 @@ export interface PassportInfo {
   id?: number | string;
   name: string;
   islandName: string;
-  friendCode: string;
+  dreamAddress: string;
   photoUrl: string;
   titlePrefix: string;
   titleSuffix: string;
@@ -58,7 +58,8 @@ export interface NookOSState {
   activeTab: number;
   bells: number;
   miles: number;
-  passport: PassportInfo;
+  activePassportId: string | number;
+  passports: PassportInfo[];
   critters: {
     caught: string[];
     donated: string[];
@@ -101,6 +102,7 @@ export interface NookOSState {
     defaultApps: Record<string, string>;
   };
   unreadDMs: number;
+  friendCode: string;
   bestFriends: string[];
   myContacts: string[];
   villagerMilestones: Record<string, {
@@ -154,15 +156,17 @@ const INITIAL_STATE: NookOSState = {
   bells: 25000,
   miles: 1500,
   maxAppSlots: 18,
-  passport: {
+  activePassportId: 'local',
+  passports: [{
+    id: 'local',
     name: "Villager",
     islandName: "Nook Island",
-    friendCode: "",
+    dreamAddress: "",
     photoUrl: "https://picsum.photos/seed/animalcrossing/300/300",
     titlePrefix: "Horizon",
     titleSuffix: "Dweller",
     comment: "Living my best life in paradise! 🏝️"
-  },
+  }],
   critters: {
     caught: [],
     donated: [],
@@ -241,8 +245,14 @@ class NookStateManager {
   get miles() { return this.state.miles; }
   set miles(val) { this.state.miles = val; }
 
-  get passport() { return this.state.passport; }
-  set passport(val) { this.state.passport = val; }
+  get activePassportId() { return this.state.activePassportId; }
+  set activePassportId(val) { this.state.activePassportId = val; this.save(); }
+
+  get passports() { return this.state.passports; }
+
+  get passport() { 
+    return this.state.passports.find(p => p.id === this.state.activePassportId) || this.state.passports[0]; 
+  }
 
   get subscribedSublogs() { return this.state.subscribedSublogs; }
   set subscribedSublogs(val) { this.state.subscribedSublogs = val; }
@@ -565,9 +575,49 @@ class NookStateManager {
     this.save();
   }
 
-  updatePassport(info: Partial<PassportInfo>) {
-    this.state.passport = { ...this.state.passport, ...info };
+  loadPassports(passports: PassportInfo[]) {
+    const remote = passports.filter(p => p.id !== 'local');
+    if (remote.length > 0) {
+      this.state.passports = remote;
+      if (this.state.activePassportId === 'local' || !remote.some(p => p.id === this.state.activePassportId)) {
+        this.state.activePassportId = remote[0].id;
+      }
+    } else {
+      const local = this.state.passports.find(p => p.id === 'local') || INITIAL_STATE.passports[0];
+      this.state.passports = [local];
+    }
     this.save();
+  }
+
+  setActivePassport(id: string | number) {
+    this.state.activePassportId = id;
+    this.save();
+  }
+
+  addOrUpdatePassport(info: PassportInfo) {
+    const idx = this.state.passports.findIndex(p => p.id === info.id);
+    if (idx !== -1) {
+      this.state.passports[idx] = { ...this.state.passports[idx], ...info };
+    } else {
+      this.state.passports.push(info);
+    }
+    this.save();
+  }
+
+  removePassport(id: string | number) {
+    if (this.state.passports.length <= 1) {
+      return false; // Can't delete last passport
+    }
+    const idx = this.state.passports.findIndex(p => p.id === id);
+    if (idx !== -1) {
+      this.state.passports.splice(idx, 1);
+      if (this.state.activePassportId === id) {
+        this.state.activePassportId = this.state.passports[0].id;
+      }
+      this.save();
+      return true;
+    }
+    return false;
   }
 
   catchCritter(critterId: string) {
@@ -988,9 +1038,9 @@ class NookStateManager {
   }
 
   completeOnboarding(name: string, islandName: string, hemisphere: "north" | "south", friendCode: string) {
-    this.state.passport.name = name;
-    this.state.passport.islandName = islandName;
-    this.state.passport.friendCode = friendCode;
+    this.state.passports[0].name = name;
+    this.state.passports[0].islandName = islandName;
+    this.state.friendCode = friendCode;
     this.state.critters.filterHemisphere = hemisphere;
     this.state.hasCompletedOnboarding = true;
     this.save();

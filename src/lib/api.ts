@@ -56,7 +56,22 @@ export const linkPassport = async (passportData: any) => {
     return false;
   }
 };
-
+export const deletePassport = async (id: number | string) => {
+  if (!isProUser()) return false;
+  try {
+    const res = await fetch(getApiUrl('passport/delete'), {
+      method: 'POST',
+      headers: getApiHeaders(),
+      body: JSON.stringify({ id })
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.success;
+  } catch (e) {
+    console.error('Failed to delete passport', e);
+    return false;
+  }
+};
 export const fetchApps = async () => {
   try {
     const res = await fetch(getApiUrl('apps'), { headers: getApiHeaders() });
