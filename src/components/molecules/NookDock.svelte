@@ -46,7 +46,7 @@
   >
     {#each ctx.dockApps as app, i}
       <div 
-        class="transition-all rounded-2xl border-2 border-transparent hover:border-white/20 flex-shrink-0"
+        class="transition-all flex-shrink-0"
         ondrop={(e) => handleIconDrop(e, i)}
         ondragover={handleDragOver}
       >

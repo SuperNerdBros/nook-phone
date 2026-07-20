@@ -304,14 +304,12 @@
   }
 
   async function messageContact(villager: any) {
-    const sublog = `bb/${villager.name.replace(/\s+/g, '')}`;
-    nookState.subRoute = sublog;
-    
     if (nookState.settings.soundEffects) {
       const { playSound } = await import('@/lib/audio');
       playSound('success');
     }
-    nookState.navigate('chat');
+    nookState.activeChatPartner = { id: villager.id, name: villager.name };
+    nookState.navigate('messages');
   }
 
   function toggleSubscription(villager: any) {
@@ -330,7 +328,7 @@
         <button onclick={closeContact} class="flex items-center text-[#5c3a21] font-bold text-sm bg-white/50 px-3 py-1.5 rounded-full shadow-sm hover:bg-white active:scale-95 transition-all cursor-pointer z-10">
           <ChevronLeft class="w-4 h-4 mr-1" /> Back
         </button>
-        <span class="absolute left-1/2 -translate-x-1/2 font-black text-lg text-[#5c3a21] tracking-tight pointer-events-none">{selectedVillager.name}</span>
+        <span class="absolute left-1/2 -translate-x-1/2 font-black text-lg text-[#5c3a21] tracking-tight pointer-events-none">{selectedVillager.personality} {selectedVillager.species}</span>
         <button onclick={() => toggleVip(selectedVillager.id)} class="text-[#f0b157] bg-white/50 p-2 rounded-full shadow-sm hover:bg-white active:scale-95 transition-all cursor-pointer z-10">
           <Star class="w-5 h-5 {nookState.isBestFriend(selectedVillager.id) ? 'fill-current' : ''}" />
         </button>
@@ -350,7 +348,7 @@
       <!-- Dialogue Bubble for Character Type & Sayings -->
       <div class="px-5 mb-6">
         <AcnhBubble
-          title="{selectedVillager.personality} {selectedVillager.species}"
+          title={selectedVillager.name}
           dialogText="{selectedVillager.quote ? selectedVillager.quote.replace(/^["'“”]|["'“”]$/g, '').trim() : ''} {selectedVillager.phrase ? selectedVillager.phrase.replace(/^["'“”]|["'“”]$/g, '').trim() : ''}"
           compact={true}
           badgeBg="#9cc677"
@@ -368,10 +366,10 @@
           <span class="text-[10px] font-bold text-[#5c3a21]">Gift</span>
         </button>
         <button onclick={() => messageContact(selectedVillager)} class="flex flex-col items-center gap-1 cursor-pointer">
-          <div class="w-12 h-12 rounded-full bg-[#eb6a9d] text-white flex items-center justify-center shadow-md active:scale-95 transition-transform hover:bg-[#c94d7d]">
+          <div class="w-12 h-12 rounded-full bg-[#8b3a3a] text-white flex items-center justify-center shadow-md active:scale-95 transition-transform hover:bg-[#6a2c2c]">
             <MessageSquare class="w-6 h-6 fill-current" />
           </div>
-          <span class="text-[10px] font-bold text-[#5c3a21]">Bulletin</span>
+          <span class="text-[10px] font-bold text-[#5c3a21]">Message</span>
         </button>
         <button onclick={() => toggleSubscription(selectedVillager)} class="flex flex-col items-center gap-1 cursor-pointer">
           <div class={`w-12 h-12 rounded-full text-white flex items-center justify-center shadow-md active:scale-95 transition-transform ${nookState.isSubscribed('bb/'+selectedVillager.name.replace(/\s+/g, '')) ? 'bg-[#eb6a9d]' : 'bg-[#e1d9be] hover:bg-[#d4ccb1]'}`}>

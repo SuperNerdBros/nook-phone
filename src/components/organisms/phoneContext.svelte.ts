@@ -99,13 +99,14 @@ export const CORE_APPS: CoreApp[] = [
     icon: "mail",
     bg: "bg-[#8b3a3a]",
     image: mailIcon,
-    proOnly: true
+    proOnly: true,
+    imageNeedsBg: true
   },
   {
     id: "best_friends",
     name: "Best Friends",
     icon: "best_friend",
-    bg: "bg-[#ffd375]",
+    bg: "bg-[#ffb380]",
     image: messagesIcon,
     proOnly: true
   },

@@ -1,48 +1,69 @@
 <script lang="ts">
-  import NookIcon from './NookIcon.svelte';
-  import { X, Plus } from '@lucide/svelte';
-  import { isProUser } from '@/lib/api';
-  import { getPhoneContext, CORE_APPS } from '../organisms/phoneContext.svelte';
-  import nookState from '@/lib/nookState.svelte';
-  import nookIncLogo from '@/assets/img/Nook_Inc.svg';
-  import { resolveAssetUrl } from '@/lib/utils';
-  
+  import NookIcon from "./NookIcon.svelte";
+  import { X, Plus } from "@lucide/svelte";
+  import { isProUser } from "@/lib/api";
+  import { getPhoneContext, CORE_APPS } from "../organisms/phoneContext.svelte";
+  import nookState from "@/lib/nookState.svelte";
+  import nookIncLogo from "@/assets/img/Nook_Inc.svg";
+  import { resolveAssetUrl } from "@/lib/utils";
+
   const ctx = getPhoneContext();
 
-  let { 
-    app, 
+  let {
+    app,
     onClick,
     onMouseEnter,
     onMouseLeave,
-    size = 'md',
+    size = "md",
     showText = true,
     forceUnlock = false,
-    class: className = '',
+    class: className = "",
     children
   } = $props<{
     app: any;
     onClick: () => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
-    size?: 'sm' | 'md' | 'lg' | 'xl';
+    size?: "sm" | "md" | "lg" | "xl";
     showText?: boolean;
     forceUnlock?: boolean;
     class?: string;
-    children?: import('svelte').Snippet;
+    children?: import("svelte").Snippet;
   }>();
 
   const isLocked = $derived(!forceUnlock && app && !isProUser() && app.proOnly);
 
   const sizeClasses = {
-    sm: { button: 'w-[64px]', icon: 'w-[46px] h-[46px] rounded-full', p: 'p-1.5', text: 'text-[8.5px]' },
-    md: { button: 'w-[80px]', icon: 'w-[60px] h-[60px] rounded-full', p: 'p-2', text: 'text-[9px]' },
-    lg: { button: 'w-[98px]', icon: 'w-[98px] h-[98px] rounded-full', p: 'p-3.5', text: 'text-[12px]' },
-    xl: { button: 'w-full', icon: 'w-[110px] h-[110px] rounded-full', p: 'p-4', text: 'text-xs' }
+    sm: {
+      button: "w-[64px]",
+      icon: "w-[46px] h-[46px] rounded-[1.0rem]",
+      p: "p-1.5",
+      text: "text-[8.5px]"
+    },
+    md: {
+      button: "w-[80px]",
+      icon: "w-[60px] h-[60px] rounded-[1.3rem]",
+      p: "p-2",
+      text: "text-[9px]"
+    },
+    lg: {
+      button: "w-[98px]",
+      icon: "w-[98px] h-[98px] rounded-[42px]",
+      p: "p-3.5",
+      text: "text-[12px]"
+    },
+    xl: {
+      button: "w-full",
+      icon: "w-[110px] h-[110px] rounded-[2.2rem]",
+      p: "p-4",
+      text: "text-xs"
+    }
   };
 
   const s = sizeClasses[size];
 
-
+  const isCore = $derived(app && app.id && CORE_APPS.some((c) => c.id === app.id));
+  const isThirdParty = $derived(app && !isCore);
 
   // Long press detection
   let pressTimer: any = null;
@@ -54,7 +75,7 @@
     pressTimer = setTimeout(() => {
       isLongPress = true;
       ctx.isEditMode = true;
-      playSound('switch');
+      playSound("switch");
     }, 700);
   }
 
@@ -86,28 +107,28 @@
     e.stopPropagation();
     if (confirm(`Uninstall ${app.name}?`)) {
       nookState.uninstallApp(app.name);
-      playSound('thwip');
+      playSound("thwip");
     }
   }
 
   async function playSound(type: any) {
     if (nookState.settings.soundEffects) {
-      const { playSound: soundPlay } = await import('@/lib/audio');
+      const { playSound: soundPlay } = await import("@/lib/audio");
       soundPlay(type);
     }
   }
 
   // Alternating wiggle delay based on ID/Name
-  const isAltWiggle = $derived((app?.id || app?.name || '').charCodeAt(0) % 2 === 0);
+  const isAltWiggle = $derived((app?.id || app?.name || "").charCodeAt(0) % 2 === 0);
   const isRemovable = $derived(app && !app.id && nookState.isAppInstalled(app.name));
 </script>
 
-<div 
-  class={`relative group ${size === 'lg' ? 'w-[98px]' : ''} ${ctx.isEditMode ? (isAltWiggle ? 'animate-wiggle' : 'animate-wiggle-alt') : ''}`}
+<div
+  class={`relative group ${size === "lg" ? "w-[98px]" : ""} ${ctx.isEditMode ? (isAltWiggle ? "animate-wiggle" : "animate-wiggle-alt") : ""}`}
   draggable={!ctx.isEditMode}
   ondragstart={(e) => {
-    e.dataTransfer?.setData('appId', app?.id || app?.name);
-    e.dataTransfer?.setData('source', 'icon');
+    e.dataTransfer?.setData("appId", app?.id || app?.name);
+    e.dataTransfer?.setData("source", "icon");
   }}
   onpointerdown={handlePointerDown}
   onpointerup={handlePointerUp}
@@ -120,33 +141,49 @@
     onclick={handleLaunch}
     onmouseenter={onMouseEnter}
     onmouseleave={onMouseLeave}
-    class={`flex flex-col items-center gap-1 bg-transparent border-0 ${size === 'lg' ? 'hover:scale-[1.15]' : 'hover:scale-105'} transition-all duration-200 cursor-pointer p-0 ${s.button} ${className}`}
+    class={`flex flex-col items-center gap-1 bg-transparent border-0 ${size === "lg" ? "hover:scale-[1.15]" : "hover:scale-105"} transition-all duration-200 cursor-pointer p-0 ${s.button} ${className}`}
   >
-    <div class={`${s.icon} flex items-center justify-center transition-all relative overflow-visible ${app?.image && !app?.imageNeedsBg ? 'bg-transparent' : `${app?.bg || 'bg-[#f5fbf7]'} border-4 border-white/20 shadow-md`}`}>
-      <div class="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
-        {#if !app?.image}
+    <div
+      class={`${s.icon} flex items-center justify-center transition-all relative overflow-visible ${(app?.image && !app?.imageNeedsBg) || isThirdParty ? "bg-transparent" : app?.bg || "bg-[#f5fbf7]"}`}
+    >
+      <div class="absolute inset-0 rounded-[inherit] overflow-hidden pointer-events-none">
+        {#if !app?.image && !isThirdParty}
           <div class="absolute inset-0 bg-gradient-to-tr from-black/5 to-white/20"></div>
         {/if}
       </div>
       {#if app?.image}
-        <img src={resolveAssetUrl(app.image)} alt={app.name} class="w-full h-full object-contain drop-shadow-sm pointer-events-none relative z-10" />
+        <img
+          src={resolveAssetUrl(app.image)}
+          alt={app.name}
+          class="w-full h-full object-contain drop-shadow-sm pointer-events-none relative z-10"
+        />
       {:else}
-        <NookIcon name={app?.logo || app?.appIcon || app?.id || 'directory'} class={`w-full h-full object-contain drop-shadow-sm ${s.p} z-10 relative pointer-events-none`} />
+        <NookIcon
+          name={app?.logo || app?.appIcon || app?.id || "directory"}
+          class={`w-full h-full object-contain drop-shadow-sm ${isThirdParty ? "" : s.p} z-10 relative pointer-events-none`}
+        />
       {/if}
-      
+
       {#if isLocked}
-        <div class="absolute inset-0 bg-black/45 flex items-center justify-center backdrop-blur-[1.5px] z-20 rounded-full border-[3px] border-[#61b948]">
-          <Plus class="w-10 h-10 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]" strokeWidth={4} />
+        <div
+          class="absolute inset-0 bg-black/45 flex items-center justify-center backdrop-blur-[1.5px] z-20 rounded-[inherit] border-[3px] border-[#61b948]"
+        >
+          <Plus
+            class="w-10 h-10 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]"
+            strokeWidth={4}
+          />
         </div>
       {/if}
     </div>
     {#if showText}
-      <span class={`${s.text} font-black ${ctx?.isDarkTheme ? 'text-white drop-shadow-[0_1px_3px_rgba(0,0,0,1)]' : 'text-[#5d5a4a] drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]'} tracking-tight text-center truncate w-full px-1 transition-colors`}>
+      <span
+        class={`${s.text} font-black ${ctx?.isDarkTheme ? "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,1)]" : "text-[#5d5a4a] drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]"} tracking-tight text-center truncate w-full px-1 transition-colors`}
+      >
         {app?.name}
       </span>
     {/if}
   </button>
-  
+
   {#if ctx.isEditMode && isRemovable}
     <button
       onclick={handleUninstall}
@@ -164,9 +201,15 @@
 
 <style>
   @keyframes wiggle-keyframe {
-    0% { transform: rotate(-1.5deg); }
-    50% { transform: rotate(1.5deg); }
-    100% { transform: rotate(-1.5deg); }
+    0% {
+      transform: rotate(-1.5deg);
+    }
+    50% {
+      transform: rotate(1.5deg);
+    }
+    100% {
+      transform: rotate(-1.5deg);
+    }
   }
   :global(.animate-wiggle) {
     animation: wiggle-keyframe 0.22s ease-in-out infinite;

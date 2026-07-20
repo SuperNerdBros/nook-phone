@@ -212,7 +212,7 @@ const INITIAL_STATE: NookOSState = {
   bestFriends: [],
   bestFriendsCommunicationsOn: true,
   subRoute: "",
-  dockApps: ["directory", "contacts", "settings"],
+  dockApps: ["contacts", "directory", "settings"],
   subscribedSublogs: ["bb/Isabelle", "bb/TomNook"],
   appDonations: {},
   servicePlanBalance: 0,
@@ -368,10 +368,10 @@ class NookStateManager {
   get bestFriendsCommunicationsOn() { return this.state.bestFriendsCommunicationsOn !== false; }
   set bestFriendsCommunicationsOn(val) { this.state.bestFriendsCommunicationsOn = val; }
 
-  get dockApps() { return this.state.dockApps || ["directory", "contacts", "settings"]; }
+  get dockApps() { return this.state.dockApps || ["contacts", "directory", "settings"]; }
   set dockApps(val) { this.state.dockApps = val; }
 
-  activeChatPartner = $state<{ id: number; name: string } | null>(null);
+  activeChatPartner = $state<{ id: string | number; name: string } | null>(null);
 
   toggleBestFriend(friendId: string | number) {
     if (!this.state.bestFriends) this.state.bestFriends = [];
@@ -403,8 +403,11 @@ class NookStateManager {
         const saved = localStorage.getItem(storageKey);
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed.dockApps && parsed.dockApps.length === 3 && parsed.dockApps[0] === "directory" && parsed.dockApps[1] === "messages" && parsed.dockApps[2] === "contacts") {
-            parsed.dockApps = ["directory", "contacts", "settings"];
+          if (parsed.dockApps && parsed.dockApps.length === 3 && (
+            (parsed.dockApps[0] === "directory" && parsed.dockApps[1] === "messages" && parsed.dockApps[2] === "contacts") ||
+            (parsed.dockApps[0] === "directory" && parsed.dockApps[1] === "contacts" && parsed.dockApps[2] === "settings")
+          )) {
+            parsed.dockApps = ["contacts", "directory", "settings"];
           }
           if (parsed.catalog) {
             if (!parsed.catalog.wishlistIds) parsed.catalog.wishlistIds = [];
