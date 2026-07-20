@@ -2,6 +2,7 @@
   import { getPhoneContext } from "@/components/organisms/phoneContext.svelte";
   import { onMount } from "svelte";
   import nookState from "@/lib/nookState.svelte";
+  import { fade } from "svelte/transition";
   import { fetchNookipediaVillagers, searchNookipediaItems } from "@/lib/api";
   import {
     Search,
@@ -386,6 +387,16 @@
     nookState.toggleResident(villagerId);
   }
 
+  function handleStatusChange(status: "resident" | "former" | "non-resident") {
+    if (selectedVillager) {
+      if (status === "resident" && !nookState.isResident(selectedVillager.id) && nookState.residents.length >= 10) {
+        nookState.addNotification("Island Full!", "You can only have up to 10 residents on your island.", "Tom Nook");
+        return;
+      }
+      nookState.setResidentStatus(selectedVillager.id, status);
+    }
+  }
+
   function toggleMilestone(milestone: "hasPoster" | "hasPhoto" | "talkedToday" | "giftedToday") {
     if (selectedVillager) {
       nookState.toggleMilestone(selectedVillager.id, milestone);
@@ -470,11 +481,12 @@
       <div class="px-5 mb-6">
         <AcnhBubble
           title={selectedVillager.name}
-          dialogText="{selectedVillager.quote
-            ? selectedVillager.quote.replace(/^["'“”]|["'“”]$/g, '').trim()
-            : ''} {selectedVillager.phrase
-            ? selectedVillager.phrase.replace(/^["'“”]|["'“”]$/g, '').trim()
-            : ''}"
+          dialogText={nookState.isSubscribed("bb/" + selectedVillager.name.replace(/\s+/g, ""))
+            ? "Thanks for subscribing! Check out my bulletin board! Let's converse at "
+            : `${selectedVillager.quote ? selectedVillager.quote.replace(/^["'“”]|["'“”]$/g, '').trim() : ''} ${selectedVillager.phrase ? selectedVillager.phrase.replace(/^["'“”]|["'“”]$/g, '').trim() : ''}`}
+          linkText={nookState.isSubscribed("bb/" + selectedVillager.name.replace(/\s+/g, "")) ? `bb/${selectedVillager.name.replace(/\s+/g, "")}` : ""}
+          postLinkText={nookState.isSubscribed("bb/" + selectedVillager.name.replace(/\s+/g, "")) ? `, ${selectedVillager.phrase ? selectedVillager.phrase.replace(/^["'“”]|["'“”]$/g, '').trim() : ''}!` : ""}
+          onLinkClick={() => nookState.navigate("chat/bb/" + selectedVillager.name.replace(/\s+/g, ""))}
           compact={true}
           badgeBg="#9cc677"
           badgeColor="#ffffff"
@@ -535,7 +547,7 @@
       <div class="px-5 flex flex-col gap-3 pb-8">
         <!-- Island Status -->
         <div
-          class="bg-white rounded-2xl p-4 shadow-sm border-2 border-[#e1d9be] flex items-center justify-between"
+          class="bg-white rounded-2xl p-4 shadow-sm border-2 border-[#e1d9be] flex flex-col gap-3.5"
         >
           <div class="flex items-center gap-3">
             <div
@@ -548,20 +560,42 @@
                 Island Status
               </p>
               <p class="text-sm font-bold text-[#5c3a21]">
-                {nookState.isResident(selectedVillager.id) ? "Current Resident" : "Non-Resident"}
+                {#if nookState.isResident(selectedVillager.id)}
+                  Current Resident
+                {:else if nookState.isFormerResident(selectedVillager.id)}
+                  Former Resident (Moved Out)
+                {:else}
+                  Non-Resident
+                {/if}
               </p>
             </div>
           </div>
-          <button
-            onclick={() => toggleResident(selectedVillager.id)}
-            class="px-4 py-2 rounded-xl text-xs font-black tracking-wider transition-all cursor-pointer {nookState.isResident(
-              selectedVillager.id
-            )
-              ? 'bg-[#ff8a8a] text-white shadow-[0_3px_0_#d96666] active:shadow-none active:translate-y-[3px] hover:bg-[#ff7575]'
-              : 'bg-[#6cd476] text-white shadow-[0_3px_0_#4ca454] active:shadow-none active:translate-y-[3px] hover:bg-[#5bc265]'}"
-          >
-            {nookState.isResident(selectedVillager.id) ? "Evict" : "Move In"}
-          </button>
+          <div class="grid grid-cols-3 gap-1 bg-[#fbf9f0] p-1 rounded-xl border border-[#e1d9be]">
+            <button
+              onclick={() => handleStatusChange("resident")}
+              class="py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer text-center {nookState.isResident(selectedVillager.id)
+                ? 'bg-[#6cd476] text-white shadow-sm'
+                : 'text-[#8a7f66] hover:bg-black/5 hover:text-[#5c3a21]'}"
+            >
+              Resident
+            </button>
+            <button
+              onclick={() => handleStatusChange("former")}
+              class="py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer text-center {nookState.isFormerResident(selectedVillager.id)
+                ? 'bg-[#f0b157] text-white shadow-sm'
+                : 'text-[#8a7f66] hover:bg-black/5 hover:text-[#5c3a21]'}"
+            >
+              Moved Out
+            </button>
+            <button
+              onclick={() => handleStatusChange("non-resident")}
+              class="py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer text-center {!nookState.isResident(selectedVillager.id) && !nookState.isFormerResident(selectedVillager.id)
+                ? 'bg-[#a39a83] text-white shadow-sm'
+                : 'text-[#8a7f66] hover:bg-black/5 hover:text-[#5c3a21]'}"
+            >
+              Non-Resident
+            </button>
+          </div>
         </div>
 
         <!-- Details -->
@@ -588,9 +622,28 @@
             </div>
             <div>
               <p class="text-[10px] font-bold text-[#8a7f66] uppercase">Preferred Outfit</p>
-              <p class="text-sm font-bold text-[#5c3a21] capitalize">
-                {selectedVillager.clothing || "Unknown"}
-              </p>
+              {#if selectedVillager.clothing}
+                {#await searchNookipediaItems(selectedVillager.clothing)}
+                  <p class="text-sm font-bold text-[#5c3a21] capitalize">
+                    {selectedVillager.clothing}
+                  </p>
+                {:then items}
+                  <div class="flex items-center gap-2">
+                    {#if items && items.length > 0 && items[0].image_url}
+                      <img src={items[0].image_url} alt={selectedVillager.clothing} class="w-8 h-8 object-contain drop-shadow-sm" />
+                    {/if}
+                    <p class="text-sm font-bold text-[#5c3a21] capitalize">
+                      {selectedVillager.clothing}
+                    </p>
+                  </div>
+                {:catch}
+                  <p class="text-sm font-bold text-[#5c3a21] capitalize">
+                    {selectedVillager.clothing}
+                  </p>
+                {/await}
+              {:else}
+                <p class="text-sm font-bold text-[#5c3a21] capitalize">Unknown</p>
+              {/if}
             </div>
             {#if selectedVillager.url}
               <div class="col-span-2 flex justify-end mt-2">
@@ -972,10 +1025,12 @@
                             class="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:bg-black/5 active:scale-90 cursor-pointer border-0 bg-transparent p-0"
                             title={nookState.isResident(villager.id)
                               ? "Evict Resident"
-                              : "Move Resident In"}
+                              : nookState.isFormerResident(villager.id)
+                                ? "Move Resident Back In"
+                                : "Move Resident In"}
                           >
                             <Home
-                              class={`w-4 h-4 transition-colors ${nookState.isResident(villager.id) ? "text-[#6cd476] fill-current" : "text-[#e1d9be] hover:text-[#6cd476]"}`}
+                              class={`w-4 h-4 transition-colors ${nookState.isResident(villager.id) ? "text-[#6cd476] fill-current" : nookState.isFormerResident(villager.id) ? "text-[#f0b157] fill-current" : "text-[#e1d9be] hover:text-[#6cd476]"}`}
                             />
                           </button>
                           <button

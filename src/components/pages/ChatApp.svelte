@@ -124,6 +124,40 @@
   
   let currentBoardStatus = $state<{ board: string; funded: boolean; raised: number } | null>(null);
   let showBoardDonation = $state(false);
+  let showBoardPicker = $state(false);
+
+  const getBoardThemeDetails = (board: string) => {
+    const normal = board.toLowerCase();
+    if (normal === 'bb/all') {
+      return { label: 'All Boards', stamp: '📢', pinColor: '#ef4444', pinDarkColor: '#b91c1c', paperBg: '#fffbeb' };
+    }
+    if (normal === 'bb/isabelle') {
+      return { label: 'Isabelle', stamp: '🎀', pinColor: '#eab308', pinDarkColor: '#a16207', paperBg: '#fefce8' };
+    }
+    if (normal === 'bb/tomnook') {
+      return { label: 'Tom Nook', stamp: '🍃', pinColor: '#22c55e', pinDarkColor: '#15803d', paperBg: '#f0fdf4' };
+    }
+    if (normal === 'bb/lottie') {
+      return { label: 'Lottie', stamp: '🏝️', pinColor: '#ec4899', pinDarkColor: '#be185d', paperBg: '#fdf2f8' };
+    }
+    if (normal === 'bb/kkslider') {
+      return { label: 'K.K. Slider', stamp: '🎸', pinColor: '#6b7280', pinDarkColor: '#374151', paperBg: '#f9fafb' };
+    }
+    if (normal === 'bb/blathers') {
+      return { label: 'Blathers', stamp: '🦉', pinColor: '#78350f', pinDarkColor: '#451a03', paperBg: '#fefbe8' };
+    }
+    if (board === islandBoard) {
+      const islandLabel = islandBoard.replace('bb/', '');
+      return { label: islandLabel, stamp: '🏡', pinColor: '#06b6d4', pinDarkColor: '#0e7490', paperBg: '#ecfeff' };
+    }
+    const label = board.replace('bb/', '');
+    return { label, stamp: '📝', pinColor: '#a855f7', pinDarkColor: '#7e22ce', paperBg: '#faf5ff' };
+  };
+
+  const hasPosts = (board: string) => {
+    if (board === "bb/All") return threads.length > 0;
+    return threads.some(t => t.subnook.toLowerCase() === board.toLowerCase());
+  };
 
   // Watch for board changes to show Lloid if unfunded
   $effect(() => {
@@ -387,8 +421,8 @@
 <div id="chat-app" class="flex flex-col h-full ac-app-screen relative">
   <!-- Header -->
   <NookAppHeader 
-    title={view === 'detail' && activeThread ? activeThread.title : "Bulletin Board"}
-    subtitle={view === 'detail' && activeThread ? activeThread.subnook : "Bulleted boards & local logs"}
+    title={view === 'detail' && activeThread ? activeThread.title : (selectedBoardFilter === 'bb/All' ? "Bulletin Board" : selectedBoardFilter)}
+    subtitle={view === 'detail' && activeThread ? activeThread.subnook : (selectedBoardFilter === 'bb/All' ? "Bulleted boards & local logs" : "Bulletin Board")}
     bgClass="bg-[#eb6a9d]"
     textClass="text-white"
   >
@@ -442,17 +476,21 @@
     {/snippet}
   </NookAppHeader>
  
-  <!-- Boards Horizontal Selector Bar -->
+  <!-- Boards Cozy Selector Entry Bar -->
   {#if view === "list"}
-    <div class="bg-[#f4f1e3] border-b-2 border-[#e1d9be] py-2.5 px-3 flex gap-2.5 overflow-x-auto shrink-0 ac-scrollbar shadow-inner">
-      {#each allBoards as sub}
-        <button
-          onclick={() => selectedBoardFilter = sub}
-          class={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider transition-all border shrink-0 cursor-pointer ${selectedBoardFilter === sub ? 'bg-[#eb6a9d] border-[#c94d7d] text-white shadow-sm scale-105' : 'bg-white hover:bg-gray-50 border-[#dcd3be] text-gray-700 active:scale-95'}`}
-        >
-          {sub}
-        </button>
-      {/each}
+    <div class="bg-[#f4f1e3] border-b-2 border-[#e1d9be] py-2 px-4 flex justify-between items-center shrink-0">
+      <div class="flex items-center gap-1.5">
+        <span class="text-[10px] font-black text-[#8a7f66] uppercase tracking-wider">Board:</span>
+        <span class="bg-[#eb6a9d] border border-[#c94d7d] text-white px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider shadow-sm">
+          {selectedBoardFilter}
+        </span>
+      </div>
+      <button 
+        onclick={() => showBoardPicker = true}
+        class="bg-[#8c6747] hover:bg-[#78563a] border-b-4 border-[#5c3e26] active:border-b-0 active:translate-y-[4px] text-[#fdfdfc] text-[10px] font-black tracking-wider uppercase px-3 py-1.5 rounded-xl shadow-md transition-all flex items-center gap-1 cursor-pointer"
+      >
+        <span>🪵 Switch Board</span>
+      </button>
     </div>
   {/if}
  
@@ -656,4 +694,104 @@
       onFunded={() => { currentBoardStatus!.funded = true; showBoardDonation = false; }}
     />
   {/if}
+
+  <!-- Resident Notice Board Selector Overlay -->
+  {#if showBoardPicker}
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm z-[100] flex flex-col justify-end p-4 animate-fade-in">
+      <!-- Main corkboard container with premium double wood borders -->
+      <div class="w-full max-h-[85%] bg-[#a67958] border-[10px] border-[#664329] rounded-[32px] shadow-[0_16px_36px_rgba(0,0,0,0.55),inset_0_0_0_4px_#8c5c36,inset_0_0_20px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden relative p-3.5 pb-5 animate-scale-up">
+        
+        <!-- Cork texture effect overlay -->
+        <div class="absolute inset-0 bg-[radial-gradient(#8f6343_15%,_transparent_15%)] bg-[size:10px_10px] opacity-30 pointer-events-none"></div>
+
+        <!-- Wooden header board with heavy signboard borders -->
+        <div class="relative z-10 w-full bg-[#f6edd2] border-4 border-[#8c6747] border-b-[8px] rounded-2xl py-2 px-3 text-center shadow-md mb-4 flex justify-between items-center">
+          <span class="text-xl animate-bounce">🐤</span>
+          
+          <div class="flex flex-col">
+            <span class="text-xs font-black text-[#5c3e26] uppercase tracking-widest leading-none">Resident Notice Board</span>
+            <span class="text-[8px] font-black text-[#9b8265] uppercase mt-0.5 tracking-wider">Tap a flyer to select board</span>
+          </div>
+
+          <span class="text-xl">🦉</span>
+        </div>
+
+        <!-- Pinned notes/flyers grid -->
+        <div class="flex-1 overflow-y-auto px-1 py-2 grid grid-cols-2 gap-3.5 ac-scrollbar relative z-10">
+          {#each allBoards as board, index}
+            {@const details = getBoardThemeDetails(board)}
+            <button
+              onclick={() => { selectedBoardFilter = board; showBoardPicker = false; }}
+              class="w-full aspect-[4/3] rounded-xl p-3 border-2 border-[#8c7f68] border-b-[6px] border-r-[4px] border-b-[#756852] border-r-[#7c6f58] shadow-md flex flex-col justify-between items-center text-center relative hover:scale-[1.05] hover:shadow-xl active:scale-[0.97] transition-all cursor-pointer group"
+              style="transform: rotate({(index % 2 === 0 ? -1.8 : 1.8) + (index * 0.4) % 1.5}deg); background-color: {details.paperBg};"
+            >
+              <!-- Colored pushpin at top center -->
+              <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full shadow-md z-20 flex items-center justify-center"
+                   style="background: radial-gradient(circle at 35% 35%, {details.pinColor} 0%, {details.pinDarkColor} 80%); border: 1.5px solid rgba(0,0,0,0.15);">
+                <div class="w-0.5 h-1 bg-black/40 absolute -bottom-1"></div>
+              </div>
+
+              <!-- Board Stamp/Symbol -->
+              <div class="text-2xl mt-1 select-none filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] group-hover:animate-bounce">
+                {details.stamp}
+              </div>
+
+              <!-- Board Name / Label -->
+              <div class="flex flex-col items-center w-full font-sans">
+                <span class="text-[11px] font-black text-[#5c3a21] leading-tight max-w-full truncate">{details.label}</span>
+                <span class="text-[8px] font-extrabold opacity-60 tracking-wider font-mono text-[#8a7a5f] mt-0.5">{board}</span>
+              </div>
+
+              <!-- Interactive details (little yellow bird 🐦 on top if active) -->
+              {#if hasPosts(board)}
+                <div class="absolute -top-3 -right-2 bg-yellow-100 text-yellow-800 text-[8px] font-black px-1.5 py-0.5 rounded-full border border-yellow-300 shadow-sm animate-pulse flex items-center gap-0.5 z-10">
+                  🐤 <span class="uppercase tracking-tighter">active</span>
+                </div>
+              {/if}
+            </button>
+          {/each}
+
+          <!-- Add Board Note -->
+          <button
+            onclick={() => { showBoardPicker = false; view = "create_board"; }}
+            class="w-full aspect-[4/3] border-4 border-dashed border-[#8c7f68]/70 rounded-xl p-3 shadow-inner flex flex-col justify-center items-center text-center relative hover:scale-[1.05] hover:bg-white/10 active:scale-[0.97] transition-all cursor-pointer bg-white/5 group"
+            style="transform: rotate(-1deg)"
+          >
+            <div class="w-7 h-7 rounded-full bg-[#eb6a9d] text-white flex items-center justify-center shadow-md mb-1.5 group-hover:scale-110 transition-transform">
+              <Plus class="w-4 h-4 stroke-[3px]" />
+            </div>
+            <span class="text-[10px] font-black text-[#5c3a21] uppercase tracking-wider">New Board</span>
+          </button>
+        </div>
+
+        <!-- Wooden signpost Cancel Button at bottom -->
+        <div class="relative z-10 w-full mt-4 flex justify-center">
+          <button 
+            onclick={() => showBoardPicker = false}
+            class="bg-[#bb3d3d] hover:bg-[#a12f2f] border-b-4 border-[#8c2222] active:border-b-0 active:translate-y-[4px] text-white text-[10px] font-black tracking-wider uppercase px-6 py-2 rounded-xl shadow-md transition-all cursor-pointer"
+          >
+            ❌ Cancel
+          </button>
+        </div>
+
+      </div>
+    </div>
+  {/if}
 </div>
+
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes scaleUp {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out forwards;
+  }
+  .animate-scale-up {
+    animation: scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+</style>

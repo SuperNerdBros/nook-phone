@@ -13,7 +13,10 @@
 		playSound,
 		compact = false,
 		badgeBg = '',
-		badgeColor = ''
+		badgeColor = '',
+		linkText = '',
+		postLinkText = '',
+		onLinkClick
 	}: {
 		title?: string;
 		children?: Snippet;
@@ -26,7 +29,12 @@
 		compact?: boolean;
 		badgeBg?: string;
 		badgeColor?: string;
+		linkText?: string;
+		postLinkText?: string;
+		onLinkClick?: () => void;
 	} = $props();
+
+	let fullText = $derived(dialogText + (linkText || '') + (postLinkText || ''));
 
 	const CHARACTER_COLORS: Record<string, { bg: string; text: string }> = {
 		'Tom Nook': { bg: '#22c55e', text: '#ffffff' },
@@ -41,8 +49,8 @@
 	let textTimer: ReturnType<typeof setInterval> | null = null;
 
 	$effect(() => {
-		if (dialogText && isActive) {
-			startTypewriter(dialogText);
+		if (fullText && isActive) {
+			startTypewriter(fullText);
 		} else if (!isActive) {
 			if (textTimer) clearInterval(textTimer);
 			typedText = '';
@@ -93,7 +101,11 @@
 						<!-- Animated / Typed Dialogue Text -->
 						<div class="flex-1 py-1">
 							<p class={compact ? "text-base sm:text-lg text-[#807256] leading-snug font-bold italic" : "text-xl sm:text-2xl text-[#807256] leading-snug font-medium min-h-[3.6rem]"}>
-								{typedText}
+								{#if linkText}
+									<span>{typedText.substring(0, dialogText.length)}{#if typedText.length > dialogText.length}<a href="javascript:void(0)" onclick={onLinkClick} class="text-[#eb6a9d] hover:text-[#c94d7d] underline cursor-pointer transition-colors inline decoration-[1.5px]">{typedText.substring(dialogText.length, dialogText.length + linkText.length)}</a>{/if}{#if typedText.length > dialogText.length + linkText.length}{typedText.substring(dialogText.length + linkText.length)}{/if}</span>
+								{:else}
+									{typedText}
+								{/if}
 								{#if !textDone}
 									<span class="inline-block w-1.5 h-5 bg-[#807256] animate-pulse ml-0.5 align-middle"></span>
 								{/if}

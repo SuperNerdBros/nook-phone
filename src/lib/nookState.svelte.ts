@@ -81,6 +81,7 @@ export interface NookOSState {
     imageUrl?: string;
   };
   residents: string[];
+  formerResidents: string[];
   milesChallenges: MilesChallenge[];
   chatLog: ChatMessage[];
   notifications: NookNotification[];
@@ -182,6 +183,7 @@ const INITIAL_STATE: NookOSState = {
     buildings: [...mapData]
   },
   residents: [],
+  formerResidents: [],
   milesChallenges: [...milesData],
   chatLog: [
     { id: "c1", sender: "Tom Nook", content: "Welcome to NookOS, yes, yes! Use your phone to manage your island and check the directories!", timestamp: "10:00 AM", isNpc: true, avatar: "🍃" }
@@ -266,6 +268,7 @@ class NookStateManager {
   set map(val) { this.state.map = val; }
 
   get residents() { return this.state.residents || []; }
+  get formerResidents() { return this.state.formerResidents || []; }
 
   get milesChallenges() { return this.state.milesChallenges; }
   set milesChallenges(val) { this.state.milesChallenges = val; }
@@ -1043,11 +1046,16 @@ class NookStateManager {
 
   toggleResident(contactId: string) {
     if (!this.state.residents) this.state.residents = [];
+    if (!this.state.formerResidents) this.state.formerResidents = [];
     if (this.state.residents.includes(contactId)) {
       this.state.residents = this.state.residents.filter(id => id !== contactId);
+      if (!this.state.formerResidents.includes(contactId)) {
+        this.state.formerResidents.push(contactId);
+      }
     } else {
       if (this.state.residents.length < 10) {
         this.state.residents.push(contactId);
+        this.state.formerResidents = this.state.formerResidents.filter(id => id !== contactId);
       } else {
         this.addNotification("Island Full!", "You can only have up to 10 residents on your island.", "Tom Nook");
         return;
@@ -1059,6 +1067,31 @@ class NookStateManager {
   isResident(contactId: string): boolean {
     if (!this.state.residents) return false;
     return this.state.residents.includes(contactId);
+  }
+
+  isFormerResident(contactId: string): boolean {
+    if (!this.state.formerResidents) return false;
+    return this.state.formerResidents.includes(contactId);
+  }
+
+  setResidentStatus(contactId: string, status: "resident" | "former" | "non-resident") {
+    if (!this.state.residents) this.state.residents = [];
+    if (!this.state.formerResidents) this.state.formerResidents = [];
+
+    this.state.residents = this.state.residents.filter(id => id !== contactId);
+    this.state.formerResidents = this.state.formerResidents.filter(id => id !== contactId);
+
+    if (status === "resident") {
+      if (this.state.residents.length < 10) {
+        this.state.residents.push(contactId);
+      } else {
+        this.addNotification("Island Full!", "You can only have up to 10 residents on your island.", "Tom Nook");
+        return;
+      }
+    } else if (status === "former") {
+      this.state.formerResidents.push(contactId);
+    }
+    this.save();
   }
 
   addContact(contactId: string) {
@@ -1079,6 +1112,9 @@ class NookStateManager {
     }
     if (this.state.residents) {
       this.state.residents = this.state.residents.filter(id => id !== contactId);
+    }
+    if (this.state.formerResidents) {
+      this.state.formerResidents = this.state.formerResidents.filter(id => id !== contactId);
     }
     this.save();
   }
