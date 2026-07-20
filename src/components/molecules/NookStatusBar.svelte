@@ -12,15 +12,21 @@
 <div class="bg-transparent px-8 pr-4 pt-3 pb-2 flex justify-between items-center text-[18px] font-['Varela_Round',sans-serif] text-[#d0cbb5] font-bold select-none z-[70] shrink-0">
   <!-- Left side (Signal / Notifications) -->
   <div class="w-[55px] flex items-center justify-center gap-1.5">
-    <img 
-      src={resolveAssetUrl(cellularStatusImg)} 
-      alt="Signal" 
-      class="h-[18px] object-contain cursor-pointer hover:scale-105 active:scale-95 transition" 
-      style={isProUser() ? "filter: invert(72%) sepia(80%) saturate(450%) hue-rotate(65deg) brightness(1.2) contrast(1);" : "opacity: 0.7;"} 
-      onclick={() => {
-        ctx.showPremiumUpsell = true;
-      }}
-    />
+    {#if nookState.settings.airplaneMode}
+      <div class="h-[18px] w-[24px] flex items-center justify-center opacity-40">
+        <Wifi class="w-4 h-4 text-[#d0cbb5] stroke-[3px]" />
+      </div>
+    {:else}
+      <img 
+        src={resolveAssetUrl(cellularStatusImg)} 
+        alt="Signal" 
+        class="h-[18px] object-contain cursor-pointer hover:scale-105 active:scale-95 transition" 
+        style={isProUser() ? "filter: invert(72%) sepia(80%) saturate(450%) hue-rotate(65deg) brightness(1.2) contrast(1);" : "opacity: 0.7;"} 
+        onclick={() => {
+          ctx.showPremiumUpsell = true;
+        }}
+      />
+    {/if}
     <button 
       onclick={() => {
         ctx.showNotificationCenter = !ctx.showNotificationCenter;
@@ -32,7 +38,7 @@
       title="Notifications"
     >
       <Bell class="w-4 h-4 text-[#d0cbb5] stroke-[2.5px]" />
-      {#if nookState.notifications.some(n => !n.isRead)}
+      {#if nookState.notifications.some(n => !n.isRead) && !nookState.settings.doNotDisturb}
         <span class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
       {/if}
     </button>
@@ -44,10 +50,17 @@
   </div>
 
   <!-- Right side (Location / Power) -->
-  <div class="w-[55px] flex items-center justify-center gap-1.5">
-    <MapPin class="w-[22px] h-[22px] text-[#d0cbb5] stroke-[2.5px]" />
-    <button onclick={ctx.handlePowerButton} class="bg-transparent border-0 p-0 cursor-pointer flex items-center hover:opacity-70 transition-opacity" title="Sleep / Lock">
-      <Battery class="w-5 h-5 text-[#d0cbb5] stroke-[2px]" />
-    </button>
+  <div class="w-[55px] flex items-center justify-end gap-1.5 pl-1">
+    {#if nookState.settings.locationServices}
+      <MapPin class="w-[20px] h-[20px] text-[#d0cbb5] stroke-[2.5px]" />
+    {/if}
+    <div class="flex items-center gap-0.5">
+      {#if nookState.settings.showBatteryPercentage}
+        <span class="text-[10px] font-bold text-[#d0cbb5] mr-0.5">100%</span>
+      {/if}
+      <button onclick={ctx.handlePowerButton} class="bg-transparent border-0 p-0 cursor-pointer flex items-center hover:opacity-70 transition-opacity" title="Sleep / Lock">
+        <Battery class="w-5 h-5 text-[#d0cbb5] stroke-[2px]" />
+      </button>
+    </div>
   </div>
 </div>

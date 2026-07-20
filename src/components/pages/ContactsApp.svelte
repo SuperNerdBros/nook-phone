@@ -3,7 +3,7 @@
   import { onMount } from "svelte";
   import nookState from "@/lib/nookState.svelte";
   import { fade } from "svelte/transition";
-  import { fetchNookipediaVillagers, searchNookipediaItems } from "@/lib/api";
+  import { fetchNookipediaVillagers, searchNookipediaItems, fetchNookipediaClothingImage } from "@/lib/api";
   import {
     Search,
     Star,
@@ -624,14 +624,14 @@
             <div>
               <p class="text-[10px] font-bold text-[#8a7f66] uppercase">Preferred Outfit</p>
               {#if selectedVillager.clothing}
-                {#await searchNookipediaItems(selectedVillager.clothing)}
+                {#await fetchNookipediaClothingImage(selectedVillager.clothing)}
                   <p class="text-sm font-bold text-[#5c3a21] capitalize">
                     {selectedVillager.clothing}
                   </p>
-                {:then items}
+                {:then imageUrl}
                   <div class="flex items-center gap-2">
-                    {#if items && items.length > 0 && items[0].image_url}
-                      <img src={items[0].image_url} alt={selectedVillager.clothing} class="w-8 h-8 object-contain drop-shadow-sm" />
+                    {#if imageUrl}
+                      <img src={imageUrl} alt={selectedVillager.clothing} class="w-8 h-8 object-contain drop-shadow-sm" />
                     {/if}
                     <p class="text-sm font-bold text-[#5c3a21] capitalize">
                       {selectedVillager.clothing}

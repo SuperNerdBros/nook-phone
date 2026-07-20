@@ -409,7 +409,7 @@
               onclick={() => {
                 dialogState = 'none';
                 pendingPhotoUrl = '';
-                ctx.navigate('passport');
+                nookState.navigate('passport');
               }}
               class="w-full bg-[#1ca349] border-0 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm hover:bg-[#188a3e] active:scale-95 transition-transform text-center cursor-pointer"
             >

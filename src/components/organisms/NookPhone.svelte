@@ -161,13 +161,37 @@
       nookState.navigate(initialApp);
     }
 
+    let idleTimer: ReturnType<typeof setTimeout>;
+    
+    const resetIdleTimer = () => {
+      clearTimeout(idleTimer);
+      if (nookState.settings.autoLockTime > 0 && !nookState.isPhoneLocked && !ctx.isBooting) {
+        idleTimer = setTimeout(() => {
+          nookState.setPhoneLocked(true);
+        }, nookState.settings.autoLockTime * 60 * 1000);
+      }
+    };
+
+    const handleInteraction = () => {
+      resetIdleTimer();
+    };
+
+    window.addEventListener('pointerdown', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+    
+    // Initial setup for idle timer
+    resetIdleTimer();
+
     return () => {
       clearTimeout(initialTipTimeout);
       clearInterval(tipInterval);
       clearTimeout(initialLoanTimeout);
       clearInterval(loanInterval);
+      clearTimeout(idleTimer);
       window.removeEventListener("nook-notification", handleNotificationReceived);
       window.removeEventListener("hashchange", handleHashChange);
+      window.removeEventListener('pointerdown', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
     };
   });
 </script>

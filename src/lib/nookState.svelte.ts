@@ -99,6 +99,13 @@ export interface NookOSState {
     reduceMotion: boolean;
     soundEffects: boolean;
     gridSize: number;
+    airplaneMode: boolean;
+    haptics: boolean;
+    autoLockTime: number; // 0 = never, 1 = 1min, 5 = 5min
+    doNotDisturb: boolean;
+    requirePasscode: boolean;
+    passcode: string;
+    locationServices: boolean;
     defaultApps: Record<string, string>;
   };
   unreadDMs: number;
@@ -211,6 +218,13 @@ const INITIAL_STATE: NookOSState = {
     reduceMotion: false,
     soundEffects: true,
     gridSize: 3,
+    airplaneMode: false,
+    haptics: true,
+    autoLockTime: 0,
+    doNotDisturb: false,
+    requirePasscode: false,
+    passcode: "0000",
+    locationServices: true,
     defaultApps: {}
   },
   unreadDMs: 0,
@@ -1048,6 +1062,8 @@ class NookStateManager {
 
 
   addNotification(title: string, message: string, sender: string, actionAppId?: string) {
+    if (this.state.settings.airplaneMode) return;
+    
     if (!this.state.notifications) {
       this.state.notifications = [];
     }
@@ -1070,7 +1086,9 @@ class NookStateManager {
     this.save();
     
     if (typeof window !== "undefined") {
-      playSound('bell', !this.state.settings.soundEffects);
+      if (!this.state.settings.doNotDisturb) {
+        playSound('bell', !this.state.settings.soundEffects);
+      }
       window.dispatchEvent(new CustomEvent("nook-notification", { detail: newNotif }));
     }
   }

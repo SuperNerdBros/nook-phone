@@ -372,6 +372,19 @@ export const searchNookipediaItems = async (query: string, category?: string) =>
   }
 };
 
+export const fetchNookipediaClothingImage = async (clothingName: string) => {
+  try {
+    const url = `https://nookipedia.com/w/api.php?action=cargoquery&format=json&origin=*&tables=nh_clothing_variation&fields=image_url&where=en_name='${encodeURIComponent(clothingName.replace(/'/g, "\\'"))}'`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.cargoquery?.[0]?.title?.image_url || null;
+  } catch (e) {
+    console.error('Failed to fetch Nookipedia clothing image', e);
+    return null;
+  }
+};
+
 export const fetchPatreonAuthUrl = async (returnUrl?: string) => {
   try {
     const root = window.wpApiSettings?.root || '/wp-json/';

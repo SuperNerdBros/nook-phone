@@ -14,7 +14,15 @@
     ChevronDown,
     X,
     Lock,
-    Coins
+    Coins,
+    Bell,
+    Shield,
+    Battery,
+    Wifi,
+    Vibrate,
+    Timer,
+    MapPin,
+    KeyRound
   } from "@lucide/svelte";
   import { fly, fade } from "svelte/transition";
   import nookState from "@/lib/nookState.svelte";
@@ -246,6 +254,20 @@
       color: "bg-[#ebd478]"
     },
     {
+      id: "notifications",
+      name: "Notifications",
+      description: "Do Not Disturb, banners",
+      icon: Bell,
+      color: "bg-[#f49b5c]"
+    },
+    {
+      id: "privacy",
+      name: "Privacy & Security",
+      description: "Passcode, location",
+      icon: Shield,
+      color: "bg-[#8ea7d6]"
+    },
+    {
       id: "about",
       name: "About NookOS",
       description: "Version info, legal, privacy",
@@ -300,6 +322,63 @@
     if (!category) return [];
     return phone.allApps.filter((app) => category.filter(app));
   };
+
+  async function toggleBatteryPercentage() {
+    nookState.settings.showBatteryPercentage = !nookState.settings.showBatteryPercentage;
+    nookState.save();
+    if (nookState.settings.soundEffects) {
+      const { playSound } = await import("@/lib/audio");
+      playSound("switch");
+    }
+  }
+
+  async function toggleAirplaneMode() {
+    nookState.settings.airplaneMode = !nookState.settings.airplaneMode;
+    nookState.save();
+    if (nookState.settings.soundEffects) {
+      const { playSound } = await import("@/lib/audio");
+      playSound("switch");
+    }
+  }
+
+  async function toggleHaptics() {
+    nookState.settings.haptics = !nookState.settings.haptics;
+    nookState.save();
+    if (nookState.settings.haptics && navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+    if (nookState.settings.soundEffects) {
+      const { playSound } = await import("@/lib/audio");
+      playSound("switch");
+    }
+  }
+
+  async function toggleDoNotDisturb() {
+    nookState.settings.doNotDisturb = !nookState.settings.doNotDisturb;
+    nookState.save();
+    if (nookState.settings.soundEffects) {
+      const { playSound } = await import("@/lib/audio");
+      playSound("switch");
+    }
+  }
+
+  async function toggleLocationServices() {
+    nookState.settings.locationServices = !nookState.settings.locationServices;
+    nookState.save();
+    if (nookState.settings.soundEffects) {
+      const { playSound } = await import("@/lib/audio");
+      playSound("switch");
+    }
+  }
+
+  async function toggleRequirePasscode() {
+    nookState.settings.requirePasscode = !nookState.settings.requirePasscode;
+    nookState.save();
+    if (nookState.settings.soundEffects) {
+      const { playSound } = await import("@/lib/audio");
+      playSound("switch");
+    }
+  }
 </script>
 
 <div class="h-full flex flex-col font-['Varela_Round',sans-serif] nook-settings-bg">
