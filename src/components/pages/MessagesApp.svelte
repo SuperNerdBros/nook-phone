@@ -59,7 +59,7 @@
     is_read: boolean;
   }
 
-  let stationeryOptions = $state<any[]>([
+  let stationeryOptions: any[] = $state([
     {
       id: "airmail",
       name: "Airmail",
@@ -87,7 +87,7 @@
       style:
         "background-image: radial-gradient(#ffb6c1 15%, transparent 16%), radial-gradient(#ffb6c1 15%, transparent 16%); background-size: 20px 20px; background-position: 0 0, 10px 10px;"
     }
-  ];
+  ]);
 
   const ctx = getPhoneContext();
   let letters = $state<Letter[]>([]);
@@ -108,6 +108,81 @@
 
   let selectedRecipient = $state<any>(null);
   let selectedStationery = $state<any>(stationeryOptions[0]);
+  let dynamicTextColor = $state('#4c4637');
+  let activeLetterTextColor = $state('#4c4637');
+
+  async function calculateTextColor(imageUrl: string, fallbackColor: string, setter: (color: string) => void) {
+    if (!imageUrl) {
+      setter(fallbackColor);
+      return;
+    }
+    
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          setter(fallbackColor);
+          resolve(null);
+          return;
+        }
+        
+        canvas.width = 50;
+        canvas.height = 50;
+        ctx.drawImage(img, 0, 0, 50, 50);
+        
+        const imageData = ctx.getImageData(0, 0, 50, 50);
+        const data = imageData.data;
+        
+        let r = 0, g = 0, b = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i];
+          g += data[i+1];
+          b += data[i+2];
+        }
+        
+        const pixels = data.length / 4;
+        r /= pixels;
+        g /= pixels;
+        b /= pixels;
+        
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        
+        if (luminance < 0.5) {
+          setter('#ffffff');
+        } else {
+          setter(fallbackColor);
+        }
+        resolve(null);
+      };
+      img.onerror = () => {
+        setter(fallbackColor);
+        resolve(null);
+      };
+      img.src = imageUrl;
+    });
+  }
+
+  $effect(() => {
+    if (selectedStationery && selectedStationery.image_url) {
+      calculateTextColor(selectedStationery.image_url, selectedStationery.color || '#4c4637', (c) => dynamicTextColor = c);
+    } else {
+      dynamicTextColor = selectedStationery?.color || '#4c4637';
+    }
+  });
+
+  $effect(() => {
+    if (activeLetter) {
+      const stationery = getStationery(activeLetter.stationery_id);
+      if (stationery && stationery.image_url) {
+        calculateTextColor(stationery.image_url, stationery.color || '#4c4637', (c) => activeLetterTextColor = c);
+      } else {
+        activeLetterTextColor = stationery?.color || '#4c4637';
+      }
+    }
+  });
 
   let activeCategory = $state("All");
   const categories = ["All", "Inbox", "Unread", "Outbox", "Villagers", "Best Friends", "Favorites"];
@@ -275,7 +350,9 @@
           id: c.id,
           name: c.name,
           bgClass: "bg-white",
-          style: `background-image: url('${c.image_url}'); background-size: cover; background-position: center; border: 8px solid #f0e9d6; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);`
+          style: `background-image: url('${c.image_url}'); background-size: cover; background-position: center; border: 8px solid #f0e9d6; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);`,
+          color: c.penColor1 || '#4c4637',
+          image_url: c.image_url
         }));
         
         // Update selected if it was the default
@@ -764,7 +841,7 @@
   const visibleReplies = $derived(replies.slice(0, visibleRepliesCount));
 
   const getStationery = (id?: string) => {
-    return STATIONERY_OPTIONS.find((s) => s.id === id) || STATIONERY_OPTIONS[0];
+    return stationeryOptions.find((s) => s.id === id) || stationeryOptions[0];
   };
 </script>
 
@@ -1098,8 +1175,8 @@
           <textarea
             bind:value={newMessage}
             placeholder="Write your letter here..."
-            class="w-full flex-1 bg-transparent border-none resize-none font-medium leading-relaxed text-[#4c4637] placeholder-[#4c4637]/40 focus:outline-none ac-scrollbar mt-2"
-            style="font-family: 'Comic Sans MS', cursive, sans-serif;"
+            class="w-full flex-1 bg-transparent border-none resize-none font-medium leading-relaxed focus:outline-none ac-scrollbar mt-2"
+            style={`font-family: 'Comic Sans MS', cursive, sans-serif; color: ${dynamicTextColor};`}
           ></textarea>
 
           <button
@@ -1144,8 +1221,8 @@
               style={stationery.style}
             >
               <div
-                class="flex-1 font-medium leading-relaxed text-[#4c4637] overflow-y-auto ac-scrollbar whitespace-pre-wrap mt-2"
-                style="font-family: 'Comic Sans MS', cursive, sans-serif;"
+                class="flex-1 font-medium leading-relaxed overflow-y-auto ac-scrollbar whitespace-pre-wrap mt-2"
+                style={`font-family: 'Comic Sans MS', cursive, sans-serif; color: ${activeLetterTextColor};`}
               >
                 {activeLetter.content}
               </div>
