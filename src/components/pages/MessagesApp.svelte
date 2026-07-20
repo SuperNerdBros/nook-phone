@@ -559,9 +559,9 @@
           selectedStationery.id
         );
 
-        if (result && result.id) {
+        if (result && (result.id || result.dm_id)) {
           const newLetter = {
-            id: result.id,
+            id: result.id || result.dm_id,
             partner_id: selectedRecipient.ID,
             partner_name: selectedRecipient.display_name,
             subject: subject,
@@ -599,9 +599,9 @@
           const partnerId = activeChatPartner?.id || activeLetter.partner_id;
           const stationeryId = activeLetter.stationery_id || "airmail";
           const result = await createPrivateLetter(partnerId, subject, newMessage, stationeryId);
-          if (result && result.id) {
+          if (result && (result.id || result.dm_id)) {
             const newLetter = {
-              id: result.id,
+              id: result.id || result.dm_id,
               partner_id: partnerId,
               partner_name: activeChatPartner?.name || activeLetter.partner_name,
               subject: subject,
