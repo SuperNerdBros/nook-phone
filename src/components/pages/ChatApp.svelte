@@ -6,7 +6,7 @@
     MessageSquare, Send, Trash2, ArrowLeft, Plus, 
     ThumbsUp, Calendar, User, MessageCircle, Hash, Coins
   , X } from '@lucide/svelte';
-  import { fetchThreads, createThread, fetchComments, createComment, isProUser, tipThread, getBoardStatus, fetchNookipediaVillagers } from '@/lib/api';
+  import { fetchThreads, createThread, fetchComments, createComment, isProUser, tipThread, getBoardStatus, fetchAcnhVillagers } from '@/lib/api';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NewThreadForm from './NewThreadForm.svelte';
   import CreateBoardForm from './CreateBoardForm.svelte';
@@ -419,7 +419,7 @@
     newSubnook = islandBoard;
     loadThreads();
     
-    fetchNookipediaVillagers().then(res => {
+    fetchAcnhVillagers().then(res => {
       if (res) villagers = res;
     });
 

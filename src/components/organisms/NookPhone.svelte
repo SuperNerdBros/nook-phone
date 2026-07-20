@@ -27,6 +27,7 @@
   import PrivacyApp from '../pages/PrivacyApp.svelte';
   import TermsApp from '../pages/TermsApp.svelte';
   import AbdApp from '../pages/AbdApp.svelte';
+  import SharingApp from '../pages/SharingApp.svelte';
 
   import NookBootScreen from '../molecules/NookBootScreen.svelte';
   import NookStatusBar from '../molecules/NookStatusBar.svelte';
@@ -248,6 +249,7 @@
             {#if nookState.currentApp === "privacy"} <PrivacyApp /> {/if}
             {#if nookState.currentApp === "terms"} <TermsApp /> {/if}
             {#if nookState.currentApp === "abd"} <AbdApp /> {/if}
+            {#if nookState.currentApp === "sharing"} <SharingApp /> {/if}
 
             <!-- Launching embedded directory pinned frames -->
             <NookExternalAppScreen />

@@ -658,7 +658,116 @@
                   </button>
                 </div>
 
-                <div class="flex items-center justify-between py-3">
+                <div
+                  class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]"
+                >
+                  <div class="flex items-center gap-4">
+                    <div
+                      class="w-10 h-10 rounded-2xl bg-[#75cfbe] border-2 border-[#5ab2a1] flex items-center justify-center text-[#5c3a21] shadow-inner"
+                    >
+                      <Battery class="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div class="font-black text-[#5c5446] text-sm">Battery Percentage</div>
+                      <div class="text-[10px] font-bold text-[#8a816f]">
+                        Show exact battery level
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    aria-label="Toggle battery percentage"
+                    onclick={toggleBatteryPercentage}
+                    class={`w-14 h-8 rounded-full p-1.5 transition-colors cursor-pointer border-2 shadow-inner flex items-center ${nookState.settings.showBatteryPercentage ? "bg-[#6cd476] border-[#4ca454]" : "bg-[#e1d9be] border-[#dcd3be]"}`}
+                  >
+                    <div
+                      class={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${nookState.settings.showBatteryPercentage ? "translate-x-5" : "translate-x-0"}`}
+                    ></div>
+                  </button>
+                </div>
+
+                <div
+                  class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]"
+                >
+                  <div class="flex items-center gap-4">
+                    <div
+                      class="w-10 h-10 rounded-2xl bg-[#a0d6ed] border-2 border-[#83b9d0] flex items-center justify-center text-[#5c3a21] shadow-inner"
+                    >
+                      <Wifi class="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div class="font-black text-[#5c5446] text-sm">Airplane Mode</div>
+                      <div class="text-[10px] font-bold text-[#8a816f]">
+                        Disable wireless connections
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    aria-label="Toggle airplane mode"
+                    onclick={toggleAirplaneMode}
+                    class={`w-14 h-8 rounded-full p-1.5 transition-colors cursor-pointer border-2 shadow-inner flex items-center ${nookState.settings.airplaneMode ? "bg-[#6cd476] border-[#4ca454]" : "bg-[#e1d9be] border-[#dcd3be]"}`}
+                  >
+                    <div
+                      class={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${nookState.settings.airplaneMode ? "translate-x-5" : "translate-x-0"}`}
+                    ></div>
+                  </button>
+                </div>
+
+                <div
+                  class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]"
+                >
+                  <div class="flex items-center gap-4">
+                    <div
+                      class="w-10 h-10 rounded-2xl bg-[#e3b5e8] border-2 border-[#c598c9] flex items-center justify-center text-[#5c3a21] shadow-inner"
+                    >
+                      <Vibrate class="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div class="font-black text-[#5c5446] text-sm">Haptic Feedback</div>
+                      <div class="text-[10px] font-bold text-[#8a816f]">
+                        Vibrate on interaction
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    aria-label="Toggle haptics"
+                    onclick={toggleHaptics}
+                    class={`w-14 h-8 rounded-full p-1.5 transition-colors cursor-pointer border-2 shadow-inner flex items-center ${nookState.settings.haptics ? "bg-[#6cd476] border-[#4ca454]" : "bg-[#e1d9be] border-[#dcd3be]"}`}
+                  >
+                    <div
+                      class={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${nookState.settings.haptics ? "translate-x-5" : "translate-x-0"}`}
+                    ></div>
+                  </button>
+                </div>
+
+                <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
+                  <div class="flex items-center gap-4">
+                    <div
+                      class="w-10 h-10 rounded-2xl bg-[#c5e693] border-2 border-[#a7c777] flex items-center justify-center text-[#5c3a21] shadow-inner"
+                    >
+                      <Timer class="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div class="font-black text-[#5c5446] text-sm">Auto-Lock Timer</div>
+                      <div class="text-[10px] font-bold text-[#8a816f]">
+                        Time before screen locks
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="flex items-center gap-1 bg-[#f4f2e8] p-1 rounded-full border-2 border-[#e1d9be]"
+                  >
+                    {#each [{label: '1m', val: 1}, {label: '5m', val: 5}, {label: 'Off', val: 0}] as option}
+                      <button
+                        onclick={() => nookState.updateSettings({ autoLockTime: option.val })}
+                        class={`h-8 px-2 rounded-full flex items-center justify-center text-xs font-black transition-colors cursor-pointer border-0 shadow-sm ${nookState.settings.autoLockTime === option.val ? "bg-[#6cd476] text-white" : "bg-transparent text-[#8a816f] hover:bg-white"}`}
+                      >
+                        {option.label}
+                      </button>
+                    {/each}
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
                   <div class="flex items-center gap-4">
                     <div
                       class="w-10 h-10 rounded-2xl bg-[#ebd478] border-2 border-[#cfb85c] flex items-center justify-center text-[#5c3a21] shadow-inner"
@@ -716,6 +825,118 @@
                       >
                     {/if}
                   </div>
+                </div>
+              </div>
+            </div>
+          {/if}
+
+          {#if currentView === "notifications"}
+            <!-- Notifications Settings -->
+            <div class="flex flex-col gap-4 animate-fade-in">
+              <h2 class="text-lg font-black text-[#5c5446] border-b-4 border-[#e1d9be] pb-2 m-0">
+                Notifications
+              </h2>
+
+              <div class="bg-white rounded-3xl p-5 border-4 border-[#e1d9be] shadow-[0_4px_0_#dcd3be] flex flex-col gap-2">
+                <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-2xl bg-[#e89a78] border-2 border-[#cc7d5c] flex items-center justify-center text-[#5c3a21] shadow-inner">
+                      <Bell class="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div class="font-black text-[#5c5446] text-sm">Do Not Disturb</div>
+                      <div class="text-[10px] font-bold text-[#8a816f]">
+                        Mute sounds and hide badges
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    aria-label="Toggle Do Not Disturb"
+                    onclick={toggleDoNotDisturb}
+                    class={`w-14 h-8 rounded-full p-1.5 transition-colors cursor-pointer border-2 shadow-inner flex items-center ${nookState.settings.doNotDisturb ? "bg-[#6cd476] border-[#4ca454]" : "bg-[#e1d9be] border-[#dcd3be]"}`}
+                  >
+                    <div class={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${nookState.settings.doNotDisturb ? "translate-x-5" : "translate-x-0"}`}></div>
+                  </button>
+                </div>
+
+                <div class="flex items-center justify-between py-3">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-2xl bg-[#fdafb2] border-2 border-[#e19396] flex items-center justify-center text-[#5c3a21] shadow-inner">
+                      <X class="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div class="font-black text-[#5c5446] text-sm">Clear History</div>
+                      <div class="text-[10px] font-bold text-[#8a816f]">
+                        Remove all notifications
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onclick={async () => {
+                      nookState.state.notifications = [];
+                      nookState.save();
+                      if (nookState.settings.soundEffects) {
+                        const { playSound } = await import("@/lib/audio");
+                        playSound("woosh");
+                      }
+                    }}
+                    class="bg-[#ff6f61] text-white px-4 py-2 rounded-full text-[11px] font-black shadow-sm hover:bg-[#e65c50] active:scale-95 transition-transform cursor-pointer border-0"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
+            </div>
+          {/if}
+
+          {#if currentView === "privacy"}
+            <!-- Privacy Settings -->
+            <div class="flex flex-col gap-4 animate-fade-in">
+              <h2 class="text-lg font-black text-[#5c5446] border-b-4 border-[#e1d9be] pb-2 m-0">
+                Privacy & Security
+              </h2>
+
+              <div class="bg-white rounded-3xl p-5 border-4 border-[#e1d9be] shadow-[0_4px_0_#dcd3be] flex flex-col gap-2">
+                <div class="flex items-center justify-between py-3 border-b-2 border-dashed border-[#f4f2e8]">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-2xl bg-[#8ea7d6] border-2 border-[#768ebf] flex items-center justify-center text-[#5c3a21] shadow-inner">
+                      <KeyRound class="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div class="font-black text-[#5c5446] text-sm">Require Passcode</div>
+                      <div class="text-[10px] font-bold text-[#8a816f]">
+                        PIN lock ({nookState.settings.passcode})
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    aria-label="Toggle Passcode"
+                    onclick={toggleRequirePasscode}
+                    class={`w-14 h-8 rounded-full p-1.5 transition-colors cursor-pointer border-2 shadow-inner flex items-center ${nookState.settings.requirePasscode ? "bg-[#6cd476] border-[#4ca454]" : "bg-[#e1d9be] border-[#dcd3be]"}`}
+                  >
+                    <div class={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${nookState.settings.requirePasscode ? "translate-x-5" : "translate-x-0"}`}></div>
+                  </button>
+                </div>
+
+                <div class="flex items-center justify-between py-3">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-2xl bg-[#ebd478] border-2 border-[#cfb85c] flex items-center justify-center text-[#5c3a21] shadow-inner">
+                      <MapPin class="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div class="font-black text-[#5c5446] text-sm">Location Services</div>
+                      <div class="text-[10px] font-bold text-[#8a816f]">
+                        Show location icon
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    aria-label="Toggle Location"
+                    onclick={toggleLocationServices}
+                    class={`w-14 h-8 rounded-full p-1.5 transition-colors cursor-pointer border-2 shadow-inner flex items-center ${nookState.settings.locationServices ? "bg-[#6cd476] border-[#4ca454]" : "bg-[#e1d9be] border-[#dcd3be]"}`}
+                  >
+                    <div class={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${nookState.settings.locationServices ? "translate-x-5" : "translate-x-0"}`}></div>
+                  </button>
                 </div>
               </div>
             </div>

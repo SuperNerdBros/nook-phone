@@ -344,22 +344,22 @@ export const fetchDIYMaterials = async () => {
   }
 };
 
-export const fetchNookipediaItems = async () => {
+export const fetchAcnhItems = async () => {
   try {
     const root = window.wpApiSettings?.root || '/wp-json/';
-    const res = await fetch(`${root}xophz/v1/nookipedia/items`);
+    const res = await fetch(`${root}xophz/v1/acnh/items`);
     if (!res.ok) return [];
     return await res.json();
   } catch (e) {
-    console.error('Failed to fetch Nookipedia items', e);
+    console.error('Failed to fetch ACNH items', e);
     return [];
   }
 };
 
-export const searchNookipediaItems = async (query: string, category?: string) => {
+export const searchAcnhItems = async (query: string, category?: string) => {
   try {
     const root = window.wpApiSettings?.root || '/wp-json/';
-    let url = `${root}xophz/v1/nookipedia/items?search=${encodeURIComponent(query)}`;
+    let url = `${root}xophz/v1/acnh/items?search=${encodeURIComponent(query)}`;
     if (category) {
       url += `&category=${encodeURIComponent(category)}`;
     }
@@ -367,21 +367,8 @@ export const searchNookipediaItems = async (query: string, category?: string) =>
     if (!res.ok) return [];
     return await res.json();
   } catch (e) {
-    console.error('Failed to search Nookipedia items', e);
+    console.error('Failed to search ACNH items', e);
     return [];
-  }
-};
-
-export const fetchNookipediaClothingImage = async (clothingName: string) => {
-  try {
-    const url = `https://nookipedia.com/w/api.php?action=cargoquery&format=json&origin=*&tables=nh_clothing_variation&fields=image_url&where=en_name='${encodeURIComponent(clothingName.replace(/'/g, "\\'"))}'`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.cargoquery?.[0]?.title?.image_url || null;
-  } catch (e) {
-    console.error('Failed to fetch Nookipedia clothing image', e);
-    return null;
   }
 };
 
@@ -402,14 +389,14 @@ export const fetchPatreonAuthUrl = async (returnUrl?: string) => {
   }
 };
 
-export const fetchNookipediaVillagers = async () => {
+export const fetchAcnhVillagers = async () => {
   try {
     const root = window.wpApiSettings?.root || '/wp-json/';
-    const res = await fetch(`${root}xophz/v1/nookipedia/villagers`);
+    const res = await fetch(`${root}xophz/v1/acnh/villagers`);
     if (!res.ok) return [];
     return await res.json();
   } catch (e) {
-    console.error('Failed to fetch Nookipedia villagers', e);
+    console.error('Failed to fetch ACNH villagers', e);
     return [];
   }
 };

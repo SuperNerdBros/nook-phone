@@ -3,7 +3,7 @@
   import { onMount } from "svelte";
   import nookState from "@/lib/nookState.svelte";
   import { fade } from "svelte/transition";
-  import { fetchNookipediaVillagers, searchNookipediaItems, fetchNookipediaClothingImage } from "@/lib/api";
+  import { fetchAcnhVillagers, searchAcnhItems } from "@/lib/api";
   import {
     Search,
     Star,
@@ -135,11 +135,12 @@
     isGiftLoading = true;
     giftSearchResults = [];
     try {
-      const res = await searchNookipediaItems(giftSearchQuery);
+      const res = await searchAcnhItems(giftSearchQuery);
       if (res.length === 0) {
         giftReaction = { rating: 0, message: "Hmm... I don't think I've ever heard of that item." };
       } else {
-        giftSearchResults = res.slice(0, 10);
+        const shuffled = [...res].sort(() => 0.5 - Math.random());
+        giftSearchResults = shuffled.slice(0, 10);
         giftReaction = { rating: 0, message: `Oh! You found ${res.length} things! Which one?` };
       }
     } catch (e) {
@@ -158,8 +159,9 @@
       message: `I've really been hoping for some ${favCat} lately! Anything like that?`
     };
     try {
-      const res = await searchNookipediaItems("", favCat);
-      giftSearchResults = res.slice(0, 10);
+      const res = await searchAcnhItems("", favCat);
+      const shuffled = [...res].sort(() => 0.5 - Math.random());
+      giftSearchResults = shuffled.slice(0, 10);
     } catch (e) {
       console.error(e);
     } finally {
@@ -306,7 +308,7 @@
   }
 
   onMount(async () => {
-    allVillagers = await fetchNookipediaVillagers();
+    allVillagers = await fetchAcnhVillagers();
     isLoading = false;
   });
 
@@ -462,9 +464,9 @@
         class="flex flex-col items-center pt-8 pb-4 px-6 bg-gradient-to-b from-[#9cc677]/10 to-transparent"
       >
         <div class="h-32 mb-2 relative group flex items-end justify-center">
-          {#if selectedVillager.image_url}
+          {#if selectedVillager.image_url || selectedVillager.image || selectedVillager.icon}
             <img
-              src={selectedVillager.image_url}
+              src={selectedVillager.image_url || selectedVillager.image || selectedVillager.icon}
               alt={selectedVillager.name}
               class="h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"
             />
@@ -484,9 +486,9 @@
           title={selectedVillager.name}
           dialogText={nookState.isSubscribed("bb/" + selectedVillager.name.replace(/\s+/g, ""))
             ? "Thanks for subscribing! Check out my bulletin board! Let's converse at "
-            : `${selectedVillager.quote ? selectedVillager.quote.replace(/^["'“”]|["'“”]$/g, '').trim() : ''} ${selectedVillager.phrase ? selectedVillager.phrase.replace(/^["'“”]|["'“”]$/g, '').trim() : ''}`}
+            : `${selectedVillager.quote ? selectedVillager.quote.replace(/^["'“”]|["'“”]$/g, '').trim() : ''} ${selectedVillager.catchphrase ? selectedVillager.catchphrase.replace(/^["'“”]|["'“”]$/g, '').trim() : ''}`}
           linkText={nookState.isSubscribed("bb/" + selectedVillager.name.replace(/\s+/g, "")) ? `bb/${selectedVillager.name.replace(/\s+/g, "")}` : ""}
-          postLinkText={nookState.isSubscribed("bb/" + selectedVillager.name.replace(/\s+/g, "")) ? `, ${selectedVillager.phrase ? selectedVillager.phrase.replace(/^["'“”]|["'“”]$/g, '').trim() : ''}!` : ""}
+          postLinkText={nookState.isSubscribed("bb/" + selectedVillager.name.replace(/\s+/g, "")) ? `, ${selectedVillager.catchphrase ? selectedVillager.catchphrase.replace(/^["'“”]|["'“”]$/g, '').trim() : ''}!` : ""}
           onLinkClick={() => nookState.navigate("chat/bb/" + selectedVillager.name.replace(/\s+/g, ""))}
           compact={true}
           badgeBg="#9cc677"
@@ -622,16 +624,36 @@
               <p class="text-sm font-bold text-[#5c3a21]">{selectedVillager.gender || "Unknown"}</p>
             </div>
             <div>
+              <p class="text-[10px] font-bold text-[#8a7f66] uppercase">Favorite Styles</p>
+              {#if selectedVillager.favorite_styles && selectedVillager.favorite_styles.length > 0}
+                <p class="text-sm font-bold text-[#5c3a21] capitalize">
+                  {selectedVillager.favorite_styles.join(', ')}
+                </p>
+              {:else}
+                <p class="text-sm font-bold text-[#5c3a21] opacity-50">Unknown</p>
+              {/if}
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-[#8a7f66] uppercase">Favorite Colors</p>
+              {#if selectedVillager.favorite_colors && selectedVillager.favorite_colors.length > 0}
+                <p class="text-sm font-bold text-[#5c3a21] capitalize">
+                  {selectedVillager.favorite_colors.join(', ')}
+                </p>
+              {:else}
+                <p class="text-sm font-bold text-[#5c3a21] opacity-50">Unknown</p>
+              {/if}
+            </div>
+            <div>
               <p class="text-[10px] font-bold text-[#8a7f66] uppercase">Preferred Outfit</p>
               {#if selectedVillager.clothing}
-                {#await fetchNookipediaClothingImage(selectedVillager.clothing)}
+                {#await searchAcnhItems(selectedVillager.clothing)}
                   <p class="text-sm font-bold text-[#5c3a21] capitalize">
                     {selectedVillager.clothing}
                   </p>
-                {:then imageUrl}
+                {:then items}
                   <div class="flex items-center gap-2">
-                    {#if imageUrl}
-                      <img src={imageUrl} alt={selectedVillager.clothing} class="w-8 h-8 object-contain drop-shadow-sm" />
+                    {#if items && items.length > 0 && items[0].image_url}
+                      <img src={items[0].image_url} alt={selectedVillager.clothing} class="w-8 h-8 object-contain drop-shadow-sm" />
                     {/if}
                     <p class="text-sm font-bold text-[#5c3a21] capitalize">
                       {selectedVillager.clothing}
@@ -643,7 +665,7 @@
                   </p>
                 {/await}
               {:else}
-                <p class="text-sm font-bold text-[#5c3a21] capitalize">Unknown</p>
+                <p class="text-sm font-bold text-[#5c3a21] opacity-50">Unknown</p>
               {/if}
             </div>
             {#if selectedVillager.url}
@@ -704,7 +726,11 @@
                   ? 'bg-[#6db3e6]/10 border-[#6db3e6] text-[#4a90e2]'
                   : 'bg-gray-50 border-gray-100 text-[#8a7f66]'}"
               >
-                <ImageIcon class="w-6 h-6 mb-1 {ms.hasPoster ? 'fill-current' : ''}" />
+                {#if ms.hasPoster && selectedVillager?.poster_url}
+                  <img src={selectedVillager.poster_url} alt="Poster" class="w-12 h-12 mb-1 object-contain drop-shadow-md" />
+                {:else}
+                  <ImageIcon class="w-6 h-6 mb-1 {ms.hasPoster ? 'fill-current' : ''}" />
+                {/if}
                 <span class="text-[10px] font-bold uppercase">Got Poster</span>
               </button>
               <button
@@ -713,7 +739,11 @@
                   ? 'bg-[#ff8a8a]/10 border-[#ff8a8a] text-[#d96666]'
                   : 'bg-gray-50 border-gray-100 text-[#8a7f66]'}"
               >
-                <Camera class="w-6 h-6 mb-1 {ms.hasPhoto ? 'fill-current' : ''}" />
+                {#if ms.hasPhoto && selectedVillager?.image}
+                  <img src={selectedVillager.image} alt="Photo" class="w-12 h-12 mb-1 object-contain drop-shadow-md" />
+                {:else}
+                  <Camera class="w-6 h-6 mb-1 {ms.hasPhoto ? 'fill-current' : ''}" />
+                {/if}
                 <span class="text-[10px] font-bold uppercase">Got Photo</span>
               </button>
             </div>
@@ -891,9 +921,9 @@
                           ? 'border-[#6cd476] ring-4 ring-[#6cd476]/30'
                           : 'border-[#e1d9be]'} flex items-center justify-center relative p-1.5 transition-all"
                       >
-                        {#if villager.image_url}
+                        {#if villager.image_url || villager.icon || villager.image}
                           <img
-                            src={villager.image_url}
+                            src={villager.image_url || villager.icon || villager.image}
                             alt={villager.name}
                             class="w-full h-full object-contain pointer-events-none"
                             loading="lazy"
@@ -977,9 +1007,9 @@
                     <div
                       class="w-12 h-12 rounded-2xl bg-[#f5f4e8] p-1 flex items-center justify-center flex-shrink-0 relative border-2 border-[#e1d9be]/50 shadow-sm"
                     >
-                      {#if villager.image_url}
+                      {#if villager.image_url || villager.icon || villager.image}
                         <img
-                          src={villager.image_url}
+                          src={villager.image_url || villager.icon || villager.image}
                           alt={villager.name}
                           class="w-full h-full object-contain"
                           loading="lazy"
@@ -1144,9 +1174,9 @@
       <!-- Character (Centered) -->
       <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-32">
         <div class="h-64 flex items-center justify-center relative animate-ac-float">
-          {#if selectedVillager?.image_url}
+          {#if selectedVillager?.render_url || selectedVillager?.poster_url || selectedVillager?.image_url || selectedVillager?.image || selectedVillager?.icon}
             <img
-              src={selectedVillager.image_url}
+              src={selectedVillager.render_url || selectedVillager.poster_url || selectedVillager.image_url || selectedVillager.image || selectedVillager.icon}
               alt={selectedVillager.name}
               class="h-full object-contain drop-shadow-2xl"
             />

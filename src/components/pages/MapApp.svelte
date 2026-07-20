@@ -1,6 +1,6 @@
 <script lang="ts">
   import nookState from '@/lib/nookState.svelte';
-  import { fetchNookipediaVillagers } from '@/lib/api';
+  import { fetchAcnhVillagers } from '@/lib/api';
   import { Upload, X, Settings } from "@lucide/svelte";
   import { onMount } from 'svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
@@ -14,7 +14,7 @@
   let isLoading = $state(true);
 
   onMount(async () => {
-    villagers = await fetchNookipediaVillagers();
+    villagers = await fetchAcnhVillagers();
     isLoading = false;
   });
 

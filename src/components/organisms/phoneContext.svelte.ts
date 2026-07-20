@@ -22,6 +22,7 @@ import settingsIcon from "@/assets/img/icons/settings_icon.png";
 import contactsIcon from "@/assets/img/icons/contacts_icon.png";
 import changelogIcon from "@/assets/img/changelog_icon.svg";
 import walletIcon from "@/assets/img/Wallet.png";
+import sharingIcon from "@/assets/img/NH-Icon-Nook_Phone-Sharing.png";
 
 export interface CoreApp {
   id: string;
@@ -101,6 +102,13 @@ export const CORE_APPS: CoreApp[] = [
     image: mailIcon,
     proOnly: true,
     imageNeedsBg: true
+  },
+  {
+    id: "sharing",
+    name: "Sharing",
+    icon: "sharing",
+    bg: "bg-[#d97c55]",
+    image: sharingIcon
   },
   {
     id: "best_friends",

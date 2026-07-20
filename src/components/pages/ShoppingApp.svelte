@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { fetchNookipediaItems, searchNookipediaItems, fetchNookipediaVillagers } from '@/lib/api';
+  import { fetchAcnhItems, fetchAcnhVillagers } from '@/lib/api';
   import NookAppTemplate from '@/components/organisms/NookAppTemplate.svelte';
   import NookIcon from '@/components/atoms/NookIcon.svelte';
   import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
@@ -35,7 +35,12 @@
     Disc,
     Image,
     Wrench,
-    Palette
+    Palette,
+    Bug,
+    Fish,
+    Bone,
+    Brush,
+    Shell
     } from "@lucide/svelte";
   import shoppingIcon from '@/assets/img/icons/shopping_icon.png';
 
@@ -55,7 +60,7 @@
   let giftReaction = $state<{ rating: number; message: string } | null>(null);
 
   $effect(() => {
-    fetchNookipediaVillagers().then(v => {
+    fetchAcnhVillagers().then(v => {
       allVillagers = v || [];
     });
   });
@@ -111,6 +116,11 @@
     "Photos",
     "Music",
     "Tools",
+    "Bugs",
+    "Fish",
+    "Sea Creatures",
+    "Fossils",
+    "Art",
     "Other"
   ];
   let isLoading = $state(true);
@@ -141,13 +151,18 @@
       case "photos": return Image;
       case "music": return Disc;
       case "tools": return Wrench;
+      case "bugs": return Bug;
+      case "fish": return Fish;
+      case "sea creatures": return Shell;
+      case "fossils": return Bone;
+      case "art": return Brush;
       default: return Package;
     }
   };
 
   onMount(async () => {
     try {
-      const items = await fetchNookipediaItems();
+      const items = await fetchAcnhItems();
       allItems = items || [];
     } catch (e) {
       console.error("Failed to load items", e);
@@ -237,18 +252,25 @@
     isSearchingNook = false;
   }
 
-  let filteredItems = $derived(allItems.filter((r, i) => {
+  let matchingSearchItems = $derived(allItems.filter((r) => {
     if (activeTab === "storage" && !nookState.isStorageItem(r.id)) return false;
     if (activeTab === "wishlist" && !nookState.isWishlistItem(r.id)) return false;
     if (activeTab === "for-trade" && !nookState.isForTradeItem(r.id)) return false;
-    
+    return r.name.toLowerCase().includes(searchTerm.toLowerCase());
+  }));
+
+  let availableCategories = $derived.by(() => {
+    if (!hasSearched && searchTerm === "" && activeTab === "all") return categories;
+    const cats = new Set(matchingSearchItems.map(r => r.category));
+    return categories.filter(c => c === "All" || cats.has(c));
+  });
+
+  let filteredItems = $derived(matchingSearchItems.filter((r, i) => {
     let matchesCategory = activeCategory === "All" || r.category === activeCategory;
     if (activeCategory === "Daily Selection") {
       matchesCategory = r.is_orderable && (i % 7 === 0);
     }
-    
-    const matchesSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesCategory;
   }).slice(0, activeCategory === "Daily Selection" ? 8 : undefined));
 
   let selectedListIndex = $state(0);
@@ -326,7 +348,7 @@
   searchBorderColorClass="border-[#dcd3be]"
   searchBgClass="bg-white"
   searchTextColorClass="text-[#4c4637]"
-  categories={currentView === "browse" ? categories : []}
+  categories={currentView === "browse" ? availableCategories : []}
   bind:activeCategory={activeCategory}
   categoryLayoutStyle="wrap"
   getCategoryIcon={getCategoryIcon}

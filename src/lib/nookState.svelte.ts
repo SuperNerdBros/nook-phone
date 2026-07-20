@@ -209,7 +209,7 @@ const INITIAL_STATE: NookOSState = {
     { id: "d3", name: "Custom Tile", grid: Array(16).fill(null).map(() => Array(16).fill("#ffffff")), creator: "Villager" }
   ],
   activeWallpaperId: "default",
-  pinnedApps: ["camera", "miles", "critter", "diy", "designs", "designer", "map", "chat", "passport", "messages", "shopping", "best_friends", "abd", "Miles", "Critterpedia", "Dodo Air", "Happy Island Designer", "Pattern Tool"],
+  pinnedApps: ["camera", "miles", "critter", "diy", "designs", "designer", "map", "chat", "passport", "messages", "shopping", "sharing", "best_friends", "abd", "Miles", "Critterpedia", "Dodo Air", "Happy Island Designer", "Pattern Tool"],
   installedApps: ["Miles", "Critterpedia", "Dodo Air", "Happy Island Designer", "Pattern Tool"],
   hasCompletedOnboarding: false,
   settings: {
