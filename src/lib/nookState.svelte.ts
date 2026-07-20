@@ -462,6 +462,7 @@ class NookStateManager {
       } catch (e) {
         console.error("Failed to load state from localStorage:", e);
       }
+      this.repairState();
     }
     
     // Ensure notifications is initialized
@@ -504,6 +505,23 @@ class NookStateManager {
     this.save();
   }
 
+  repairState() {
+    if (!this.state.map) {
+      this.state.map = { buildings: [...mapData] };
+    } else if (!Array.isArray(this.state.map.buildings) || this.state.map.buildings.length === 0) {
+      this.state.map.buildings = [...mapData];
+    } else {
+      this.state.map.buildings.forEach(building => {
+        const defaultB = mapData.find(b => b.id === building.id);
+        if (defaultB) {
+          if (building.icon !== defaultB.icon) {
+            building.icon = defaultB.icon;
+          }
+        }
+      });
+    }
+  }
+
   async initializeAsync() {
     if (isProUser()) {
       const remoteState = await fetchRemoteState();
@@ -514,6 +532,7 @@ class NookStateManager {
           if (remoteState.settings.soundEffects === undefined) remoteState.settings.soundEffects = true;
         }
         this.state = { ...this.state, ...remoteState };
+        this.repairState();
         this.saveLocal();
       } else {
         // Seamless Merge: Cloud is empty, push local state up
