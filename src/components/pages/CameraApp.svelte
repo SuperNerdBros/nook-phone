@@ -29,7 +29,6 @@
   let cameraStream: MediaStream | null = $state(null);
   let permissionError = $state(false);
   let flash = $state(false);
-  let photos: string[] = $state([]);
   let activeView: "camera" | "roll" = $state("camera");
 
   let videoElement: HTMLVideoElement | undefined = $state();
@@ -183,8 +182,13 @@
       imgData = "https://picsum.photos/seed/" + Math.floor(Math.random() * 500) + "/400/300";
     }
 
-    photos = [imgData, ...photos];
+    nookState.saveSnapshot(imgData);
     nookState.snapPhoto(); // Triggers Nook Miles achievement
+  }
+
+  function setAsPassportPhoto(photoUrl: string) {
+    nookState.updatePassport({ photoUrl });
+    ctx.navigate('passport');
   }
 </script>
 
@@ -319,7 +323,7 @@
     <!-- Camera Roll Roll -->
     <div class="flex-1 overflow-y-auto p-4 ac-scrollbar flex flex-col gap-3">
       <div class="flex justify-between items-center border-b border-[#e4dfd0] pb-2">
-        <h2 class="font-bold text-[#3e1b54] text-sm">Saved Snapshots ({photos.length})</h2>
+        <h2 class="font-bold text-[#3e1b54] text-sm">Saved Snapshots ({nookState.cameraRoll.length})</h2>
         <button
           onclick={() => activeView = "camera"}
           class="text-xs bg-[#bda1d4]/20 text-[#3e1b54] px-3 py-1 rounded-full font-bold"
@@ -328,17 +332,25 @@
         </button>
       </div>
 
-      {#if photos.length > 0}
+      {#if nookState.cameraRoll.length > 0}
         <div class="grid grid-cols-2 gap-3">
-          {#each photos as p, idx}
+          {#each nookState.cameraRoll as p, idx}
             <div
               class="bg-white p-2 rounded-2xl border border-[#e4dfd0] shadow-sm flex flex-col gap-1 group relative overflow-hidden"
             >
               <div class="aspect-video bg-gray-100 rounded-xl overflow-hidden relative">
                 <img src={p} alt="Captured" class="w-full h-full object-cover" />
+                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button 
+                    onclick={() => setAsPassportPhoto(p)}
+                    class="bg-white text-[#3e1b54] text-[10px] font-bold px-2 py-1 rounded-full shadow-md hover:scale-105 transition-transform"
+                  >
+                    Set Passport
+                  </button>
+                </div>
               </div>
               <span class="text-[9px] text-gray-400 font-mono mt-1 text-center">
-                Snapshot_{photos.length - idx}.jpg
+                Snapshot_{nookState.cameraRoll.length - idx}.jpg
               </span>
             </div>
           {/each}

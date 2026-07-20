@@ -49,7 +49,8 @@ export const linkPassport = async (passportData: any) => {
       headers: getApiHeaders(),
       body: JSON.stringify({ passport: passportData })
     });
-    return res.ok;
+    if (!res.ok) return null;
+    return await res.json();
   } catch (e) {
     console.error('Failed to link passport', e);
     return false;

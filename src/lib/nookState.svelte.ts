@@ -16,6 +16,7 @@ import { fetchRemoteState, saveRemoteState, isProUser, processTransaction } from
 import { playSound } from "./audio";
 
 export interface PassportInfo {
+  id?: number | string;
   name: string;
   islandName: string;
   friendCode: string;
@@ -118,6 +119,7 @@ export interface NookOSState {
   servicePlanBalance?: number;
   hasReceivedAllowance?: boolean;
   maxAppSlots?: number;
+  cameraRoll?: string[];
 }
 
 const DEFAULT_GRID_LEAF = [
@@ -329,6 +331,15 @@ class NookStateManager {
 
   get maxAppSlots() { return this.state.maxAppSlots || 18; }
   set maxAppSlots(val) { this.state.maxAppSlots = val; this.save(); }
+
+  get cameraRoll() { return this.state.cameraRoll || []; }
+  set cameraRoll(val) { this.state.cameraRoll = val; this.save(); }
+
+  saveSnapshot(dataUrl: string) {
+    if (!this.state.cameraRoll) this.state.cameraRoll = [];
+    this.state.cameraRoll = [dataUrl, ...this.state.cameraRoll];
+    this.save();
+  }
 
   async payServicePlan(amount: number): Promise<boolean> {
     const currentLoan = this.state.servicePlanBalance || 0;
