@@ -29,7 +29,8 @@
     isProUser,
     deleteDM,
     deleteConversation,
-    generateGeminiReply
+    generateGeminiReply,
+    fetchAcnhItems
   } from "@/lib/api";
   import NookAppTemplate from "@/components/organisms/NookAppTemplate.svelte";
   import NookAppHeader from "@/components/organisms/NookAppHeader.svelte";
@@ -58,7 +59,7 @@
     is_read: boolean;
   }
 
-  const STATIONERY_OPTIONS = [
+  let stationeryOptions = $state<any[]>([
     {
       id: "airmail",
       name: "Airmail",
@@ -106,7 +107,7 @@
   let searchQuery = $state("");
 
   let selectedRecipient = $state<any>(null);
-  let selectedStationery = $state<any>(STATIONERY_OPTIONS[0]);
+  let selectedStationery = $state<any>(stationeryOptions[0]);
 
   let activeCategory = $state("All");
   const categories = ["All", "Inbox", "Unread", "Outbox", "Villagers", "Best Friends", "Favorites"];
@@ -264,6 +265,27 @@
     const localLetters: Letter[] = localDMsStr ? JSON.parse(localDMsStr) : [];
     letters = [...serverLetters, ...localLetters];
     loading = false;
+
+    // Fetch Message Cards
+    try {
+      const items = await fetchAcnhItems();
+      const cards = items.filter((i: any) => i.category === 'Message Cards');
+      if (cards.length > 0) {
+        stationeryOptions = cards.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          bgClass: "bg-white",
+          style: `background-image: url('${c.image_url}'); background-size: cover; background-position: center; border: 8px solid #f0e9d6; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);`
+        }));
+        
+        // Update selected if it was the default
+        if (selectedStationery?.id === 'airmail' && stationeryOptions.length > 0) {
+          selectedStationery = stationeryOptions[0];
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load message cards", e);
+    }
 
     // Handle incoming activeChatPartner from navigation
     if (nookState.activeChatPartner) {
@@ -1032,7 +1054,7 @@
           Select Stationery
         </div>
         <div class="flex-1 overflow-y-auto ac-scrollbar p-4 grid grid-cols-2 gap-4">
-          {#each STATIONERY_OPTIONS as opt}
+          {#each stationeryOptions as opt}
             <button
               class={`aspect-[3/4] rounded-lg shadow-sm flex items-center justify-center cursor-pointer transition hover:scale-105 active:scale-95 border-2 ${selectedStationery?.id === opt.id ? "border-[#8b3a3a] shadow-md" : "border-transparent"} ${opt.bgClass}`}
               style={opt.style}
