@@ -28,7 +28,8 @@
     fetchNookUsers,
     isProUser,
     deleteDM,
-    deleteConversation
+    deleteConversation,
+    generateGeminiReply
   } from "@/lib/api";
   import NookAppTemplate from "@/components/organisms/NookAppTemplate.svelte";
   import NookAppHeader from "@/components/organisms/NookAppHeader.svelte";
@@ -181,8 +182,22 @@
     { ID: 4, display_name: "Tommy" }
   ];
 
-  function triggerVillagerMockReply(villagerId: string | number, villagerName: string, letterId: number, userMessage: string) {
-    setTimeout(() => {
+  async function triggerVillagerMockReply(villagerId: string | number, villagerName: string, letterId: number, userMessage: string) {
+    let replyMsg = `Thanks for the letter! It made me smile, pthhpth!`;
+    const villager = nookState.villagers?.find((v: any) => v.id === villagerId);
+    
+    if (villager) {
+      const personality = villager.personality || 'friendly';
+      const species = villager.species || 'animal';
+      const phrase = villager.phrase || 'pthhpth';
+      const prompt = `The player just sent you this letter: "${userMessage}"\nWrite a short, friendly reply (1-3 sentences) back to them. Include your signature catchphrase "${phrase}" naturally in the response. Do not use em dashes. It should feel surreal and in-game as possible.`;
+      const systemInst = `You are ${villagerName}, a ${personality} ${species} villager from Animal Crossing.`;
+      
+      const aiReply = await generateGeminiReply(prompt, systemInst);
+      if (aiReply && !aiReply.includes("Uh oh") && !aiReply.includes("offline")) {
+        replyMsg = aiReply.replace(/[""]/g, '').trim();
+      }
+    } else {
       const responses = [
         `Thanks for the letter! It made me smile, pthhpth!`,
         `Oh! A letter from you? I'm going to keep this forever!`,
@@ -190,12 +205,14 @@
         `I was just thinking about writing to you. Thanks for saying hi!`,
         `Your words are so kind. Hope you are having a great day on the island!`
       ];
-      const randomMsg = responses[Math.floor(Math.random() * responses.length)];
-      
+      replyMsg = responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    setTimeout(() => {
       const newComment = {
         id: Date.now(),
         sender_id: villagerId as number,
-        content: randomMsg,
+        content: replyMsg,
         date: new Date().toISOString(),
         is_read: false
       };
@@ -211,7 +228,7 @@
           visibleRepliesCount = replies.length;
         }
       }
-    }, 2000);
+    }, 500); // 500ms since the API call itself takes some time
   }
 
   onMount(async () => {

@@ -410,3 +410,23 @@ export const processTransaction = async (amount: number, reason: string): Promis
     return { success: false };
   }
 };
+
+export const generateGeminiReply = async (prompt: string, systemInstruction: string): Promise<string> => {
+  if (!isProUser()) {
+    return "I'm offline right now, pthhpth!";
+  }
+  try {
+    const root = window.wpApiSettings?.root || '/wp-json/';
+    const res = await fetch(`${root}xophz/v1/gemini/generate`, {
+      method: 'POST',
+      headers: getApiHeaders(),
+      body: JSON.stringify({ prompt, system_instruction: systemInstruction })
+    });
+    if (!res.ok) return "Sorry, I can't reply right now!";
+    const data = await res.json();
+    return data.success ? data.text : "Sorry, my phone is acting up!";
+  } catch (e) {
+    console.error('Failed to generate Gemini reply', e);
+    return "Uh oh, connection lost!";
+  }
+};
