@@ -191,7 +191,8 @@
         const matchesSearch =
           p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (p.information && p.information.some((info) => info.toLowerCase() === searchTerm.toLowerCase()));
+          (p.information &&
+            p.information.some((info) => info.toLowerCase() === searchTerm.toLowerCase()));
         const matchesCategory =
           selectedCategory === "all" ||
           (selectedCategory === "featured"
@@ -387,7 +388,7 @@
     class={`absolute inset-0 w-full h-full flex flex-col transition-transform duration-300 ${currentView === "grid" ? "translate-x-0" : "-translate-x-full"}`}
   >
     <div class="flex-1 overflow-y-auto ac-scrollbar px-4 pb-4">
-      {#if featuredApps.length > 0 && searchTerm === "" && (selectedCategory === "all" || selectedCategory === "featured")}
+      {#if featuredApps.length > 0 && searchTerm === "" && selectedCategory === "featured"}
         {@const safeIndex = Math.min(featuredAppIndex, featuredApps.length - 1)}
         {@const app = featuredApps[safeIndex]}
         {@const isCoreApp = checkIsCoreApp(app.name)}
@@ -398,8 +399,9 @@
         <div class="mb-4">
           <div class="flex justify-between items-end mb-2 px-1">
             <h2 class="text-[13px] font-black text-[#2d5c56] uppercase tracking-wider">
-              Featured {#if selectedPlatform === "ios"}iOS{:else if selectedPlatform === "android"}Android{:else}Nook
-                OS{/if} Apps
+              Featured
+              {#if selectedPlatform === "ios"}iOS{:else if selectedPlatform === "android"}Android{:else}{/if}
+              Apps
             </h2>
             <div class="text-[10px] font-bold text-[#45a38f]">
               {featuredAppIndex + 1} / {featuredApps.length}
@@ -667,224 +669,231 @@
 
             <!-- Top Row (Icon + Details) -->
             <div class="flex gap-4 items-center relative z-10">
-
-            <!-- App Icon -->
-            <div class="w-[42%] aspect-square flex items-center justify-center shrink-0 z-10">
-              <NookIcon
-                name={selectedApp.logo || selectedApp.appIcon || "directory"}
-                class="w-full h-full object-contain drop-shadow-sm animate-fade-in"
-              />
-            </div>
-
-            <!-- App Titles & Basic Ratings -->
-            <div class="flex flex-col min-w-0 flex-1 justify-center z-10">
-              <h3 class="text-[15px] font-black text-[#2d5c56] leading-tight truncate">
-                {selectedApp.name}
-              </h3>
-
-              <!-- Description -->
-              <p class="text-[11px] font-bold text-[#4c4637]/90 leading-snug mt-1">
-                {selectedApp.description}
-              </p>
-
-              <!-- Platform / Action Tags -->
-              <div class="flex flex-wrap gap-1 mt-1.5">
-                {#each selectedApp.tools as tool}
-                  <span
-                    class="text-[8px] font-black bg-[#45a38f] text-[#fffdf5] px-1.5 py-0.5 rounded-md uppercase tracking-wide"
-                  >
-                    {tool}
-                  </span>
-                {/each}
-                {#if selectedApp.site}
-                  <span
-                    class="text-[8px] font-black bg-[#bedad4] text-[#2d5c56] px-1.5 py-0.5 rounded-md uppercase tracking-wide"
-                  >
-                    Nook OS
-                  </span>
-                {/if}
-                {#if selectedApp.ios}
-                  <span
-                    class="text-[8px] font-black bg-[#bedad4] text-[#2d5c56] px-1.5 py-0.5 rounded-md uppercase tracking-wide"
-                  >
-                    iOS
-                  </span>
-                {/if}
-                {#if selectedApp.android}
-                  <span
-                    class="text-[8px] font-black bg-[#bedad4] text-[#2d5c56] px-1.5 py-0.5 rounded-md uppercase tracking-wide"
-                  >
-                    Android
-                  </span>
-                {/if}
+              <!-- App Icon -->
+              <div class="w-[42%] aspect-square flex items-center justify-center shrink-0 z-10">
+                <NookIcon
+                  name={selectedApp.logo || selectedApp.appIcon || "directory"}
+                  class="w-full h-full object-contain drop-shadow-sm animate-fade-in"
+                />
               </div>
 
-              <!-- Inline Installs and Review Stars -->
-              <div class="flex items-center gap-3.5 text-[12px] font-black text-[#2d5c56]/80 mt-2">
-                <div class="flex items-center gap-0.5">
-                  <span class="text-[#f59e33] text-base leading-none -mt-0.5">★</span>
-                  <span>{stats?.average_rating || "0.0"}</span>
-                  <span class="text-[#2d5c56]/40">({stats?.rating_count || "0"})</span>
-                </div>
-                <div class="w-1 h-1 bg-[#2d5c56]/30 rounded-full"></div>
-                <div class="flex items-center gap-0.5">
-                  <Download class="w-3.5 h-3.5 text-[#45a38f] stroke-[2.5px]" />
-                  <span>{stats?.installs || "0"}</span>
-                </div>
-              </div>
+              <!-- App Titles & Basic Ratings -->
+              <div class="flex flex-col min-w-0 flex-1 justify-center z-10">
+                <h3 class="text-[15px] font-black text-[#2d5c56] leading-tight truncate">
+                  {selectedApp.name}
+                </h3>
 
-              <!-- Action Buttons -->
-              <div class="w-full mt-2.5">
-                {#if isCoreApp}
-                  <div
-                    class="w-full flex items-center justify-center gap-1.5 bg-[#1bc6b6]/20 text-[#15a497] py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border border-[#1bc6b6]/30"
-                  >
-                    <CheckCircle class="w-3.5 h-3.5" /> Installed
+                <!-- Description -->
+                <p class="text-[11px] font-bold text-[#4c4637]/90 leading-snug mt-1">
+                  {selectedApp.description}
+                </p>
+
+                <!-- Platform / Action Tags -->
+                <div class="flex flex-wrap gap-1 mt-1.5">
+                  {#each selectedApp.tools as tool}
+                    <span
+                      class="text-[8px] font-black bg-[#45a38f] text-[#fffdf5] px-1.5 py-0.5 rounded-md uppercase tracking-wide"
+                    >
+                      {tool}
+                    </span>
+                  {/each}
+                  {#if selectedApp.site}
+                    <span
+                      class="text-[8px] font-black bg-[#bedad4] text-[#2d5c56] px-1.5 py-0.5 rounded-md uppercase tracking-wide"
+                    >
+                      Nook OS
+                    </span>
+                  {/if}
+                  {#if selectedApp.ios}
+                    <span
+                      class="text-[8px] font-black bg-[#bedad4] text-[#2d5c56] px-1.5 py-0.5 rounded-md uppercase tracking-wide"
+                    >
+                      iOS
+                    </span>
+                  {/if}
+                  {#if selectedApp.android}
+                    <span
+                      class="text-[8px] font-black bg-[#bedad4] text-[#2d5c56] px-1.5 py-0.5 rounded-md uppercase tracking-wide"
+                    >
+                      Android
+                    </span>
+                  {/if}
+                </div>
+
+                <!-- Inline Installs and Review Stars -->
+                <div
+                  class="flex items-center gap-3.5 text-[12px] font-black text-[#2d5c56]/80 mt-2"
+                >
+                  <div class="flex items-center gap-0.5">
+                    <span class="text-[#f59e33] text-base leading-none -mt-0.5">★</span>
+                    <span>{stats?.average_rating || "0.0"}</span>
+                    <span class="text-[#2d5c56]/40">({stats?.rating_count || "0"})</span>
                   </div>
-                {:else if isInstalled}
-                  <div class="flex gap-2 w-full flex-col">
-                    {#if selectedPlatform === "ios" && selectedApp.ios}
+                  <div class="w-1 h-1 bg-[#2d5c56]/30 rounded-full"></div>
+                  <div class="flex items-center gap-0.5">
+                    <Download class="w-3.5 h-3.5 text-[#45a38f] stroke-[2.5px]" />
+                    <span>{stats?.installs || "0"}</span>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="w-full mt-2.5">
+                  {#if isCoreApp}
+                    <div
+                      class="w-full flex items-center justify-center gap-1.5 bg-[#1bc6b6]/20 text-[#15a497] py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border border-[#1bc6b6]/30"
+                    >
+                      <CheckCircle class="w-3.5 h-3.5" /> Installed
+                    </div>
+                  {:else if isInstalled}
+                    <div class="flex gap-2 w-full flex-col">
+                      {#if selectedPlatform === "ios" && selectedApp.ios}
+                        <button
+                          onclick={() => handleExternalLink(selectedApp.ios, selectedApp.name)}
+                          class="w-full flex items-center justify-center gap-1.5 bg-[#1bc6b6] text-white py-2 rounded-xl text-[10px] font-black hover:bg-[#15a497] active:scale-95 transition-all shadow-sm mb-1"
+                        >
+                          <Smartphone class="w-3.5 h-3.5" /> Get on iOS
+                        </button>
+                      {:else if selectedPlatform === "android" && selectedApp.android}
+                        <button
+                          onclick={() => handleExternalLink(selectedApp.android, selectedApp.name)}
+                          class="w-full flex items-center justify-center gap-1.5 bg-[#f59e33] text-white py-2 rounded-xl text-[10px] font-black hover:bg-[#e08922] active:scale-95 transition-all shadow-sm mb-1"
+                        >
+                          <Smartphone class="w-3.5 h-3.5" /> Get on Android
+                        </button>
+                      {/if}
+                      <div class="flex gap-2 w-full">
+                        <div
+                          class="flex-1 flex items-center justify-center gap-1.5 bg-[#1bc6b6]/20 text-[#15a497] py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border border-[#1bc6b6]/30"
+                        >
+                          <CheckCircle class="w-3.5 h-3.5" /> Installed
+                        </div>
+                        <button
+                          onclick={() => {
+                            handleUninstall(selectedApp.name);
+                            currentView = "grid";
+                          }}
+                          class="flex-1 flex items-center justify-center gap-1.5 bg-[#fdafb2] text-[#8c2a2e] py-2 rounded-xl text-[10px] font-black hover:bg-[#f09a9d] active:scale-95 transition-all shadow-sm"
+                        >
+                          <Trash2 class="w-3.5 h-3.5" /> Uninstall
+                        </button>
+                      </div>
+                    </div>
+                  {:else if selectedPlatform === "installable" && selectedApp.site}
+                    <button
+                      onclick={() => {
+                        handleInstall(selectedApp.name);
+                      }}
+                      class="w-full flex items-center justify-center gap-1.5 bg-[#45a38f] text-[#fffdf5] py-2 rounded-xl text-[10px] font-black hover:bg-[#368875] transition-all active:scale-95 shadow-sm"
+                    >
+                      <Leaf class="w-3.5 h-3.5" /> Install to NookPhone
+                    </button>
+                  {:else if selectedPlatform === "ios" && selectedApp.ios}
+                    <div class="flex gap-2 w-full">
                       <button
-                        onclick={() => handleExternalLink(selectedApp.ios, selectedApp.name)}
-                        class="w-full flex items-center justify-center gap-1.5 bg-[#1bc6b6] text-white py-2 rounded-xl text-[10px] font-black hover:bg-[#15a497] active:scale-95 transition-all shadow-sm mb-1"
+                        onclick={() => {
+                          handleExternalLink(selectedApp.ios, selectedApp.name);
+                        }}
+                        class="flex-1 flex items-center justify-center gap-1.5 bg-[#1bc6b6] text-white py-2 rounded-xl text-[10px] font-black hover:bg-[#15a497] active:scale-95 transition-all shadow-sm"
                       >
                         <Smartphone class="w-3.5 h-3.5" /> Get on iOS
                       </button>
-                    {:else if selectedPlatform === "android" && selectedApp.android}
                       <button
-                        onclick={() => handleExternalLink(selectedApp.android, selectedApp.name)}
-                        class="w-full flex items-center justify-center gap-1.5 bg-[#f59e33] text-white py-2 rounded-xl text-[10px] font-black hover:bg-[#e08922] active:scale-95 transition-all shadow-sm mb-1"
+                        onclick={() => handleMarkInstalled(selectedApp.name)}
+                        class="flex-[0.5] flex items-center justify-center gap-1 bg-[#45a38f] text-[#fffdf5] py-2 rounded-xl text-[10px] font-black hover:bg-[#368875] transition-all active:scale-95 shadow-sm"
+                      >
+                        <CheckCircle class="w-3.5 h-3.5" /> Mark
+                      </button>
+                    </div>
+                  {:else if selectedPlatform === "android" && selectedApp.android}
+                    <div class="flex gap-2 w-full">
+                      <button
+                        onclick={() => {
+                          handleExternalLink(selectedApp.android, selectedApp.name);
+                        }}
+                        class="flex-1 flex items-center justify-center gap-1.5 bg-[#f59e33] text-white py-2 rounded-xl text-[10px] font-black hover:bg-[#e08922] active:scale-95 transition-all shadow-sm"
                       >
                         <Smartphone class="w-3.5 h-3.5" /> Get on Android
                       </button>
-                    {/if}
-                    <div class="flex gap-2 w-full">
-                      <div
-                        class="flex-1 flex items-center justify-center gap-1.5 bg-[#1bc6b6]/20 text-[#15a497] py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border border-[#1bc6b6]/30"
-                      >
-                        <CheckCircle class="w-3.5 h-3.5" /> Installed
-                      </div>
                       <button
-                        onclick={() => {
-                          handleUninstall(selectedApp.name);
-                          currentView = "grid";
-                        }}
-                        class="flex-1 flex items-center justify-center gap-1.5 bg-[#fdafb2] text-[#8c2a2e] py-2 rounded-xl text-[10px] font-black hover:bg-[#f09a9d] active:scale-95 transition-all shadow-sm"
+                        onclick={() => handleMarkInstalled(selectedApp.name)}
+                        class="flex-[0.5] flex items-center justify-center gap-1 bg-[#45a38f] text-[#fffdf5] py-2 rounded-xl text-[10px] font-black hover:bg-[#368875] transition-all active:scale-95 shadow-sm"
                       >
-                        <Trash2 class="w-3.5 h-3.5" /> Uninstall
+                        <CheckCircle class="w-3.5 h-3.5" /> Mark
                       </button>
                     </div>
-                  </div>
-                {:else if selectedPlatform === "installable" && selectedApp.site}
-                  <button
-                    onclick={() => {
-                      handleInstall(selectedApp.name);
-                    }}
-                    class="w-full flex items-center justify-center gap-1.5 bg-[#45a38f] text-[#fffdf5] py-2 rounded-xl text-[10px] font-black hover:bg-[#368875] transition-all active:scale-95 shadow-sm"
-                  >
-                    <Leaf class="w-3.5 h-3.5" /> Install to NookPhone
-                  </button>
-                {:else if selectedPlatform === "ios" && selectedApp.ios}
-                  <div class="flex gap-2 w-full">
-                    <button
-                      onclick={() => {
-                        handleExternalLink(selectedApp.ios, selectedApp.name);
-                      }}
-                      class="flex-1 flex items-center justify-center gap-1.5 bg-[#1bc6b6] text-white py-2 rounded-xl text-[10px] font-black hover:bg-[#15a497] active:scale-95 transition-all shadow-sm"
-                    >
-                      <Smartphone class="w-3.5 h-3.5" /> Get on iOS
-                    </button>
-                    <button
-                      onclick={() => handleMarkInstalled(selectedApp.name)}
-                      class="flex-[0.5] flex items-center justify-center gap-1 bg-[#45a38f] text-[#fffdf5] py-2 rounded-xl text-[10px] font-black hover:bg-[#368875] transition-all active:scale-95 shadow-sm"
-                    >
-                      <CheckCircle class="w-3.5 h-3.5" /> Mark
-                    </button>
-                  </div>
-                {:else if selectedPlatform === "android" && selectedApp.android}
-                  <div class="flex gap-2 w-full">
-                    <button
-                      onclick={() => {
-                        handleExternalLink(selectedApp.android, selectedApp.name);
-                      }}
-                      class="flex-1 flex items-center justify-center gap-1.5 bg-[#f59e33] text-white py-2 rounded-xl text-[10px] font-black hover:bg-[#e08922] active:scale-95 transition-all shadow-sm"
-                    >
-                      <Smartphone class="w-3.5 h-3.5" /> Get on Android
-                    </button>
-                    <button
-                      onclick={() => handleMarkInstalled(selectedApp.name)}
-                      class="flex-[0.5] flex items-center justify-center gap-1 bg-[#45a38f] text-[#fffdf5] py-2 rounded-xl text-[10px] font-black hover:bg-[#368875] transition-all active:scale-95 shadow-sm"
-                    >
-                      <CheckCircle class="w-3.5 h-3.5" /> Mark
-                    </button>
+                  {/if}
+                </div>
+
+                <!-- Developer Resources -->
+                {#if selectedApp.site || selectedApp.git}
+                  <div class="flex gap-2 mt-2">
+                    {#if selectedApp.site}
+                      <a
+                        href={selectedApp.site}
+                        target="_blank"
+                        rel="noreferrer"
+                        class="flex-1 flex items-center justify-center gap-1.5 bg-[#45a38f] text-[#fffdf5] py-2 rounded-xl text-[10px] font-black no-underline hover:bg-[#368875] transition-all active:scale-95 shadow-sm"
+                      >
+                        <Globe class="w-3.5 h-3.5" /> Open Website
+                      </a>
+                    {/if}
+                    {#if selectedApp.git}
+                      <a
+                        href={selectedApp.git}
+                        target="_blank"
+                        rel="noreferrer"
+                        class="flex-1 flex items-center justify-center gap-1.5 bg-[#2d5c56] text-[#fffdf5] py-2 rounded-xl text-[10px] font-black no-underline hover:bg-[#1e3e3a] transition-all active:scale-95 shadow-sm"
+                      >
+                        <Code class="w-3.5 h-3.5" /> View Source
+                      </a>
+                    {/if}
                   </div>
                 {/if}
               </div>
+            </div>
 
-              <!-- Developer Resources -->
-              {#if selectedApp.site || selectedApp.git}
-                <div class="flex gap-2 mt-2">
-                  {#if selectedApp.site}
-                    <a
-                      href={selectedApp.site}
-                      target="_blank"
-                      rel="noreferrer"
-                      class="flex-1 flex items-center justify-center gap-1.5 bg-[#45a38f] text-[#fffdf5] py-2 rounded-xl text-[10px] font-black no-underline hover:bg-[#368875] transition-all active:scale-95 shadow-sm"
+            <!-- Footnotes / Specs (Full Width Footer) -->
+            <div
+              class="mt-4 pt-3 border-t border-white/30 flex flex-col gap-2 text-[9.5px] font-bold text-[#2d5c56]/80 relative z-10"
+            >
+              <div class="flex items-center gap-2">
+                <span class="text-[#45a38f] font-black uppercase tracking-wider w-14 shrink-0"
+                  >Scope</span
+                >
+                <div class="flex-1 flex flex-wrap gap-1">
+                  {#each selectedApp.information as info}
+                    <button
+                      onclick={() => {
+                        searchTerm = info;
+                        currentView = "grid";
+                      }}
+                      class="bg-[#bedad4] text-[#2d5c56] text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wide cursor-pointer hover:bg-[#a6ccc4] active:scale-95 transition-all border-none outline-none"
                     >
-                      <Globe class="w-3.5 h-3.5" /> Open Website
-                    </a>
-                  {/if}
-                  {#if selectedApp.git}
-                    <a
-                      href={selectedApp.git}
-                      target="_blank"
-                      rel="noreferrer"
-                      class="flex-1 flex items-center justify-center gap-1.5 bg-[#2d5c56] text-[#fffdf5] py-2 rounded-xl text-[10px] font-black no-underline hover:bg-[#1e3e3a] transition-all active:scale-95 shadow-sm"
-                    >
-                      <Code class="w-3.5 h-3.5" /> View Source
-                    </a>
-                  {/if}
+                      {info}
+                    </button>
+                  {/each}
                 </div>
-              {/if}
-            </div>
-          </div>
-
-          <!-- Footnotes / Specs (Full Width Footer) -->
-          <div class="mt-4 pt-3 border-t border-white/30 flex flex-col gap-2 text-[9.5px] font-bold text-[#2d5c56]/80 relative z-10">
-            <div class="flex items-center gap-2">
-              <span class="text-[#45a38f] font-black uppercase tracking-wider w-14 shrink-0">Scope</span>
-              <div class="flex-1 flex flex-wrap gap-1">
-                {#each selectedApp.information as info}
-                  <button
-                    onclick={() => {
-                      searchTerm = info;
-                      currentView = "grid";
-                    }}
-                    class="bg-[#bedad4] text-[#2d5c56] text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wide cursor-pointer hover:bg-[#a6ccc4] active:scale-95 transition-all border-none outline-none"
-                  >
-                    {info}
-                  </button>
-                {/each}
               </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[#45a38f] font-black uppercase tracking-wider w-14 shrink-0">Langs</span>
-              <div class="flex-1 flex flex-wrap gap-1">
-                {#each selectedApp.languages as lang}
-                  <button
-                    onclick={() => {
-                      selectedLanguage = lang;
-                      currentView = "grid";
-                    }}
-                    class="bg-[#bedad4] text-[#2d5c56] text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wide cursor-pointer hover:bg-[#a6ccc4] active:scale-95 transition-all border-none outline-none"
-                  >
-                    {lang}
-                  </button>
-                {/each}
+              <div class="flex items-center gap-2">
+                <span class="text-[#45a38f] font-black uppercase tracking-wider w-14 shrink-0"
+                  >Langs</span
+                >
+                <div class="flex-1 flex flex-wrap gap-1">
+                  {#each selectedApp.languages as lang}
+                    <button
+                      onclick={() => {
+                        selectedLanguage = lang;
+                        currentView = "grid";
+                      }}
+                      class="bg-[#bedad4] text-[#2d5c56] text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wide cursor-pointer hover:bg-[#a6ccc4] active:scale-95 transition-all border-none outline-none"
+                    >
+                      {lang}
+                    </button>
+                  {/each}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
           <!-- Review Input Section -->
           {#if isInstalled && proUser}

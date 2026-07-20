@@ -24,6 +24,7 @@
     Check,
     UserPlus,
     Leaf,
+    Palmtree,
     X as XIcon
   } from "@lucide/svelte";
   import NookAppHeader from "@/components/organisms/NookAppHeader.svelte";
@@ -1105,7 +1106,7 @@
             ? 'bg-[#6cd476]/20 text-[#4ca454]'
             : 'text-[#8a7f66] hover:bg-gray-50 hover:text-[#4ca454]'}"
         >
-          <Home class="w-5 h-5 mb-0.5 {activeTab === 'island' ? 'fill-current' : ''}" />
+          <Palmtree class="w-5 h-5 mb-0.5 {activeTab === 'island' ? 'fill-current' : ''}" />
           <span class="text-[10px] font-black uppercase tracking-wider"
             >Neighbors ({nookState.residents.length}/10)</span
           >

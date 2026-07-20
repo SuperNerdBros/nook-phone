@@ -6,7 +6,7 @@
     MessageSquare, Send, Trash2, ArrowLeft, Plus, 
     ThumbsUp, Calendar, User, MessageCircle, Hash, Coins
   , X } from '@lucide/svelte';
-  import { fetchThreads, createThread, fetchComments, createComment, isProUser, tipThread, getBoardStatus } from '@/lib/api';
+  import { fetchThreads, createThread, fetchComments, createComment, isProUser, tipThread, getBoardStatus, fetchNookipediaVillagers } from '@/lib/api';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NewThreadForm from './NewThreadForm.svelte';
   import CreateBoardForm from './CreateBoardForm.svelte';
@@ -125,6 +125,36 @@
   let currentBoardStatus = $state<{ board: string; funded: boolean; raised: number } | null>(null);
   let showBoardDonation = $state(false);
   let showBoardPicker = $state(false);
+  let villagers = $state<any[]>([]);
+
+  const getBoardImage = (board: string) => {
+    const cleanString = (str: string) => str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    const cleanBoard = cleanString(board.replace(/^bb\//i, ''));
+    
+    // Fallbacks for special NPCs
+    if (cleanBoard === 'isabelle') {
+      return "https://nookipedia.com/w/images/9/91/Isabelle_NH_Character_Icon.png";
+    }
+    if (cleanBoard === 'tomnook') {
+      return "https://nookipedia.com/w/images/6/68/Tom_Nook_NH_Character_Icon.png";
+    }
+    if (cleanBoard === 'lottie') {
+      return "https://nookipedia.com/w/images/7/78/Lottie_NH_Character_Icon.png";
+    }
+    if (cleanBoard === 'kkslider') {
+      return "https://nookipedia.com/w/images/8/8d/K.K._Slider_NH_Character_Icon.png";
+    }
+    if (cleanBoard === 'blathers') {
+      return "https://nookipedia.com/w/images/0/0b/Blathers_NH_Character_Icon.png";
+    }
+
+    // Try matching standard villagers by normalized name or id
+    const found = villagers.find(v => cleanString(v.name) === cleanBoard || cleanString(v.id) === cleanBoard);
+    if (found && found.image_url) {
+      return found.image_url;
+    }
+    return null;
+  };
 
   const getBoardThemeDetails = (board: string) => {
     const normal = board.toLowerCase();
@@ -389,6 +419,10 @@
     newSubnook = islandBoard;
     loadThreads();
     
+    fetchNookipediaVillagers().then(res => {
+      if (res) villagers = res;
+    });
+
     if (nookState.subRoute) {
       selectedBoardFilter = nookState.subRoute;
       if (!nookState.isSubscribed(nookState.subRoute) && nookState.subRoute !== islandBoard) {
@@ -717,7 +751,7 @@
         </div>
 
         <!-- Pinned notes/flyers grid -->
-        <div class="flex-1 overflow-y-auto px-1 py-2 grid grid-cols-2 gap-3.5 ac-scrollbar relative z-10">
+        <div class="flex-1 overflow-y-auto overflow-x-hidden px-1 py-2 grid grid-cols-2 gap-3.5 notice-board-scrollbar relative z-10">
           {#each allBoards as board, index}
             {@const details = getBoardThemeDetails(board)}
             <button
@@ -731,9 +765,20 @@
                 <div class="w-0.5 h-1 bg-black/40 absolute -bottom-1"></div>
               </div>
 
-              <!-- Board Stamp/Symbol -->
-              <div class="text-2xl mt-1 select-none filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] group-hover:animate-bounce">
-                {details.stamp}
+              <!-- Board Stamp/Symbol or Villager Image -->
+              <div class="w-12 h-12 flex items-center justify-center relative mt-1 group-hover:animate-bounce select-none">
+                {#if getBoardImage(board)}
+                  <img
+                    src={getBoardImage(board)}
+                    alt={board}
+                    class="w-full h-full object-contain filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.15)]"
+                    loading="lazy"
+                  />
+                {:else}
+                  <span class="text-2xl filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]">
+                    {details.stamp}
+                  </span>
+                {/if}
               </div>
 
               <!-- Board Name / Label -->
@@ -793,5 +838,14 @@
   }
   .animate-scale-up {
     animation: scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Hide scrollbar completely to look like a clean wooden notice board */
+  .notice-board-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .notice-board-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
   }
 </style>

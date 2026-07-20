@@ -52,6 +52,22 @@
     }
   });
 
+  $effect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      ctx.timeStr = now.toLocaleTimeString([], { 
+        hour: "numeric", 
+        minute: "2-digit",
+        hour12: !nookState.settings.use24HourTime 
+      });
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    return () => {
+      clearInterval(interval);
+    };
+  });
+
   onMount(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const successParam = urlParams.get('success');
@@ -68,16 +84,6 @@
       }, 2800);
     }
 
-    const updateTime = () => {
-      const now = new Date();
-      ctx.timeStr = now.toLocaleTimeString([], { 
-        hour: "numeric", 
-        minute: "2-digit",
-        hour12: !nookState.settings.use24HourTime 
-      });
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
 
     const deliverRandomTip = () => {
       const existingNotifTitles = nookState.notifications.map(n => n.title);
@@ -156,7 +162,6 @@
     }
 
     return () => {
-      clearInterval(interval);
       clearTimeout(initialTipTimeout);
       clearInterval(tipInterval);
       clearTimeout(initialLoanTimeout);
