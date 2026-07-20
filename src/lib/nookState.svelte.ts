@@ -589,6 +589,16 @@ class NookStateManager {
   craftRecipe(recipeId: string) {
     this.state.diy.craftedCount += 1;
     this.triggerAchievementProgress("m3", 1);
+
+    // Convert recipe name to standard lowercase hyphenated slug
+    const slug = recipeId.toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/[\s_]+/g, '-');
+
+    const currentQty = this.getItemQuantity(slug, 'storage');
+    this.setItemQuantity(slug, currentQty + 1, 'storage');
+
     this.save();
   }
 
@@ -719,6 +729,11 @@ class NookStateManager {
 
   addBells(amount: number) {
     this.state.bells += amount;
+    this.save();
+  }
+
+  deductBells(amount: number) {
+    this.state.bells = Math.max(0, this.state.bells - amount);
     this.save();
   }
 

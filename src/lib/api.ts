@@ -113,18 +113,61 @@ export const fetchThreads = async () => {
   }
 };
 
-export const createThread = async (title: string, content: string) => {
+export const createThread = async (title: string, content: string, subnook: string) => {
   if (!isProUser()) return null;
   try {
     const res = await fetch(getApiUrl('threads'), {
       method: 'POST',
       headers: getApiHeaders(),
-      body: JSON.stringify({ title, content })
+      body: JSON.stringify({ title, content, subnook })
     });
     if (!res.ok) return null;
     return await res.json();
   } catch (e) {
     console.error('Failed to create thread', e);
+    return null;
+  }
+};
+
+export const tipThread = async (threadId: number, amount: number = 25) => {
+  if (!isProUser()) return null;
+  try {
+    const res = await fetch(getApiUrl('threads/tip'), {
+      method: 'POST',
+      headers: getApiHeaders(),
+      body: JSON.stringify({ thread_id: threadId, amount })
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to tip thread', e);
+    return null;
+  }
+};
+
+export const getBoardStatus = async (board: string) => {
+  try {
+    const res = await fetch(getApiUrl(`boards/status?board=${encodeURIComponent(board)}`), { headers: getApiHeaders() });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to get board status', e);
+    return null;
+  }
+};
+
+export const donateToBoard = async (board: string, amount: number) => {
+  if (!isProUser()) return null;
+  try {
+    const res = await fetch(getApiUrl('boards/donate'), {
+      method: 'POST',
+      headers: getApiHeaders(),
+      body: JSON.stringify({ board, amount })
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    console.error('Failed to donate to board', e);
     return null;
   }
 };
@@ -177,6 +220,7 @@ export const createPrivateLetter = async (recipientId: number, subject: string, 
       method: 'POST',
       headers: getApiHeaders(),
       body: JSON.stringify({ 
+        subject,
         content, 
         recipient_id: recipientId, 
         stationery_id: stationeryId

@@ -238,9 +238,9 @@
   }
 
   let filteredItems = $derived(allItems.filter((r, i) => {
-    if (activeTab === "storage" && !nookState.isStorageItem(r.name)) return false;
-    if (activeTab === "wishlist" && !nookState.isWishlistItem(r.name)) return false;
-    if (activeTab === "for-trade" && !nookState.isForTradeItem(r.name)) return false;
+    if (activeTab === "storage" && !nookState.isStorageItem(r.id)) return false;
+    if (activeTab === "wishlist" && !nookState.isWishlistItem(r.id)) return false;
+    if (activeTab === "for-trade" && !nookState.isForTradeItem(r.id)) return false;
     
     let matchesCategory = activeCategory === "All" || r.category === activeCategory;
     if (activeCategory === "Daily Selection") {

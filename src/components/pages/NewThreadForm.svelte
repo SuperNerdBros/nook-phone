@@ -6,9 +6,12 @@
     onSubmit: (title: string, content: string, board: string) => void;
   }>();
 
+  import nookState from '@/lib/nookState.svelte';
+
   let newTitle = $state("");
   let newContent = $state("");
   let newBoard = $state(defaultBoard);
+  let canAfford = $derived(nookState.bells >= 200);
 </script>
 
 <div class="bg-white rounded-3xl p-4 border-4 border-[#e1d9be] shadow-sm text-left flex flex-col gap-4">
@@ -64,10 +67,14 @@
     </button>
     <button
       onclick={() => onSubmit(newTitle, newContent, newBoard)}
-      disabled={!newTitle.trim() || !newContent.trim()}
-      class="px-6 py-2 bg-[#afd485] hover:bg-opacity-95 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled={!newTitle.trim() || !newContent.trim() || !canAfford}
+      class="bg-[#afd485] text-white px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-[0_4px_0_#98ba74] hover:-translate-y-0.5 hover:shadow-[0_6px_0_#98ba74] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:active:translate-y-0 disabled:hover:-translate-y-0 disabled:hover:shadow-[0_4px_0_#98ba74]"
     >
-      Post Bulletin
+      {#if canAfford}
+        Post Bulletin (200 Bells)
+      {:else}
+        Need 200 Bells
+      {/if}
     </button>
   </div>
 </div>

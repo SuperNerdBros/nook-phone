@@ -279,6 +279,11 @@ class NookStateManager {
     this.notify();
   }
 
+  public deductBells(amount: number) {
+    this.state.bells = Math.max(0, this.state.bells - amount);
+    this.notify();
+  }
+
   public addMiles(amount: number) {
     this.state.miles += amount;
     this.notify();

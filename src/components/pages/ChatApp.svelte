@@ -6,10 +6,11 @@
     MessageSquare, Send, Trash2, ArrowLeft, Plus, 
     ThumbsUp, Calendar, User, MessageCircle, Hash, Coins
   , X } from '@lucide/svelte';
-  import { fetchThreads, createThread, fetchComments, createComment, isProUser } from '@/lib/api';
+  import { fetchThreads, createThread, fetchComments, createComment, isProUser, tipThread, getBoardStatus } from '@/lib/api';
   import NookIcon from '../atoms/NookIcon.svelte';
   import NewThreadForm from './NewThreadForm.svelte';
   import CreateBoardForm from './CreateBoardForm.svelte';
+  import BoardDonationDialog from '@/components/organisms/BoardDonationDialog.svelte';
   import NookAppHeader from '@/components/organisms/NookAppHeader.svelte';
   import NookToolbarButton from '../molecules/NookToolbarButton.svelte';
   import AcnhBubble from '@/components/molecules/AcnhBubble.svelte';
@@ -23,8 +24,8 @@
     author_island?: string;
     date: string;
     comment_count: number;
-    likes?: number;
-    hasLiked?: boolean;
+    tips?: number;
+    hasLiked?: boolean; // Kept for backwards compatibility but not strictly used for tipping limit
   }
 
   // Helper to normalize island name for n/ prefix (removes " Island" suffix)
@@ -120,6 +121,32 @@
   let replyText = $state("");
   let loading = $state(false);
   let showReplies = $state(false);
+  
+  let currentBoardStatus = $state<{ board: string; funded: boolean; raised: number } | null>(null);
+  let showBoardDonation = $state(false);
+
+  // Watch for board changes to show Lloid if unfunded
+  $effect(() => {
+    if (selectedBoardFilter) {
+      const coreBoards = ['bb/All', 'bb/Isabelle', 'bb/TomNook', 'bb/Lottie', 'bb/KKSlider', 'bb/Blathers', islandBoard];
+      if (coreBoards.includes(selectedBoardFilter)) {
+        currentBoardStatus = null;
+        showBoardDonation = false;
+        return;
+      }
+      
+      getBoardStatus(selectedBoardFilter).then(res => {
+        if (res) {
+          currentBoardStatus = res;
+          if (!res.funded) {
+            showBoardDonation = true;
+          } else {
+            showBoardDonation = false;
+          }
+        }
+      });
+    }
+  });
 
   // Filter threads by active board selection
   let filteredThreads = $derived(threads.filter(t => {
@@ -137,7 +164,7 @@
       threads = data.map((t: any) => ({
         ...t,
         subnook: t.subnook || islandBoard,
-        likes: t.likes || Math.floor(Math.random() * 12),
+        tips: t.tips || 0,
         hasLiked: false
       }));
     } else {
@@ -180,13 +207,20 @@
 
   async function submitThread() {
     if (!newTitle.trim() || !newContent.trim()) return;
+    if (nookState.bells < 200) {
+      alert("You need 200 Bells to post a bulletin!");
+      return;
+    }
+
     const author = nookState.passport.name || "Resident";
     loading = true;
+
+    nookState.deductBells(200);
 
     const subnookTarget = newSubnook || islandBoard;
 
     if (isProUser()) {
-      const result = await createThread(newTitle.trim(), newContent.trim());
+      const result = await createThread(newTitle.trim(), newContent.trim(), subnookTarget);
       if (result && result.success) {
         // Save subnook to post meta in real WP environments if available
         newTitle = "";
@@ -204,7 +238,7 @@
         author_island: nookState.passport.islandName || "Nook Island",
         date: new Date().toISOString(),
         comment_count: 0,
-        likes: 0,
+        tips: 0,
         hasLiked: false
       };
       threads = [newT, ...threads];
@@ -218,7 +252,12 @@
 
   async function submitComment() {
     if (!replyText.trim() || !activeThread) return;
+    if (nookState.bells < 50) {
+      alert("You need 50 Bells to reply!");
+      return;
+    }
     const author = nookState.passport.name || "Resident";
+    nookState.deductBells(50);
     
     if (isProUser()) {
       const success = await createComment(activeThread.id, replyText.trim());
@@ -271,23 +310,37 @@
     newBoardName = "";
   }
 
-  function handleLike(threadId: number, event: Event) {
+  async function handleTip(threadId: number, event: Event) {
     event.stopPropagation();
-    threads = threads.map(t => {
-      if (t.id === threadId) {
-        const liked = !t.hasLiked;
-        return {
-          ...t,
-          hasLiked: liked,
-          likes: (t.likes || 0) + (liked ? 1 : -1)
-        };
+    if (nookState.bells < 25) {
+      alert("You need 25 Bells to tip!");
+      return;
+    }
+    nookState.deductBells(25);
+
+    if (isProUser()) {
+      const res = await tipThread(threadId, 25);
+      if (res && res.success) {
+        threads = threads.map(t => t.id === threadId ? { ...t, tips: res.new_tips } : t);
+        if (activeThread && activeThread.id === threadId) {
+          activeThread = { ...activeThread, tips: res.new_tips };
+        }
       }
-      return t;
-    });
-    localStorage.setItem("nook_mock_threads", JSON.stringify(threads));
-    
-    if (activeThread && activeThread.id === threadId) {
-      activeThread = threads.find(t => t.id === threadId) || null;
+    } else {
+      threads = threads.map(t => {
+        if (t.id === threadId) {
+          return {
+            ...t,
+            tips: (t.tips || 0) + 25
+          };
+        }
+        return t;
+      });
+      localStorage.setItem("nook_mock_threads", JSON.stringify(threads));
+      
+      if (activeThread && activeThread.id === threadId) {
+        activeThread = threads.find(t => t.id === threadId) || null;
+      }
     }
   }
 
@@ -375,12 +428,12 @@
       {/if}
       {#if view === "detail" && activeThread}
         <NookToolbarButton 
-          class={activeThread.hasLiked ? "text-white bg-[#eb6a9d] !px-2" : "text-[#eb6a9d] !px-2"}
-          onclick={(e) => handleLike(activeThread!.id, e)} 
-          title="Upvote"
+          class="text-[#eb6a9d] !px-2 hover:bg-[#eb6a9d] hover:text-white"
+          onclick={(e) => handleTip(activeThread!.id, e)} 
+          title="Tip 25 Bells"
         >
-          <ThumbsUp class="w-3.5 h-3.5 stroke-[2.5px] mr-1" />
-          <span class="text-[10px] font-black">{activeThread.likes || 0}</span>
+          <Coins class="w-3.5 h-3.5 stroke-[2.5px] mr-1" />
+          <span class="text-[10px] font-black">{activeThread.tips || 0}</span>
         </NookToolbarButton>
       {/if}
       <NookToolbarButton class="text-[#eb6a9d]" onclick={ctx.handleHomeButton} title="Close App">
@@ -424,7 +477,7 @@
             tabindex="0"
             onclick={() => selectThread(thread)}
             onkeydown={(e) => e.key === 'Enter' && selectThread(thread)}
-            class="w-full bg-white rounded-[24px] p-4 border-4 border-[#e1d9be] shadow-[0_6px_0_#dcd3be] hover:-translate-y-1 hover:shadow-[0_8px_0_#dcd3be] active:translate-y-1 active:shadow-[0_2px_0_#dcd3be] transition-all text-left flex flex-col gap-3 cursor-pointer relative group overflow-hidden"
+            class="w-full bg-white rounded-[24px] p-4 border-4 border-[#e1d9be] shadow-[0_6px_0_#dcd3be] hover:-translate-y-1 hover:shadow-[0_8px_0_#dcd3be] active:translate-y-1 active:shadow-[0_2px_0_#dcd3be] transition-all text-left flex flex-col gap-3 cursor-pointer relative group overflow-hidden shrink-0 min-h-[130px]"
           >
             <!-- Decorative bubbly corner -->
             <div class="absolute -top-4 -right-4 w-12 h-12 bg-[#f4f1e3] rounded-full opacity-50 group-hover:scale-125 transition-transform duration-300"></div>
@@ -440,19 +493,24 @@
 
             <!-- Content -->
             <div class="flex flex-col gap-1 z-10 text-center pt-1 pb-4 px-1">
-              <h3 class="text-sm font-black text-[#5c3a21] leading-snug line-clamp-1">{thread.title}</h3>
-              <p class="text-[12px] text-[#786b51] line-clamp-2 leading-relaxed font-medium">{thread.content}</p>
+              <h3 class="text-sm font-black text-[#5c3a21] leading-snug line-clamp-1">
+                {typeof thread.title === 'object' ? thread.title.rendered : thread.title}
+              </h3>
+              <p class="text-[12px] text-[#786b51] line-clamp-2 leading-relaxed font-medium">
+                {@html typeof thread.content === 'object' ? thread.content.rendered : thread.content}
+              </p>
             </div>
 
             <!-- Bottom Controls -->
             <div class="flex justify-between items-center w-full pt-2 mt-1 border-t-2 border-dashed border-[#e8dfc7] text-[11px] font-bold text-[#8a7f66] z-10">
               <button
-                onclick={(e) => { e.stopPropagation(); handleLike(thread.id, e); }}
-                class={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-b-2 transition-all cursor-pointer ${thread.hasLiked ? 'bg-[#eb6a9d] border-[#c94d7d] text-white active:translate-y-0.5 active:border-b-0' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-0.5 active:border-b-0'}`}
+                onclick={(e) => handleTip(thread.id, e)}
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-b-2 transition-all cursor-pointer bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-0.5 active:border-b-0"
               >
-                <ThumbsUp class="w-3.5 h-3.5 stroke-[2.5px]" />
-                <span class="font-black">{thread.likes || 0} Upvotes</span>
+                <Coins class="w-3.5 h-3.5 stroke-[2.5px]" />
+                <span class="font-black">Tip 25 Bells</span>
               </button>
+              <span class="font-black text-[#5c3a21] bg-[#e1d9be]/50 px-2 py-1 rounded-lg">Raised: {thread.tips || 0}</span>
             </div>
           </div>
         {/each}
@@ -476,19 +534,24 @@
             
             <!-- Content -->
             <div class="flex flex-col gap-3 z-10 text-center pt-2 pb-2 px-1">
-              <h3 class="text-[15px] font-black text-[#5c3a21] leading-snug">{activeThread.title}</h3>
-              <p class="text-[13px] text-[#786b51] leading-relaxed font-medium whitespace-pre-wrap">{activeThread.content}</p>
+              <h3 class="text-[15px] font-black text-[#5c3a21] leading-snug">
+                {typeof activeThread.title === 'object' ? activeThread.title.rendered : activeThread.title}
+              </h3>
+              <p class="text-[13px] text-[#786b51] leading-relaxed font-medium whitespace-pre-wrap">
+                {@html typeof activeThread.content === 'object' ? activeThread.content.rendered : activeThread.content}
+              </p>
             </div>
 
             <!-- Bottom Controls -->
             <div class="flex items-center justify-between pt-3 mt-1 border-t-2 border-dashed border-[#e8dfc7]">
               <button
-                onclick={(e) => handleLike(activeThread!.id, e)}
-                class={`flex items-center gap-1.5 px-4 py-2 rounded-xl border-b-[3px] text-[12px] font-black transition-all cursor-pointer ${activeThread.hasLiked ? 'bg-[#eb6a9d] border-[#c94d7d] text-white active:translate-y-[2px] active:border-b-[1px]' : 'bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-[2px] active:border-b-[1px]'}`}
+                onclick={(e) => handleTip(activeThread!.id, e)}
+                class="flex items-center gap-1.5 px-4 py-2 rounded-xl border-b-[3px] text-[12px] font-black transition-all cursor-pointer bg-[#f4f1e3] border-[#e1d9be] hover:bg-[#ebdca6] text-[#7a6f58] active:translate-y-[2px] active:border-b-[1px]"
               >
-                <ThumbsUp class="w-4 h-4 stroke-[2.5px]" />
-                <span>{activeThread.likes || 0} Upvotes</span>
+                <Coins class="w-4 h-4 stroke-[2.5px]" />
+                <span>Tip 25 Bells</span>
               </button>
+              <span class="text-[13px] font-black text-[#5c3a21] bg-[#e1d9be]/50 px-3 py-1.5 rounded-xl">Raised: {activeThread.tips || 0}</span>
             </div>
          </div>
 
@@ -568,18 +631,29 @@
       <input
         id="reply-message-input"
         type="text"
-        placeholder="Type a reply to this bulletin..."
+        placeholder={nookState.bells >= 50 ? "Type a reply... (Costs 50 Bells)" : "Need 50 Bells to reply!"}
         bind:value={replyText}
+        disabled={nookState.bells < 50}
         onkeydown={(e) => e.key === "Enter" && submitComment()}
-        class="flex-1 bg-[#fbf9f0] border border-[#dcd3be] p-2 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#eb6a9d] text-[#4c4637]"
+        class="flex-1 bg-[#fbf9f0] border border-[#dcd3be] p-2 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#eb6a9d] text-[#4c4637] disabled:opacity-50"
       />
       <button
         onclick={submitComment}
-        disabled={!replyText.trim()}
+        disabled={!replyText.trim() || nookState.bells < 50}
         class="bg-[#eb6a9d] text-white p-2 rounded-xl hover:bg-opacity-95 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
       >
         <Send class="w-5 h-5 stroke-[2.5px]" />
       </button>
     </div>
+  {/if}
+
+  {#if showBoardDonation && currentBoardStatus}
+    <BoardDonationDialog
+      board={currentBoardStatus.board}
+      initialRaised={currentBoardStatus.raised}
+      isFunded={currentBoardStatus.funded}
+      onClose={() => showBoardDonation = false}
+      onFunded={() => { currentBoardStatus!.funded = true; showBoardDonation = false; }}
+    />
   {/if}
 </div>
