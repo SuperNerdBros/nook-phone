@@ -35,6 +35,10 @@ export default defineConfig({
       },
       devOptions: {
         enabled: false
+      },
+      workbox: {
+        navigateFallback: null,
+        globIgnores: ['**/index.html']
       }
     })
   ],
