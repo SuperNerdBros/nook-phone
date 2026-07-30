@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 8085 --host 0.0.0.0",
     "build": "vite build && cd apps/happy-island-designer && node scripts/generateTilesCache.js && node scripts/generateBaseMapCache.js && npx webpack --mode production && rm -rf ../../../../wp-content/plugins/xophz-nook-phone/public/dist-designer && mkdir -p ../../../../wp-content/plugins/xophz-nook-phone/public/dist-designer && cp -r dist index.html static ../../../../wp-content/plugins/xophz-nook-phone/public/dist-designer/",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"

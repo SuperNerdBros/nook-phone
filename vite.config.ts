@@ -48,14 +48,14 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5175,
+    port: 8085,
     host: true,
     strictPort: true,
     cors: true,
     allowedHosts: true,
-    origin: 'http://compass:5175',
+    origin: 'http://compass:8085',
     hmr: {
-      clientPort: 5175
+      clientPort: 8085
     }
   },
   build: {
