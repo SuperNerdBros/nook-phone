@@ -3,6 +3,9 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
+const workspaceRoot = process.env.PNPM_WORKSPACE_DIR || path.resolve(__dirname, '../..')
+const TARGET_DIST = path.join(workspaceRoot, 'wp-content/plugins/xophz-nook-phone/public/dist')
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -59,7 +62,7 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: '../../wp-content/plugins/xophz-nook-phone/public/dist',
+    outDir: TARGET_DIST,
     emptyOutDir: true,
   }
 })
