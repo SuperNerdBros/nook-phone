@@ -28,3 +28,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Chemical X local telemetry & audit history
+.chemx/
